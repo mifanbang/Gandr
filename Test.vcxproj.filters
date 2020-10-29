@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\Test\Main.cpp" />
+    <ClCompile Include="src\Test\Test.cpp" />
+    <ClCompile Include="src\Test\TestBreakpoint.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestHash.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestHook.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestProcessList.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestHandle.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestMutex.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestBuffer.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestDynamicCall.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestDllInjector.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestInstructionDecoder64.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestInstructionDecoder32.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestDebugger.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Test\TestModuleList.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Test\Test.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Test Suites">
+      <UniqueIdentifier>{a8b3acd9-a991-43ad-853c-c357274bc4b6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="src\Test\TestDllInjectorAsm.asm">
+      <Filter>Test Suites</Filter>
+    </MASM>
+  </ItemGroup>
+</Project>
