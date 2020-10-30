@@ -35,7 +35,7 @@ DEFINE_TESTSUITE_START(Mutex)
 
 		volatile bool newThreadStarted = false;
 
-		// New thread: sleeps 5 sec and assigns 4096 to "i"
+		// New thread: sleeps 65ms and assigns 4096 to "i"
 		std::thread newThread( [&sharedInt, &newThreadStarted]() {
 			sharedInt.ApplyOperation( [&newThreadStarted](int& i) {
 				newThreadStarted = true;
@@ -44,16 +44,18 @@ DEFINE_TESTSUITE_START(Mutex)
 			} );
 		} );
 
+		// Spin until the new thread has called ApplyOperation()
 		while (!newThreadStarted)
-			;  // Spin
+			;
 
+		// ApplyOperation() below should block until newThread finishes and yields the resource
 		const auto startTime = std::chrono::steady_clock::now();
-		sharedInt.ApplyOperation( [](int& i) { return i; } );
+		const int snapshot = sharedInt.ApplyOperation( [](const int& i) { return i; } );
 		const auto endTime = std::chrono::steady_clock::now();
 		const std::chrono::duration<float> deltaTime = endTime - startTime;
 
-		// Must NOT use ASSERT or it won't wait for the thread.
 		EXPECT(deltaTime.count() > .055f && deltaTime.count() < .075f);  // 65ms +- 10ms
+		EXPECT(snapshot == 4096);
 
 		newThread.join();
 	}

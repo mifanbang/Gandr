@@ -100,6 +100,7 @@ DEFINE_TESTSUITE_START(Buffer)
 		EXPECT(buffer->GetCapacity() == 1 << 22);
 		EXPECT(buffer->GetSize() == 1 << 21);
 
+		// Make sure data were copied to the new memory location
 		gan::MemAddr bufferDataNew = buffer->GetData();
 		EXPECT(bufferData != bufferDataNew);
 		EXPECT(*bufferDataNew.As<uint64_t>() == k_magicNumber);
