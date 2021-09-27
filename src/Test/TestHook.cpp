@@ -102,7 +102,7 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 		gan::Hook hook { GetProcAddress, _GetProcAddress };
 
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
-		EXPECT(GetProcAddress(m_hMod, "GetProcAddress") == gan::MemAddr(_GetProcAddress));
+		EXPECT(GetProcAddress(m_hMod, "GetProcAddress") == reinterpret_cast<FARPROC>(_GetProcAddress));
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
 	}
 	DEFINE_TEST_END

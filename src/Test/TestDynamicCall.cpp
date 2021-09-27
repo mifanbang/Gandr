@@ -60,7 +60,7 @@ DEFINE_TESTSUITE_START(DynamicCall)
 		// non-void return type
 		gan::DynamicCall<HANDLE __stdcall ()> funcGetCurrentProcess(k_kernel32, "GetCurrentProcess");
 		ASSERT(funcGetCurrentProcess.IsValid());
-		ASSERT(funcGetCurrentProcess() == gan::MemAddr(-1));  // GetCurrentProcess() returns a pseudo handle which has the value -1
+		ASSERT(funcGetCurrentProcess() == HANDLE(-1));  // GetCurrentProcess() returns a pseudo handle which has the value -1
 	}
 	DEFINE_TEST_END
 

@@ -54,7 +54,7 @@ DEFINE_TESTSUITE_START(Mutex)
 		const auto endTime = std::chrono::steady_clock::now();
 		const std::chrono::duration<float> deltaTime = endTime - startTime;
 
-		EXPECT(deltaTime.count() > .055f && deltaTime.count() < .075f);  // 65ms +- 10ms
+		EXPECT(deltaTime.count() > .055f && deltaTime.count() < .085f);  // The actual sleep time varies
 		EXPECT(snapshot == 4096);
 
 		newThread.join();
