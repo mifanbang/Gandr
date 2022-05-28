@@ -87,7 +87,7 @@ struct OpcodeLookAhead
 	ModRegRM modRegRM;
 	SIB sib;
 
-	constexpr OpcodeLookAhead(gan::MemAddr ptr)
+	OpcodeLookAhead(gan::MemAddr ptr)
 		: opcode(ptr[0])
 		, modRegRM()
 		, sib()
@@ -96,8 +96,9 @@ struct OpcodeLookAhead
 		if (opcode.bytes[0] == 0x0F)
 			opcode = Opcode(0x0F, ptr[1]);
 
-		modRegRM = *ptr.Offset(opcode.length).As<ModRegRM>();
-		sib = *ptr.Offset(opcode.length + 1).As<SIB>();
+		const auto ptrEndOfOpcode = ptr.Offset(opcode.length);
+		modRegRM = *ptrEndOfOpcode.As<ModRegRM>();
+		sib = *ptrEndOfOpcode.Offset(1).As<SIB>();
 	}
 };
 

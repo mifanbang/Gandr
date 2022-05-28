@@ -40,6 +40,11 @@ namespace
 {
 
 
+// workaround for compile error when we'd like to put k_64bit in a static_assert
+template <size_t>
+constexpr bool k_64bitStaticAssert = gan::k_64bit;
+
+
 struct PrologStrategy
 {
 	enum class Type : uint8_t
@@ -60,8 +65,8 @@ struct PrologStrategy
 		AbsoluteJmp64
 	};
 
-	Type type;
-	uint8_t imm8;  // optional; only valid when type=RelShortJmpToAux
+	Type type { };
+	uint8_t imm8 { };  // optional; only valid when type=RelShortJmpToAux
 };
 
 
@@ -380,7 +385,7 @@ public:
 		template <size_t N>
 		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N])
 		{
-			static_assert(gan::k_64bit);
+			static_assert(k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
 
 			// mov rax, imm64
@@ -403,7 +408,7 @@ public:
 		template <size_t N>
 		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N])
 		{
-			static_assert(gan::k_64bit);
+			static_assert(k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
 
 			const uint32_t addrLow = static_cast<uint32_t>(static_cast<gan::IntMemAddr>(targetAddr));
@@ -432,7 +437,7 @@ public:
 		template <size_t N>
 		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N])
 		{
-			static_assert(!gan::k_64bit);
+			static_assert(!k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
 
 			// push imm32
