@@ -252,7 +252,7 @@ DEFINE_TESTSUITE_START(Hook_XInput)
 
 		constexpr static BYTE k_expectedTrigger = 0x87;
 
-		static DWORD __stdcall _XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState)
+		static DWORD __stdcall _XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState) noexcept
 		{
 			gan::Hook::GetTrampoline(XInputGetState)(dwUserIndex, pState);
 			pState->Gamepad.bLeftTrigger = k_expectedTrigger;
