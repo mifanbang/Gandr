@@ -213,7 +213,7 @@ public:
 		memcpy(trampolineAddr, trampoline.opcode, k_trampolineSize);
 
 		assert(m_records.find(trampolineAddr) == m_records.end());
-		m_records.insert({ trampolineAddr, pageIndex });
+		m_records.try_emplace(trampolineAddr, pageIndex);
 
 		return trampolineAddr;
 	}
@@ -325,7 +325,7 @@ private:
 		return -1;
 	}
 
-	//  Assumes that caller has already obtained a lock
+	// Assumes that caller has already obtained a lock
 	unsigned int AddNewPage(const gan::MemRange& desiredAddrRange)
 	{
 		const gan::MemRange fixedAddrRange = AlignMemRangeWithGranularity(desiredAddrRange, m_allocGranularity);

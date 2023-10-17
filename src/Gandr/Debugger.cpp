@@ -148,7 +148,7 @@ bool Debugger::AddSessionInstance(const std::shared_ptr<DebugSession>& pSession)
 	if (itr != m_sessions.end())
 		return false;
 
-	m_sessions.insert(decltype(m_sessions)::value_type(sessId, pSession));
+	m_sessions.try_emplace(sessId, pSession);
 	return true;
 }
 
