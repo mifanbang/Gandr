@@ -140,7 +140,7 @@ public:
 
 		const auto record = LookUp(funcAddr);
 		return record ?
-			gan::ConstMemAddr{ record->trampoline } :
+			record->trampoline.Immutable() :
 			gan::ConstMemAddr{ nullptr };
 	}
 
@@ -698,7 +698,7 @@ void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacem
 	for (const Displacement32& disp : displacements)
 	{
 		const auto newDisplacement = static_cast<uint32_t>(
-			disp.targetAddr - gan::ConstMemAddr{ trampolineAddr.Offset(disp.offsetBase) }
+			disp.targetAddr - trampolineAddr.Offset(disp.offsetBase).Immutable()
 		);
 		trampolineAddr.Offset(disp.offsetData).Ref<uint32_t>() = newDisplacement;
 	}
@@ -760,7 +760,7 @@ Hook::OpResult Hook::Install()
 
 	// Generate a new prolog and backup the original one.
 	const auto hookProlog = GenerateHookProlog(m_funcOrig, m_funcHook, strategy);
-	const auto origProlog = CopyProlog(ConstMemAddr{ m_funcOrig }, hookProlog.length);
+	const auto origProlog = CopyProlog(m_funcOrig.Immutable(), hookProlog.length);
 	if (!origProlog)
 		return OpResult::PrologNotSupported;
 

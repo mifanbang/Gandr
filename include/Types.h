@@ -55,10 +55,6 @@ public:
 	explicit MemAddrWrapper(void* addr) requires !IsImmutable
 		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
 
-	// Constructing ConstMemAddr from MemAddr
-	constexpr explicit MemAddrWrapper(const MemAddr& other) requires IsImmutable
-		: MemAddrWrapper(other.Ptr<void>()) { }
-
 	constexpr MemAddrWrapper& operator=(const MemAddrWrapper& other) = default;
 
 	// Casting
@@ -73,7 +69,12 @@ public:
 	{
 		return reinterpret_cast<S*>(m_addr);
 	}
-	MemAddr ConstCast() const
+	ConstMemAddr Immutable() const  // MemAddr -> ConstMemAddr
+		requires !IsImmutable
+	{
+		return ConstMemAddr{ reinterpret_cast<const void*>(m_addr) };
+	}
+	MemAddr ConstCast() const  // ConstMemAddr -> MemAddr; use with caution
 		requires IsImmutable
 	{
 		return MemAddr{ reinterpret_cast<void*>(m_addr) };
