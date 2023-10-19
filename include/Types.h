@@ -166,16 +166,17 @@ using WinHandle = void*;
 using WinErrorCode = unsigned long;
 
 
-enum
-{
-	k_64bit = (sizeof(MemAddr) == 8)
-};
-
 enum class Arch : uint8_t
 {
 	IA32,
 	Amd64
 };
+
+
+consteval bool Is64()
+{
+	return sizeof(MemAddr) == 8;
+}
 
 
 }  // namespace gan
@@ -186,8 +187,8 @@ enum class Arch : uint8_t
 namespace std
 {
 
-	
-template <> struct hash<gan::MemAddr>
+template <>
+struct hash<gan::MemAddr>
 {
 	std::size_t operator()(gan::MemAddr key) const
 	{
@@ -196,6 +197,5 @@ template <> struct hash<gan::MemAddr>
 		);
 	}
 };
-
 
 }  // namespace std

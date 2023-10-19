@@ -38,9 +38,9 @@ namespace
 {
 
 
-// workaround for compile error when we'd like to put k_64bit in a static_assert
+// workaround for compile error when we'd like to put Is64() in a static_assert
 template <size_t>
-constexpr bool k_64bitStaticAssert = gan::k_64bit;
+constexpr bool k_64bitStaticAssert = gan::Is64();
 
 
 struct PrologStrategy
@@ -251,7 +251,7 @@ private:
 	// Assumes that "desiredAddrRange" is aligned with the result from GetAllocGranularity()
 	static gan::MemAddr FindPageForAlloc(gan::MemRange desiredAddrRange)
 	{
-		if constexpr (gan::k_64bit)
+		if constexpr (gan::Is64())
 		{
 			const auto allocGranularity = GetAllocGranularity();
 			const auto addrToFindStart = desiredAddrRange.min;
@@ -317,7 +317,7 @@ private:
 			if (m_freeLists[i].empty())
 				continue;
 
-			if constexpr (gan::k_64bit)
+			if constexpr (gan::Is64())
 			{
 				if (desiredAddrRange.InRange(m_pages[i]))
 					return i;
@@ -500,7 +500,7 @@ PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 	constexpr PrologStrategy k_RelNearJmp32 { PrologStrategy::Type::RelNearJmp32 };
 	constexpr PrologStrategy k_AbsoluteJmp64 { PrologStrategy::Type::AbsoluteJmp64 };
 
-	if constexpr (gan::k_64bit)
+	if constexpr (gan::Is64())
 	{
 		const auto addrDiff = origFunc > hookFunc ?
 			origFunc - hookFunc :
@@ -532,7 +532,7 @@ PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologStrategy strategy)
 {
 	Prolog result;
-	if constexpr (gan::k_64bit)
+	if constexpr (gan::Is64())
 	{
 		if (strategy.type == PrologStrategy::Type::RelShortJmpToAux)
 			result.length = OpcodeGenerator::RelShortJmp8::Make(hookFunc, strategy.imm8, result.opcode);
@@ -572,7 +572,7 @@ class AuxiliaryPrologHelper
 public:
 	constexpr static bool ShouldUseAuxProlog(PrologStrategy::Type strategyType)
 	{
-		if constexpr (gan::k_64bit)
+		if constexpr (gan::Is64())
 			return strategyType == PrologStrategy::Type::RelShortJmpToAux;
 		else
 			return false;
@@ -656,7 +656,7 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 
 gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displacement32>& displacements)
 {
-	if constexpr (gan::k_64bit)
+	if constexpr (gan::Is64())
 	{
 		// Combine "tramAddr" and "displacements" into a uniformly-typed vector.
 		std::vector<gan::MemAddr> addresses;
@@ -713,7 +713,7 @@ Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog)
 	Trampoline result;
 	memcpy(result.opcode, prolog.opcode, prolog.length);
 
-	if constexpr (gan::k_64bit)
+	if constexpr (gan::Is64())
 	{
 		auto& opcodeJmp = reinterpret_cast<uint8_t(&)[14]>(result.opcode[prolog.length]);  // ugly...
 		OpcodeGenerator::AbsLongJmp64::Make(origFuncAddr.Offset(prolog.length), opcodeJmp);

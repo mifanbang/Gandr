@@ -44,7 +44,7 @@ namespace
 class InjectionHelper
 {
 public:
-	constexpr static size_t k_targetArch = gan::k_64bit ? 64 : 32;
+	constexpr static size_t k_targetArch = gan::Is64() ? 64 : 32;
 
 
 	template <size_t N> static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext(::CONTEXT&, const wchar_t*) = delete;

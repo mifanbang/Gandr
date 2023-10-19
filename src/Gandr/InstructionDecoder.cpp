@@ -408,7 +408,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 	// This is a very rare case but it's simple enough to support.
 	else if (HasAnyFlagIn(matchedOp->operands, Operand::Moffs))
 	{
-		if constexpr (gan::k_64bit)
+		if constexpr (gan::Is64())
 			result.lengthImm = result.prefix67 ? 4 : 8;
 		else
 			result.lengthImm = result.prefix67 ? 2 : 4;

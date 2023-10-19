@@ -72,7 +72,7 @@ public:
 
 	// Using build's target platform as arch
 	explicit InstructionDecoder(ConstMemAddr address)
-		: InstructionDecoder(k_64bit ? Arch::Amd64 : Arch::IA32, address)
+		: InstructionDecoder(Is64() ? Arch::Amd64 : Arch::IA32, address)
 	{ }
 
 	std::optional<InstructionLengthDetails> GetNextLength();
