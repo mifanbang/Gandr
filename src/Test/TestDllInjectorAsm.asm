@@ -1,6 +1,6 @@
 ;
 ;  Gandr - another minimalism library for hacking x86-based Windows
-;  Copyright (C) 2020 Mifan Bang <https://debug.tw>.
+;  Copyright (C) 2020-2023 Mifan Bang <https://debug.tw>.
 ;
 ;  This program is free software: you can redistribute it and/or modify
 ;  it under the terms of the GNU General Public License as published by
