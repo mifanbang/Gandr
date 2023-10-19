@@ -18,6 +18,10 @@
 
 #pragma once
 
+#if !defined(NOMINMAX) || defined(min) || defined(max)
+	#error Macro NOMINMAX is required for the library
+#endif  // windows.h NOMINMAX check
+
 #include <cstdint>
 #include <functional>
 
@@ -27,59 +31,121 @@ namespace gan
 {
 
 
-using IntMemAddr = size_t;  // integral type for memory address
+enum class MemType { Mutable, Immutable };
 
 
-// A wrapper for the ease of casting and offseting
-class MemAddr
+template <MemType Mutability> class MemAddrWrapper;
+using MemAddr = MemAddrWrapper<MemType::Mutable>;
+using ConstMemAddr = MemAddrWrapper<MemType::Immutable>;
+
+
+// A wrapper for the ease of casting and offseting memory addresses
+template <MemType Mutability>
+class MemAddrWrapper
 {
+	constexpr static bool IsImmutable = Mutability == MemType::Immutable;
+
 public:
-	// Can't use reinterpret_cast as it has undefined behavior and thus incompatible with constexpr.
-	constexpr MemAddr() : m_addr(0) { }
-	constexpr MemAddr(const void* addr) : m_addr((IntMemAddr)(addr)) { }
-	constexpr MemAddr(IntMemAddr addr) : m_addr(addr) { }
+	using IntegralType = size_t;  // Integral type for memory address
 
-	// casting
-	constexpr operator const void* () const		{ return (const void*)(m_addr); }
-	constexpr operator const uint8_t* () const	{ return (const uint8_t*)(m_addr); }
-	constexpr operator IntMemAddr () const		{ return m_addr; }
-	constexpr operator void* ()					{ return (void*)(m_addr); }
-	constexpr operator uint8_t* ()				{ return (uint8_t*)(m_addr); }
+	constexpr MemAddrWrapper() = default;
+	constexpr MemAddrWrapper(const MemAddrWrapper& other) = default;
+	explicit MemAddrWrapper(const void* addr) requires IsImmutable
+		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
+	explicit MemAddrWrapper(void* addr) requires !IsImmutable
+		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
 
-	// more generic casting
-	template <typename T> constexpr const T* As() const	{ return (const T*)(m_addr); }
-	template <typename T> constexpr T* As()				{ return (T*)(m_addr); }
+	// Constructing ConstMemAddr from MemAddr
+	constexpr explicit MemAddrWrapper(const MemAddr& other) requires IsImmutable
+		: MemAddrWrapper(other.Ptr<void>()) { }
 
-	// validity
-	constexpr bool operator ! () const	{ return m_addr == 0; }
-	constexpr bool IsValid() const		{ return m_addr != 0; }
+	constexpr MemAddrWrapper& operator=(const MemAddrWrapper& other) = default;
 
-	// comparisons
-	constexpr bool operator == (MemAddr other) const	{ return m_addr == other.m_addr; }
-	constexpr bool operator != (MemAddr other) const	{ return m_addr != other.m_addr; }
-	constexpr bool operator > (MemAddr other) const		{ return m_addr > other.m_addr; }
-	constexpr bool operator >= (MemAddr other) const	{ return m_addr >= other.m_addr; }
+	// Casting
+	template <class S = void>
+	const S* ConstPtr() const
+	{
+		return reinterpret_cast<const S*>(m_addr);
+	}
+	template <class S = void>
+	S* Ptr() const
+		requires !IsImmutable
+	{
+		return reinterpret_cast<S*>(m_addr);
+	}
+	MemAddr ConstCast() const
+		requires IsImmutable
+	{
+		return MemAddr{ reinterpret_cast<void*>(m_addr) };
+	}
 
-	// arithmetics
-	constexpr MemAddr Offset(intptr_t offset) const			{ return m_addr + offset; }
-	constexpr ptrdiff_t operator - (MemAddr other) const	{ return m_addr - other.m_addr; }
+	// Dereferencing
+	template <class S>
+	const S& ConstRef() const
+	{
+		if constexpr (std::is_function_v<S>)  // keyword "const" for function would be redundant
+			return *reinterpret_cast<S*>(m_addr);
+		else
+			return *reinterpret_cast<const S*>(m_addr);
+	}
+	template <class S>
+	S& Ref() const
+		requires !IsImmutable
+	{
+		return *reinterpret_cast<S*>(m_addr);
+	}
+
+	// Validity
+	constexpr explicit operator bool() const { return m_addr; }
+	constexpr bool IsValid() const			 { return m_addr; }
+
+	// Comparisons
+	template <class OtherT>
+	constexpr bool operator==(OtherT other) const noexcept
+		requires (requires (OtherT otherT) { {otherT.m_addr} -> std::equality_comparable_with<IntegralType>; })
+	{
+		return m_addr == other.m_addr;
+	}
+	template <class OtherT>
+	constexpr std::strong_ordering operator<=>(OtherT other) const noexcept
+		requires (requires (OtherT otherT) { {otherT.m_addr} -> std::three_way_comparable_with<IntegralType>; })
+	{
+		return m_addr <=> other.m_addr;
+	}
+
+	// Bitwise binary
+	MemAddrWrapper operator&(IntegralType mask) const { return MemAddrWrapper{ m_addr & mask }; }
+
+	// Arithmetics
+	MemAddrWrapper Offset(intptr_t offset) const	{ return MemAddrWrapper{ m_addr + offset }; }
+	ptrdiff_t operator-(MemAddrWrapper other) const	{ return m_addr - other.m_addr; }
+	MemAddrWrapper& operator++()
+	{
+		++m_addr;
+		return *this;
+	}
 
 private:
-	IntMemAddr m_addr;
+	explicit MemAddrWrapper(IntegralType addr) : m_addr(addr) { }
+
+	IntegralType m_addr;
 };
+static_assert(sizeof(MemAddr) == sizeof(size_t));
 
 
 // Only closed at the lower endpoing, i.e., [min, max)
-struct MemRange
+template <class T>
+struct Range
 {
-	MemAddr min;
-	MemAddr max;
+	T min;
+	T max;
 
-	constexpr bool InRange(MemAddr addr) const
-	{
-		return addr >= min && max > addr;
-	}
+	template <class OtherT>
+	constexpr bool InRange(OtherT addr) const { return addr >= min && max > addr; }
 };
+
+using MemRange = Range<MemAddr>;
+using ConstMemRange = Range<ConstMemAddr>;
 
 
 template <typename T>
@@ -99,13 +165,9 @@ using WinHandle = void*;
 using WinErrorCode = unsigned long;
 
 
-
-constexpr MemAddr k_nullptr;
-
-
 enum
 {
-	k_64bit = (sizeof(IntMemAddr) == 8)
+	k_64bit = (sizeof(MemAddr) == 8)
 };
 
 enum class Arch : uint8_t
@@ -126,7 +188,12 @@ namespace std
 	
 template <> struct hash<gan::MemAddr>
 {
-	std::size_t operator()(gan::MemAddr key) const { return hash<gan::IntMemAddr>()(key); }
+	std::size_t operator()(gan::MemAddr key) const
+	{
+		return hash<const uint8_t*>{}(
+			key.ConstPtr<uint8_t>()
+		);
+	}
 };
 
 

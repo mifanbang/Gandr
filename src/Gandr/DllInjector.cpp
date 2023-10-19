@@ -78,8 +78,8 @@ public:
 
 		GET_CONTEXT_REG(context, sp) -= output->GetSize();
 
-		gan::MemAddr bufferData = output->GetData();
-		*bufferData.As<StackFrameForLoadLibraryW32>() = {
+		auto bufferData = gan::MemAddr{ output->GetData() };
+		bufferData.Ref<StackFrameForLoadLibraryW32>() = {
 			// for LoadLibraryW()
 			funcVirtualFree.GetAddress(),
 			remoteDllPath,
@@ -113,8 +113,8 @@ public:
 		GET_CONTEXT_REG(context, sp) -= output->GetSize();
 		GET_CONTEXT_REG(context, cx) = reinterpret_cast<size_t>(remoteDllPath);  // Arg to LoadLibraryW
 
-		gan::MemAddr bufferData = output->GetData();
-		*bufferData.As<StackFrameForLoadLibraryW64>() = {
+		gan::MemAddr bufferData{ output->GetData() };
+		bufferData.Ref<StackFrameForLoadLibraryW64>() = {
 			reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, ip))
 		};
 

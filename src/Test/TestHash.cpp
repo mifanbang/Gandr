@@ -44,7 +44,7 @@ DEFINE_TESTSUITE_START(Hash)
 		gan::Hash<256> hash;
 		memset(hash.data, 0, sizeof(hash.data));
 
-		ASSERT(gan::Hasher::GetSHA(k_text, sizeof(k_text) - 1, hash) == NO_ERROR);  // Don't hash null char at the end.
+		ASSERT(gan::Hasher::GetSHA(gan::ConstMemAddr{ k_text }, sizeof(k_text) - 1, hash) == NO_ERROR);  // Don't hash null char at the end.
 		ASSERT(memcmp(hash.data, k_digest, sizeof(hash.data)) == 0);
 	}
 	DEFINE_TEST_END

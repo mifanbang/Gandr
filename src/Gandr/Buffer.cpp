@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define NOMINMAX
-
 #include <Buffer.h>
 #include <Types.h>
 
@@ -69,11 +67,11 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 	assert(capacity >= size);
 	if (capacity >= size)
 	{
-		MemAddr dataPtr = ::HeapAlloc(GetProcessHeap(), 0, capacity);
+		MemAddr dataPtr{ ::HeapAlloc(GetProcessHeap(), 0, capacity) };
 		if (dataPtr.IsValid())
-			return std::unique_ptr<Buffer>(new Buffer(capacity, size, dataPtr));
+			return std::unique_ptr<Buffer>{ new Buffer{ capacity, size, dataPtr.Ptr<uint8_t>()} };
 	}
-	return std::unique_ptr<Buffer>();
+	return nullptr;
 }
 
 
@@ -104,13 +102,13 @@ bool Buffer::Resize(size_t newSize)
 	if (newCapacity < newSize)
 		return false;
 
-	MemAddr newAddr = ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity);
+	MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity) };
 	assert(newAddr.IsValid());
 	if (newAddr.IsValid())
 	{
 		m_capacity = newCapacity;
 		m_size = newSize;
-		m_data = newAddr;
+		m_data = newAddr.Ptr<uint8_t>();
 
 		return true;
 	}

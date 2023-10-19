@@ -20,45 +20,76 @@
 
 #include <Handle.h>
 
+#include <windows.h>
+#include <bcrypt.h>  // Win32 API bug: must be included after windows.h
+
 #include <memory>
 
-#include <windows.h>
-#include <bcrypt.h>  // Must be included after windows.h
-
 #pragma comment(lib, "bcrypt.lib")
-
 
 
 namespace gan
 {
 
 
-
-WinErrorCode Hasher::GetSHA(const void* data, size_t size, Hash<256>& out)
+WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 {
 	AutoHandle hProv(BCRYPT_ALG_HANDLE(nullptr), [](auto prov) { ::BCryptCloseAlgorithmProvider(prov, 0); });
 	AutoHandle hHash(BCRYPT_HASH_HANDLE(nullptr), ::BCryptDestroyHash);
 
 	// Initialization of service provider
-	bool isSuccessful = true;
 	ULONG numByteRead = 0;
 	uint32_t hashObjSize = 1;
-	isSuccessful = isSuccessful && BCRYPT_SUCCESS(::BCryptOpenAlgorithmProvider(&hProv.GetRef(), BCRYPT_SHA256_ALGORITHM, nullptr, 0));
-	isSuccessful = isSuccessful && BCRYPT_SUCCESS(::BCryptGetProperty(hProv, BCRYPT_OBJECT_LENGTH, gan::MemAddr(&hashObjSize), sizeof(hashObjSize), &numByteRead, 0));
+	const bool initSucceeded =
+		BCRYPT_SUCCESS(::BCryptOpenAlgorithmProvider(
+			&hProv.GetRef(),
+			BCRYPT_SHA256_ALGORITHM,
+			nullptr,
+			0
+		))
+		&& BCRYPT_SUCCESS(::BCryptGetProperty(
+			hProv,
+			BCRYPT_OBJECT_LENGTH,
+			reinterpret_cast<uint8_t*>(&hashObjSize),
+			sizeof(hashObjSize),
+			&numByteRead,
+			0
+		));
 
 	// Hash calculation
 	std::unique_ptr<uint8_t[]> hashObj(new uint8_t[hashObjSize]);
 	Hash<256> hash { { 0 } };
-	isSuccessful = isSuccessful && BCRYPT_SUCCESS(::BCryptCreateHash(hProv, &hHash.GetRef(), hashObj.get(), hashObjSize, nullptr, 0, 0));
-	isSuccessful = isSuccessful && BCRYPT_SUCCESS(::BCryptHashData(hHash, gan::MemAddr(data), static_cast<ULONG>(size), 0));
-	isSuccessful = isSuccessful && BCRYPT_SUCCESS(::BCryptFinishHash(hHash, gan::MemAddr(&hash.data), sizeof(hash), 0));
-	if (!isSuccessful)
+	const bool hashSucceeded =
+		initSucceeded
+		&& BCRYPT_SUCCESS(::BCryptCreateHash(
+			hProv,
+			&hHash.GetRef(),
+			hashObj.get(),
+			hashObjSize,
+			nullptr,
+			0,
+			0
+		))
+		// Win32 API bug: the 2nd param of BCryptHashData should be const as it's pure input
+		// REF: https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcrypthashdata
+		&& BCRYPT_SUCCESS(::BCryptHashData(
+			hHash,
+			dataAddr.ConstCast().Ptr<uint8_t>(),
+			static_cast<ULONG>(size),
+			0
+		))
+		&& BCRYPT_SUCCESS(::BCryptFinishHash(
+			hHash,
+			reinterpret_cast<uint8_t*>(&hash.data),
+			sizeof(hash),
+			0
+		));
+	if (!hashSucceeded)
 		return GetLastError();
 
 	::CopyMemory(&out, &hash, sizeof(hash));
 	return NO_ERROR;
 }
-
 
 
 }  // namespace gan

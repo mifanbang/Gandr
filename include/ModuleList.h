@@ -37,7 +37,7 @@ namespace gan
 
 struct ModuleInfo
 {
-	MemAddr baseAddr;
+	ConstMemAddr baseAddr;
 	size_t size;
 	std::wstring imageName;  // incl. file extension
 	std::wstring imagePath;

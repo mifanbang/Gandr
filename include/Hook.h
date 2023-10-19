@@ -73,15 +73,15 @@ public:
 	static auto GetTrampoline(const F& origFunc)
 	{
 		static_assert(std::is_function<F>::value);
-		auto trampoline = GetTrampolineAddr(origFunc);
+		auto trampoline = GetTrampolineAddr(gan::ConstMemAddr{ origFunc });
 		assert(trampoline);
-		return trampoline.As<F>();
+		return trampoline.ConstRef<F>();
 	}
 
 
 private:
 	// for hiding implementation as CallTrampoline must be defined in header
-	static MemAddr GetTrampolineAddr(MemAddr origFunc);
+	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);
 
 	MemAddr m_funcOrig;  // address to where the inline hook is installed
 	MemAddr m_funcHook;  // address to the user-defined hook function

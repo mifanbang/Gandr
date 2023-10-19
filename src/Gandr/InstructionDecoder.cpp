@@ -87,18 +87,18 @@ struct OpcodeLookAhead
 	ModRegRM modRegRM;
 	SIB sib;
 
-	OpcodeLookAhead(gan::MemAddr ptr)
-		: opcode(ptr[0])
+	OpcodeLookAhead(gan::ConstMemAddr addr)
+		: opcode(addr.ConstRef<uint8_t>())
 		, modRegRM()
 		, sib()
 	{
 		// The longest opcode is 3 bytes but Gandr currently supports up to 2 bytes
 		if (opcode.bytes[0] == 0x0F)
-			opcode = Opcode(0x0F, ptr[1]);
+			opcode = Opcode(0x0F, addr.Offset(1).ConstRef<uint8_t>());
 
-		const auto ptrEndOfOpcode = ptr.Offset(opcode.length);
-		modRegRM = *ptrEndOfOpcode.As<ModRegRM>();
-		sib = *ptrEndOfOpcode.Offset(1).As<SIB>();
+		const auto ptrEndOfOpcode = addr.Offset(opcode.length);
+		modRegRM = ptrEndOfOpcode.ConstRef<ModRegRM>();
+		sib = ptrEndOfOpcode.Offset(1).ConstRef<SIB>();
 	}
 };
 
@@ -303,16 +303,14 @@ constexpr OpcodeDefinition k_opDefTable[] {
 
 
 
-std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, gan::MemAddr addr)
+std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, gan::ConstMemAddr addr)
 {
 	gan::InstructionLengthDetails result;
 
-	const uint8_t* instPtr = addr;
-
 	// extract all prefixes
-	for (; ; ++instPtr)
+	for (; ; ++addr)
 	{
-		const uint8_t byte = *instPtr;
+		const auto byte = addr.ConstRef<uint8_t>();
 		if ((byte == 0x2E || byte == 0x36 || byte == 0x26 || byte == 0x64 || byte == 0x65) && !result.prefixSeg)
 		{
 			result.prefixSeg = true;
@@ -332,13 +330,13 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 		{
 			// REX must be the last prefix before opcode, so fallthrough to break.
 			result.prefixRex = true;
-			++instPtr;
+			++addr;
 		}
 		break;
 	}
 
 	std::optional<OpcodeDefinition> matchedOp;
-	const OpcodeLookAhead lookAhead(instPtr);  // prefetch stuff
+	const OpcodeLookAhead lookAhead(addr);  // prefetch stuff
 
 	// Match opcode in k_opDefTable
 	for (const OpcodeDefinition& opDef : k_opDefTable)
@@ -437,7 +435,7 @@ namespace gan
 {
 
 
-InstructionDecoder::InstructionDecoder(Arch arch, MemAddr address)
+InstructionDecoder::InstructionDecoder(Arch arch, ConstMemAddr address)
 	: m_instPtr(address)
 	, m_arch(arch)
 {

@@ -67,7 +67,7 @@ DEFINE_TESTSUITE_START(Breakpoint)
 
 	DEFINE_TEST_START(InstallBP)
 	{
-		ASSERT(gan::HWBreakpoint::Enable(GetCurrentThread(), GetCurrentProcess, gan::HWBreakpointSlot::DR3));
+		ASSERT(gan::HWBreakpoint::Enable(GetCurrentThread(), gan::ConstMemAddr{ GetCurrentProcess }, gan::HWBreakpointSlot::DR3));
 		t_isBpHit = false;
 		GetCurrentProcess();
 		EXPECT(t_isBpHit);
@@ -77,7 +77,7 @@ DEFINE_TESTSUITE_START(Breakpoint)
 
 	DEFINE_TEST_START(UninstallBP)
 	{
-		ASSERT(gan::HWBreakpoint::Enable(GetCurrentThread(), GetCurrentProcess, gan::HWBreakpointSlot::DR3));
+		ASSERT(gan::HWBreakpoint::Enable(GetCurrentThread(), gan::ConstMemAddr{ GetCurrentProcess }, gan::HWBreakpointSlot::DR3));
 		ASSERT(gan::HWBreakpoint::Disable(GetCurrentThread(), gan::HWBreakpointSlot::DR3));
 		t_isBpHit = false;
 		GetCurrentProcess();

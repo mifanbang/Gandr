@@ -68,17 +68,17 @@ struct InstructionLengthDetails
 class InstructionDecoder
 {
 public:
-	InstructionDecoder(Arch arch, MemAddr address);
+	InstructionDecoder(Arch arch, ConstMemAddr address);
 
 	// Using build's target platform as arch
-	explicit InstructionDecoder(MemAddr address)
+	explicit InstructionDecoder(ConstMemAddr address)
 		: InstructionDecoder(k_64bit ? Arch::Amd64 : Arch::IA32, address)
 	{ }
 
 	std::optional<InstructionLengthDetails> GetNextLength();
 
 private:
-	MemAddr m_instPtr;
+	ConstMemAddr m_instPtr;
 	Arch m_arch;
 };
 

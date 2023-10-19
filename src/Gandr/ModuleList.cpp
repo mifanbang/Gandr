@@ -53,7 +53,7 @@ namespace gan
 
 
 ModuleInfo::ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry)
-	: baseAddr(moduleEntry.modBaseAddr)
+	: baseAddr(ConstMemAddr{ moduleEntry.modBaseAddr })
 	, size(moduleEntry.modBaseSize)
 	, imageName(moduleEntry.szModule)
 	, imagePath(moduleEntry.szExePath)

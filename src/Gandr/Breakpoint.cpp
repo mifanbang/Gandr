@@ -41,7 +41,7 @@ constexpr size_t GetMaskFromSlot(gan::HWBreakpointSlot slot)
 }
 
 
-bool UpdateDebugRegisters(gan::WinHandle hThread, gan::MemAddr address, gan::HWBreakpointSlot slot, Dr7UpdateOp opDr7)
+bool UpdateDebugRegisters(gan::WinHandle hThread, gan::ConstMemAddr address, gan::HWBreakpointSlot slot, Dr7UpdateOp opDr7)
 {
 	::CONTEXT ctx;
 	ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
@@ -49,8 +49,8 @@ bool UpdateDebugRegisters(gan::WinHandle hThread, gan::MemAddr address, gan::HWB
 		return false;
 
 	// Write to the corresponding register field in "ctx".
-	auto* ptrRegInCtx = gan::MemAddr(&ctx.Dr0).As<gan::IntMemAddr>() + static_cast<uint8_t>(slot);
-	*ptrRegInCtx = address;
+	auto ptrRegInCtx = gan::MemAddr{ &ctx.Dr0 }.Offset(sizeof(gan::MemAddr) * static_cast<uint8_t>(slot));
+	ptrRegInCtx.Ref<gan::ConstMemAddr>() = address;
 
 	// Setup control register
 	if (opDr7 == Dr7UpdateOp::Enable)
@@ -73,15 +73,15 @@ namespace gan
 
 
 
-bool HWBreakpoint::Enable(WinHandle thread, MemAddr address, HWBreakpointSlot slot)
+bool HWBreakpoint::Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot)
 {
-	return UpdateDebugRegisters(thread, address, slot, Dr7UpdateOp::Enable);
+	return UpdateDebugRegisters(thread, addr, slot, Dr7UpdateOp::Enable);
 }
 
 
 bool HWBreakpoint::Disable(WinHandle thread, HWBreakpointSlot slot)
 {
-	return UpdateDebugRegisters(thread, nullptr, slot, Dr7UpdateOp::Disable);
+	return UpdateDebugRegisters(thread, ConstMemAddr{ }, slot, Dr7UpdateOp::Disable);
 }
 
 

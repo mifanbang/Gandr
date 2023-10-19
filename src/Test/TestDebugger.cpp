@@ -44,7 +44,7 @@ DEFINE_TESTSUITE_START(Debugger)
 		wchar_t systemPath[MAX_PATH];
 		GetSystemDirectory(systemPath, _countof(systemPath));
 		const std::wstring imagePath = std::wstring(systemPath) + L"\\notepad.exe";
-	
+
 		// For later use
 		gan::DebugSession::Identifier pid;
 		gan::AutoWinHandle process(nullptr);

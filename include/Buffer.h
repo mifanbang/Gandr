@@ -32,16 +32,16 @@ class Buffer
 public:
 	constexpr static size_t k_minSize = 128;  // 128 B
 
-	// factory function
+	// Factory function
 	static std::unique_ptr<Buffer> Allocate(size_t size);
 
 	~Buffer();
 
-	// non-copyable & non-movable
-	Buffer(const Buffer& other) = delete;
-	Buffer(Buffer&& other) = delete;
-	Buffer& operator=(const Buffer& other) = delete;
-	Buffer& operator=(Buffer&& other) = delete;
+	// Non-copyable & non-movable, since there can be no invalidated buffer
+	Buffer(const Buffer&) = delete;
+	Buffer(Buffer&&) = delete;
+	Buffer& operator=(const Buffer&) = delete;
+	Buffer& operator=(Buffer&&) = delete;
 
 	operator const uint8_t*() const	{ return m_data; }
 	operator uint8_t*()				{ return m_data; }
@@ -55,7 +55,6 @@ public:
 
 private:
 	Buffer(size_t capacity, size_t size, uint8_t* addr);
-
 
 	size_t m_capacity;
 	size_t m_size;  // size in use

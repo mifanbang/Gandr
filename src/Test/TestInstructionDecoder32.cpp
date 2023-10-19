@@ -39,7 +39,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		const static uint8_t k_inRexMovzxFromDisp32[] { 0x48, 0x0F, 0xB6, 0x05, 0x11, 0x22, 0x33, 0x44 };
 
 		// A single-byte DEC instruction should be decoded instead of a REX prefix
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inRexMovzxFromDisp32);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inRexMovzxFromDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(!lengthDetails->prefixRex);
@@ -60,7 +60,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// mov  dword ptr ds:[44332211h], 88776655h
 		const static uint8_t k_inMovImm32ToDisp32[] { 0xC7, 0x05, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inMovImm32ToDisp32);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovImm32ToDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -78,7 +78,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// movzx  eax, byte ptr ds:[44332211h]
 		const static uint8_t k_inMovzxFromDisp32[] { 0x0F, 0xB6, 0x05, 0x11, 0x22, 0x33, 0x44 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inMovzxFromDisp32);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovzxFromDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -95,7 +95,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// push  dword ptr ds:[44332211h]
 		const static uint8_t k_inPushMem[] { 0xFF, 0x35, 0x11, 0x22, 0x33, 0x44 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inPushMem);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inPushMem });
 		auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -113,7 +113,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// push  dword ptr ds:[44332211h]
 		const static uint8_t k_inPushMem[] { 0xFF, 0x34, 0x25, 0x11, 0x22, 0x33, 0x44 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inPushMem);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inPushMem });
 		auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -135,7 +135,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// mov  dword ptr ds:[44332211h], 88776655h
 		const static uint8_t k_inMovImm32ToMem32[] { 0xC7, 0x04, 0x25, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inMovImm32ToMem32);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovImm32ToMem32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -153,7 +153,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// mov  dword ptr [esp + 4], 12345678h
 		const static uint8_t k_inMovImm32ToDisp8[] { 0xC7, 0x44, 0x24, 0x04, 0x78, 0x56, 0x34, 0x12 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inMovImm32ToDisp8);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovImm32ToDisp8 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -171,7 +171,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// jmp  dword ptr [ebp + 12h]
 		const static uint8_t k_inJmpNearAbsIndir[] { 0xFF, 0x64, 0x25, 0x12 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inJmpNearAbsIndir);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inJmpNearAbsIndir });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(lengthDetails->modRegRm);
@@ -190,7 +190,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// jmp  [eip + 44332211h]
 		const static uint8_t k_inJmpNearRel[] { 0xE9, 0x11, 0x22, 0x33, 0x44 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inJmpNearRel);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inJmpNearRel });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(!lengthDetails->modRegRm);
@@ -209,7 +209,7 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// push  eax
 		const static uint8_t k_inPushR_Eax[] { 0x50 };
 
-		gan::InstructionDecoder decoder(gan::Arch::IA32, k_inPushR_Eax);
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inPushR_Eax });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
 		EXPECT(!lengthDetails->dispNeedsFixup);

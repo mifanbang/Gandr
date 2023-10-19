@@ -48,7 +48,7 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnProcessCreated(const CREA
 	m_hMainThread = procInfo.hThread;
 
 	// install a hardware breakpoint at entry point
-	HWBreakpoint::Enable(m_hMainThread, procInfo.lpStartAddress, HWBreakpointSlot::DR0);
+	HWBreakpoint::Enable(m_hMainThread, ConstMemAddr{ procInfo.lpStartAddress }, HWBreakpointSlot::DR0);
 
 	return ContinueStatus::ContinueThread;
 }

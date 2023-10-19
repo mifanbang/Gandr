@@ -93,17 +93,17 @@ DEFINE_TESTSUITE_START(Buffer)
 		const auto buffer = gan::Buffer::Allocate(1 << 20);  // 1 MB
 		ASSERT(buffer);
 
-		gan::MemAddr bufferData = buffer->GetData();
-		*bufferData.As<uint64_t>() = k_magicNumber;
+		gan::MemAddr bufferData{ buffer->GetData() };
+		bufferData.Ref<uint64_t>() = k_magicNumber;
 
 		ASSERT(buffer->Resize(1 << 21));
 		EXPECT(buffer->GetCapacity() == 1 << 22);
 		EXPECT(buffer->GetSize() == 1 << 21);
 
 		// Make sure data were copied to the new memory location
-		gan::MemAddr bufferDataNew = buffer->GetData();
+		gan::MemAddr bufferDataNew{ buffer->GetData() };
 		EXPECT(bufferData != bufferDataNew);
-		EXPECT(*bufferDataNew.As<uint64_t>() == k_magicNumber);
+		EXPECT(bufferDataNew.Ref<uint64_t>() == k_magicNumber);
 	}
 	DEFINE_TEST_END
 

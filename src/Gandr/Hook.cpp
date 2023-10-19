@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define NOMINMAX
-
 #include <Hook.h>
 
 #include <InstructionDecoder.h>
@@ -83,7 +81,7 @@ struct Displacement32
 {
 	uint8_t offsetData;  // offset in prolog where a disp32 locates
 	uint8_t offsetBase;  // offset in prolog from where a new disp should be calculated
-	gan::MemAddr targetAddr;  // absolute address to target memory address
+	gan::ConstMemAddr targetAddr;  // absolute address to target memory address
 };
 
 
@@ -119,7 +117,7 @@ public:
 		gan::MemAddr trampoline;
 		PrologStrategy strategy;
 
-		__forceinline bool IsValid() const	{ return trampoline; }
+		__forceinline bool IsValid() const	{ return static_cast<bool>(trampoline); }
 		__forceinline operator bool() const	{ return IsValid(); }
 	};
 
@@ -136,39 +134,38 @@ public:
 		return true;
 	}
 
-	gan::MemAddr GetTrampoline(gan::MemAddr funcAddr) const
+	gan::ConstMemAddr GetTrampoline(gan::MemAddr funcAddr) const
 	{
 		std::shared_lock lock(m_mutex);
 
 		const auto record = LookUp(funcAddr);
 		return record ?
-			record.trampoline :
-			gan::k_nullptr;
+			gan::ConstMemAddr{ record->trampoline } :
+			gan::ConstMemAddr{ nullptr };
 	}
 
-	Record LookUp(const gan::MemAddr funcAddr) const
+	std::optional<Record> LookUp(const gan::MemAddr funcAddr) const
 	{
 		std::shared_lock lock(m_mutex);
 
-		Record output;
 		const auto& itr = m_records.find(funcAddr);
-		if (itr != m_records.end())
-			output = itr->second;
-		return output;
+		return itr != m_records.end() ?
+			std::make_optional<Record>(itr->second) :
+			std::nullopt;
 	}
 
-	Record Unregister(const gan::MemAddr funcAddr)
+	std::optional<Record> Unregister(const gan::MemAddr funcAddr)
 	{
 		std::unique_lock lock(m_mutex);
 
-		Record unregistered;
 		const auto& itr = m_records.find(funcAddr);
 		if (itr != m_records.end())
 		{
-			unregistered = itr->second;
+			auto unregisteredRecord = itr->second;
 			m_records.erase(itr);
+			return unregisteredRecord;
 		}
-		return unregistered;
+		return std::nullopt;
 	}
 
 private:
@@ -196,13 +193,15 @@ public:
 	constexpr static auto k_trampolineSize = Trampoline::k_size;
 
 	// Try allocating a trampoline within the range of 32-bit offset from "desiredAddress".
-	gan::MemAddr Register(const Trampoline& trampoline, const gan::MemRange& desiredAddrRange)
+	gan::MemAddr Register(const Trampoline& trampoline, gan::MemRange desiredAddrRange)
 	{
 		std::unique_lock lock(m_mutex);
 
-		int pageIndex = FindRelevantPageInRange(desiredAddrRange);
-		if (pageIndex < 0)
-			pageIndex = static_cast<int>(AddNewPage(desiredAddrRange));
+		const auto pageIndex =
+			FindRelevantPageInRange(desiredAddrRange)
+			.value_or(
+				AddNewPage(desiredAddrRange)
+			);
 		assert(m_freeLists[pageIndex].size() > 0);
 
 		// get a free slot
@@ -210,7 +209,7 @@ public:
 		m_freeLists[pageIndex].pop_back();
 
 		auto trampolineAddr = m_pages[pageIndex].Offset(slot.pageOffset);
-		memcpy(trampolineAddr, trampoline.opcode, k_trampolineSize);
+		memcpy(trampolineAddr.Ptr<uint8_t>(), trampoline.opcode, k_trampolineSize);
 
 		assert(m_records.find(trampolineAddr) == m_records.end());
 		m_records.try_emplace(trampolineAddr, pageIndex);
@@ -227,9 +226,9 @@ public:
 			return;
 
 		const auto pageIndex = itr->second;
-		const gan::IntMemAddr offset = addr - m_pages[pageIndex];  // negative offset will be treated as a big, positve offset
+		const auto offset = static_cast<unsigned int>(addr - m_pages[pageIndex]);  // negative offset will be treated as a big, positve offset
 		assert(offset <= m_allocGranularity - k_trampolineSize);
-		m_freeLists[pageIndex].emplace_back(FreeSlot { static_cast<unsigned int>(offset) });
+		m_freeLists[pageIndex].emplace_back(offset);
 		m_records.erase(itr);
 	}
 
@@ -250,68 +249,72 @@ private:
 	}
 
 	// Assumes that "desiredAddrRange" is aligned with the result from GetAllocGranularity()
-	static gan::MemAddr FindPageForAlloc(const gan::MemRange& desiredAddrRange)
+	static gan::MemAddr FindPageForAlloc(gan::MemRange desiredAddrRange)
 	{
 		if constexpr (gan::k_64bit)
 		{
 			const auto allocGranularity = GetAllocGranularity();
-			const gan::IntMemAddr addrToFindStart = desiredAddrRange.min;
-			const gan::IntMemAddr addrToFindEnd = desiredAddrRange.max.Offset(-allocGranularity);
+			const auto addrToFindStart = desiredAddrRange.min;
+			const auto addrToFindEnd = desiredAddrRange.max.Offset(-allocGranularity);
 
 			// Iterate through pages until hitting one with the MEM_FREE state.
 			MEMORY_BASIC_INFORMATION memInfo;
-			for (gan::IntMemAddr addr = addrToFindStart; addr < addrToFindEnd; )
+			for (auto addr = addrToFindStart; addr < addrToFindEnd; )
 			{
-				const auto result = ::VirtualQuery(gan::MemAddr(addr), &memInfo, sizeof(memInfo));
+				const auto result = ::VirtualQuery(addr.ConstPtr<uint8_t>(), &memInfo, sizeof(memInfo));
 				if (result == 0)
 				{
-					addr += allocGranularity;
+					// VirtualQuery failed with the address passed in
+					addr = addr.Offset(allocGranularity);
 					continue;
 				}
 
 				if (memInfo.State == MEM_FREE)
+				{
 					return addr;
+				}
 				else
 				{
 					const auto offset = AlignMemAddrWithGranularity(memInfo.RegionSize, allocGranularity);
-					addr = gan::MemAddr(memInfo.BaseAddress).Offset(offset);
+					addr = gan::MemAddr{ memInfo.BaseAddress }.Offset(offset);
 				}
 			}
-			return gan::k_nullptr;  // Not found
+			return gan::MemAddr{ nullptr };  // Not found
 		}
 		else
-			return gan::k_nullptr;  // Don't care 32 bit
+			return gan::MemAddr{ nullptr };  // Don't care in 32 bit
 	}
 
-	static gan::IntMemAddr AlignMemAddrWithGranularity(const gan::IntMemAddr addr, unsigned int granularity)
+	static size_t GenerateMaskFromGranularity(unsigned int granularity)
 	{
-		const auto lzcnt = _tzcnt_u32(granularity);
-		const gan::IntMemAddr offsetMask = gan::IntMemAddr(-1) << lzcnt;
-		assert(_lzcnt_u32(granularity) + lzcnt == 31);  // "granularity" must a power of 2.
+		const auto tzcnt = _tzcnt_u32(granularity);
+		assert(_lzcnt_u32(granularity) + tzcnt == 31);  // "granularity" must a power of 2.
+		return std::numeric_limits<size_t>::max() << tzcnt;
+	}
 
+	static size_t AlignMemAddrWithGranularity(const size_t addr, unsigned int granularity)
+	{
+		const auto offsetMask = GenerateMaskFromGranularity(granularity);
 		return (addr & offsetMask) + (addr & ~offsetMask ? granularity : 0);
 	}
 
-	static gan::MemRange AlignMemRangeWithGranularity(const gan::MemRange& memRange, unsigned int granularity)
+	static gan::MemRange AlignMemRangeWithGranularity(gan::MemRange memRange, unsigned int granularity)
 	{
-		const auto lzcnt = _tzcnt_u32(granularity);
-		const gan::IntMemAddr offsetMask = gan::IntMemAddr(-1) << lzcnt;
-		assert(_lzcnt_u32(granularity) + lzcnt == 31);  // "granularity" must a power of 2.
-
-		const gan::IntMemAddr rangeMin = memRange.min;
-		const gan::IntMemAddr rangeMax = memRange.max;
+		auto offsetMask = GenerateMaskFromGranularity(granularity);
+		const auto rangeMin = memRange.min;
+		const auto rangeMax = memRange.max;
 		return {
-			(rangeMin & offsetMask) + (rangeMin & ~offsetMask ? granularity : 0),
-			(rangeMax & offsetMask)  // Not to return an address higher than memRange.max
+			.min = (rangeMin & offsetMask).Offset(rangeMin & ~offsetMask ? granularity : 0),
+			.max = (rangeMax & offsetMask)  // Not to return an address higher than memRange.max
 		};
 	}
 
 	// Assumes that caller has already obtained a lock
-	int FindRelevantPageInRange(const gan::MemRange& desiredAddrRange) const
+	std::optional<unsigned int> FindRelevantPageInRange(gan::MemRange desiredAddrRange) const
 	{
-		for (int i = 0; i < static_cast<int>(m_pages.size()); ++i)
+		for (unsigned int i = 0; i < static_cast<unsigned int>(m_pages.size()); ++i)
 		{
-			if (m_freeLists[i].size() == 0)
+			if (m_freeLists[i].empty())
 				continue;
 
 			if constexpr (gan::k_64bit)
@@ -322,16 +325,20 @@ private:
 			else
 				return i;
 		}
-		return -1;
+		return std::nullopt;
 	}
 
-	// Assumes that caller has already obtained a lock
-	unsigned int AddNewPage(const gan::MemRange& desiredAddrRange)
+	// Assume: caller has already obtained a lock
+	unsigned int AddNewPage(gan::MemRange desiredAddrRange)
 	{
 		const gan::MemRange fixedAddrRange = AlignMemRangeWithGranularity(desiredAddrRange, m_allocGranularity);
 
-		gan::MemAddr desiredAddress = FindPageForAlloc(fixedAddrRange);
-		gan::MemAddr newPageAddr = ::VirtualAlloc(desiredAddress, m_allocGranularity, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+		auto desiredAddress{ FindPageForAlloc(fixedAddrRange) };
+		gan::MemAddr newPageAddr{ ::VirtualAlloc(
+			desiredAddress.Ptr<uint8_t>(),
+			m_allocGranularity,
+			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE
+		) };
 		assert(newPageAddr);
 
 		m_pages.emplace_back(newPageAddr);
@@ -391,7 +398,7 @@ public:
 			// mov rax, imm64
 			out[0] = 0x48;  // REX.W
 			out[1] = 0xB8;  // mov
-			*reinterpret_cast<uint64_t*>(out + 2) = targetAddr;
+			gan::MemAddr{ out + 2 }.Ref<gan::MemAddr>() = targetAddr;
 
 			// jmp rax
 			out[10] = 0xFF;
@@ -411,8 +418,9 @@ public:
 			static_assert(k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
 
-			const uint32_t addrLow = static_cast<uint32_t>(static_cast<gan::IntMemAddr>(targetAddr));
-			const uint32_t addrHigh = static_cast<uint32_t>(static_cast<gan::IntMemAddr>(targetAddr) >> 32);
+			const auto addr64 = reinterpret_cast<uint64_t>(targetAddr.ConstPtr());
+			const auto addrLow = static_cast<uint32_t>(addr64);
+			const auto addrHigh = static_cast<uint32_t>(addr64 >> 32ull);
 
 			// push imm32(lower 32 bits of addr)
 			out[0] = 0x68;  // push
@@ -442,7 +450,7 @@ public:
 
 			// push imm32
 			out[0] = 0x68;  // push
-			*reinterpret_cast<uint32_t*>(out + 1) = targetAddr;  // This causes truncation in amd64 so don't do that.
+			gan::MemAddr{ out + 1 }.Ref<gan::MemAddr>() = targetAddr;
 
 			// ret
 			out[5] = 0xC3;
@@ -503,8 +511,8 @@ PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 
 		for (intptr_t i = k_lenRelShortJmpToAux; i < 127 + k_lenRelShortJmpToAux - k_lenAbsoluteJmpRax; ++i)
 		{
-			const uint8_t* start = origFunc.Offset(i);
-			const uint8_t* end = origFunc.Offset(i + k_lenAbsoluteJmpRax);
+			auto start = origFunc.Offset(i).ConstPtr<uint8_t>();
+			auto end = origFunc.Offset(i + k_lenAbsoluteJmpRax).ConstPtr<uint8_t>();
 			if (std::all_of(start, end, [](uint8_t c) { return c == 0xCC; } ))
 			{
 				return {
@@ -546,9 +554,10 @@ Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologSt
 bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data)
 {
 	DWORD oldAttr, dummy;
-	::VirtualProtect(address, data.size(), PAGE_EXECUTE_READWRITE, &oldAttr);
-	memcpy(address, data.data(), data.size());
-	::VirtualProtect(address, data.size(), oldAttr, &dummy);
+	auto rawPtr = address.Ptr<uint8_t>();
+	::VirtualProtect(rawPtr, data.size(), PAGE_EXECUTE_READWRITE, &oldAttr);
+	memcpy(rawPtr, data.data(), data.size());
+	::VirtualProtect(rawPtr, data.size(), oldAttr, &dummy);
 	return true;
 }
 
@@ -596,7 +605,7 @@ public:
 };
 
 
-std::optional<PrologWithDisp> CopyProlog(gan::MemAddr addr, uint8_t length)
+std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 {
 	PrologWithDisp copiedProlog;
 
@@ -611,7 +620,7 @@ std::optional<PrologWithDisp> CopyProlog(gan::MemAddr addr, uint8_t length)
 			{
 				memcpy(
 					copiedProlog.opcode + copiedProlog.length,
-					addr.Offset(copiedProlog.length),
+					addr.Offset(copiedProlog.length).ConstPtr<uint8_t>(),
 					nextInstLen
 				);
 				copiedProlog.length += nextInstLen;
@@ -625,7 +634,7 @@ std::optional<PrologWithDisp> CopyProlog(gan::MemAddr addr, uint8_t length)
 					// Disp and imm are the last two parts of an instruction
 					const uint8_t offsetData = copiedProlog.length - nextInstInfo->lengthImm - nextInstInfo->lengthDisp;
 
-					const int32_t disp32 = *addr.Offset(offsetData).As<int32_t>();  // Disp32 field in instruction
+					const auto disp32 = addr.Offset(offsetData).ConstRef<int32_t>();  // Disp32 field in instruction
 					const Displacement32 newDispEntry {
 						offsetData,
 						copiedProlog.length,
@@ -650,28 +659,28 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 	if constexpr (gan::k_64bit)
 	{
 		// Combine "tramAddr" and "displacements" into a uniformly-typed vector.
-		std::vector<gan::IntMemAddr> addresses;
+		std::vector<gan::MemAddr> addresses;
 		addresses.reserve(displacements.size() + 1);
 		addresses.emplace_back(tramAddr);
 		std::transform(
 			displacements.begin(),
 			displacements.end(),
 			std::back_inserter(addresses),
-			[](const Displacement32& disp) -> gan::IntMemAddr {
-				return disp.targetAddr;
+			[](const Displacement32& disp) {
+				return disp.targetAddr.ConstCast();
 			}
 		);
 
 		// Get max and min.
-		gan::IntMemAddr addrMax = 0;
-		gan::IntMemAddr addrMin = -1;
-		std::for_each(addresses.begin(), addresses.end(), [&addrMax](gan::IntMemAddr addr) { addrMax = std::max(addrMax, addr); } );
-		std::for_each(addresses.begin(), addresses.end(), [&addrMin](gan::IntMemAddr addr) { addrMin = std::min(addrMin, addr); } );
+		auto [itrMin, itrMax] = std::minmax_element(addresses.begin(), addresses.end(), std::less<gan::MemAddr>{ });
+		assert(itrMin != addresses.end());
+		assert(itrMax != addresses.end());
 
-		// The range can now be evaluated from max and min.
-		gan::MemRange addrRange {
-			addrMax - 0x7FFF'0000ull,  // The MSB in disp32 is sign bit.
-			addrMin + 0x7FFF'0000ull
+		// min and max must be within the range addressable by disp32, and since
+		// the MSB in disp32 is a sign bit, their distance can't go beyond 0x7FFF'FFFF.
+		gan::MemRange addrRange{
+			.min = itrMax->Offset(-0x7FFF'0000ll),  // min must be addressable by disp32 from itrMax,
+			.max = itrMin->Offset(0x7FFF'0000ll)    // and the same for max.
 		};
 		assert(addrRange.max > addrRange.min);
 		return addrRange;
@@ -679,7 +688,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 	else
 	{
 		// Easy enough for 32-bit system.
-		return { 0x1'0000u, 0x7FFF'0000u };
+		return { gan::MemAddr{ (void*)0x1'0000u }, gan::MemAddr{ (void*)0x7FFF'0000u } };
 	}
 }
 
@@ -689,9 +698,9 @@ void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacem
 	for (const Displacement32& disp : displacements)
 	{
 		const auto newDisplacement = static_cast<uint32_t>(
-			disp.targetAddr - trampolineAddr.Offset(disp.offsetBase)
+			disp.targetAddr - gan::ConstMemAddr{ trampolineAddr.Offset(disp.offsetBase) }
 		);
-		*trampolineAddr.Offset(disp.offsetData).As<uint32_t>() = newDisplacement;
+		trampolineAddr.Offset(disp.offsetData).Ref<uint32_t>() = newDisplacement;
 	}
 }
 
@@ -751,7 +760,7 @@ Hook::OpResult Hook::Install()
 
 	// Generate a new prolog and backup the original one.
 	const auto hookProlog = GenerateHookProlog(m_funcOrig, m_funcHook, strategy);
-	const auto origProlog = CopyProlog(m_funcOrig, hookProlog.length);
+	const auto origProlog = CopyProlog(ConstMemAddr{ m_funcOrig }, hookProlog.length);
 	if (!origProlog)
 		return OpResult::PrologNotSupported;
 
@@ -764,18 +773,18 @@ Hook::OpResult Hook::Install()
 
 	// Allocate memory and fix up displacements for trampoline.
 	TrampolineRegistry& trampolineReg = TrampolineRegistry::GetInstance();
-	void* trampolineAddr = trampolineReg.Register(trampoline, desiredTramAddrRange);
-	if (trampolineAddr == nullptr)
+	auto trampolineAddr = trampolineReg.Register(trampoline, desiredTramAddrRange);
+	if (!trampolineAddr)
 		return OpResult::TrampolineAllocFailed;
 	if (origProlog->displacements.size() > 0)
 		FixupDisplacements(trampolineAddr, origProlog->displacements);
 
 	// Register hook and modify memory
 	HookRegistry::Record newHookRecord {
-		*origProlog,
-		hookProlog,
-		trampolineAddr,
-		strategy
+		.original = *origProlog,
+		.modified = hookProlog,
+		.trampoline = trampolineAddr,
+		.strategy = strategy
 	};
 	if (hookReg.Register(m_funcOrig, newHookRecord))
 	{
@@ -803,28 +812,28 @@ Hook::OpResult Hook::Uninstall()
 	HookRegistry& hookReg = HookRegistry::GetInstance();
 	if (const auto record = hookReg.LookUp(m_funcOrig))
 	{
-		const Prolog& expectedHookProlog = record.modified;
+		const Prolog& expectedHookProlog = record->modified;
 
 		// Make sure the prolog altered by our hook hasn't been modified by others.
-		if (memcmp(m_funcOrig, expectedHookProlog.opcode, expectedHookProlog.length) != 0)
+		if (memcmp(m_funcOrig.Ptr<uint8_t>(), expectedHookProlog.opcode, expectedHookProlog.length) != 0)
 			return OpResult::PrologMismatched;
 
 		// We don't expect user making hook modification across threads. Thus no check
 		// is made against the results from LookUp() and Unregister().
 		hookReg.Unregister(m_funcOrig);
 
-		const Prolog& origProlog = record.original;
+		const Prolog& origProlog = record->original;
 		if (WriteMemory(m_funcOrig, std::span(origProlog.opcode, origProlog.length)))
-			TrampolineRegistry::GetInstance().Unregister(record.trampoline);
+			TrampolineRegistry::GetInstance().Unregister(record->trampoline);
 		else
 		{
 			// Failed to write memory somehow. Have to restore hook registry.
-			hookReg.Register(m_funcOrig, record);
+			hookReg.Register(m_funcOrig, *record);
 			return OpResult::AccessDenied;
 		}
 
-		if (AuxiliaryPrologHelper::ShouldUseAuxProlog(record.strategy.type))
-			AuxiliaryPrologHelper::Delete(m_funcOrig, record.strategy.imm8);
+		if (AuxiliaryPrologHelper::ShouldUseAuxProlog(record->strategy.type))
+			AuxiliaryPrologHelper::Delete(m_funcOrig, record->strategy.imm8);
 	}
 
 	m_hooked = false;
@@ -832,9 +841,9 @@ Hook::OpResult Hook::Uninstall()
 }
 
 
-MemAddr Hook::GetTrampolineAddr(MemAddr origFunc)
+ConstMemAddr Hook::GetTrampolineAddr(ConstMemAddr origFunc)
 {
-	return HookRegistry::GetInstance().GetTrampoline(origFunc);
+	return HookRegistry::GetInstance().GetTrampoline(origFunc.ConstCast());
 }
 
 

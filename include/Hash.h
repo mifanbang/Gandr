@@ -53,7 +53,7 @@ class Hasher
 public:
 	// generate the SHA256 hash for a given buffer.
 	// returns a Windows error code indicating the result of the last internal system call.
-	static WinErrorCode GetSHA(const void* data, size_t size, Hash<256>& out);
+	static WinErrorCode GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out);
 };
 
 
