@@ -307,7 +307,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 {
 	gan::InstructionLengthDetails result;
 
-	// extract all prefixes
+	// Extract all prefixes
 	for (; ; ++addr)
 	{
 		const auto byte = addr.ConstRef<uint8_t>();
@@ -336,7 +336,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 	}
 
 	std::optional<OpcodeDefinition> matchedOp;
-	const OpcodeLookAhead lookAhead(addr);  // prefetch stuff
+	const OpcodeLookAhead lookAhead(addr);  // Prefetch stuff
 
 	// Match opcode in k_opDefTable
 	for (const OpcodeDefinition& opDef : k_opDefTable)
@@ -375,7 +375,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 		&& lookAhead.modRegRM.mod != 0b11
 		&& lookAhead.modRegRM.rm == 0b100;
 
-	// displacement
+	// Displacement
 	if (HasAnyFlagIn(matchedOp->operands, Operand::R_M))
 	{
 		if (lookAhead.modRegRM.mod == 0b01)
@@ -391,7 +391,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 			result.lengthDisp = lookAhead.modRegRM.mod == 0b01 ? 1 : 4;
 	}
 
-	// immediate
+	// Immediate
 	if (HasAnyFlagIn(matchedOp->operands, Operand::Imm8))
 		result.lengthImm = 1;
 	else if (HasAnyFlagIn(matchedOp->operands, Operand::Imm16))
@@ -408,7 +408,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 	// This is a very rare case but it's simple enough to support.
 	else if (HasAnyFlagIn(matchedOp->operands, Operand::Moffs))
 	{
-		if constexpr (gan::Is64())
+		if (arch == gan::Arch::Amd64)
 			result.lengthImm = result.prefix67 ? 4 : 8;
 		else
 			result.lengthImm = result.prefix67 ? 2 : 4;

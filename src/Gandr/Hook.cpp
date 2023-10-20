@@ -688,7 +688,10 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 	else
 	{
 		// Easy enough for 32-bit system.
-		return { gan::MemAddr{ (void*)0x1'0000u }, gan::MemAddr{ (void*)0x7FFF'0000u } };
+		return {
+			gan::MemAddr{ reinterpret_cast<void*>(0x1'0000u) },
+			gan::MemAddr{ reinterpret_cast<void*>(0x7FFF'0000u) }
+		};
 	}
 }
 

@@ -37,16 +37,41 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		// 32-bit mode: dec  eax
 		//				movzx  eax, byte ptr ds:[44332211h]
 		const static uint8_t k_inRexMovzxFromDisp32[] { 0x48, 0x0F, 0xB6, 0x05, 0x11, 0x22, 0x33, 0x44 };
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inRexMovzxFromDisp32 });
 
 		// A single-byte DEC instruction should be decoded instead of a REX prefix
-		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inRexMovzxFromDisp32 });
-		const auto lengthDetails = decoder.GetNextLength();
-		ASSERT(lengthDetails);
-		EXPECT(!lengthDetails->prefixRex);
-		EXPECT(lengthDetails->lengthOp == 1);
-		EXPECT(lengthDetails->lengthDisp == 0);
-		EXPECT(lengthDetails->lengthImm == 0);
-		EXPECT(lengthDetails->GetLength() == 1);
+		{
+			const auto lengthDetails = decoder.GetNextLength();
+			ASSERT(lengthDetails);
+			EXPECT(!lengthDetails->prefixSeg);
+			EXPECT(!lengthDetails->prefix66);
+			EXPECT(!lengthDetails->prefix67);
+			EXPECT(!lengthDetails->prefixRex);
+			EXPECT(!lengthDetails->modRegRm);
+			EXPECT(!lengthDetails->sib);
+			EXPECT(!lengthDetails->dispNeedsFixup);
+			EXPECT(lengthDetails->lengthOp == 1);
+			EXPECT(lengthDetails->lengthDisp == 0);
+			EXPECT(lengthDetails->lengthImm == 0);
+			EXPECT(lengthDetails->GetLength() == 1);
+		}
+
+		// The second instruction should be identical to 32-bit version of "MovzxFromDisp32"
+		{
+			const auto lengthDetails = decoder.GetNextLength();
+			ASSERT(lengthDetails);
+			EXPECT(!lengthDetails->prefixSeg);
+			EXPECT(!lengthDetails->prefix66);
+			EXPECT(!lengthDetails->prefix67);
+			EXPECT(!lengthDetails->prefixRex);
+			EXPECT(lengthDetails->modRegRm);
+			EXPECT(!lengthDetails->sib);
+			EXPECT(!lengthDetails->dispNeedsFixup);
+			EXPECT(lengthDetails->lengthOp == 2);
+			EXPECT(lengthDetails->lengthDisp == 4);
+			EXPECT(lengthDetails->lengthImm == 0);
+			EXPECT(lengthDetails->GetLength() == 7);
+		}
 	}
 	DEFINE_TEST_END
 
@@ -63,12 +88,39 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovImm32ToDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 1);
 		EXPECT(lengthDetails->lengthDisp == 4);
 		EXPECT(lengthDetails->lengthImm == 4);
 		EXPECT(lengthDetails->GetLength() == 10);
+	}
+	DEFINE_TEST_END
+
+	DEFINE_TEST_START(MovFromMoff32)
+	{
+		// mov  eax, dword ptr ds:[44332211h]
+		const static uint8_t k_inMovFromMoff32[]{ 0xA1, 0x11, 0x22, 0x33, 0x44 };
+
+		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovFromMoff32 });
+		const auto lengthDetails = decoder.GetNextLength();
+		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
+		EXPECT(!lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
+		EXPECT(!lengthDetails->dispNeedsFixup);
+		EXPECT(lengthDetails->lengthOp == 1);
+		EXPECT(lengthDetails->lengthDisp == 0);
+		EXPECT(lengthDetails->lengthImm == 4);
+		EXPECT(lengthDetails->GetLength() == 5);
 	}
 	DEFINE_TEST_END
 
@@ -81,7 +133,12 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovzxFromDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 2);
 		EXPECT(lengthDetails->lengthDisp == 4);
@@ -98,6 +155,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inPushMem });
 		auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(!lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -116,6 +177,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inPushMem });
 		auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -138,6 +203,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovImm32ToMem32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -156,6 +225,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inMovImm32ToDisp8 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -174,6 +247,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inJmpNearAbsIndir });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -193,6 +270,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inJmpNearRel });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(!lengthDetails->modRegRm);
 		EXPECT(!lengthDetails->sib);
 		EXPECT(lengthDetails->dispNeedsFixup);
@@ -212,6 +293,12 @@ DEFINE_TESTSUITE_START(InstructionDecoder_IA32)
 		gan::InstructionDecoder decoder(gan::Arch::IA32, gan::ConstMemAddr{ k_inPushR_Eax });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
+		EXPECT(!lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 1);
 		EXPECT(lengthDetails->lengthDisp == 0);

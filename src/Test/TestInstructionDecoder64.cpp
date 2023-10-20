@@ -38,7 +38,12 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inMovImm64ToReg64 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
 		EXPECT(lengthDetails->prefixRex);
+		EXPECT(!lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 1);
 		EXPECT(lengthDetails->lengthDisp == 0);
@@ -59,7 +64,12 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inMovImm32ToDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 1);
 		EXPECT(lengthDetails->lengthImm == 4);
@@ -68,17 +78,43 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 	}
 	DEFINE_TEST_END
 
+	DEFINE_TEST_START(MovFromMoff32)
+	{
+		// mov  eax, dword ptr [8877665544332211h]
+		const static uint8_t k_inMovFromMoff32[]{ 0xA1, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
+
+		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inMovFromMoff32 });
+		const auto lengthDetails = decoder.GetNextLength();
+		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
+		EXPECT(!lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
+		EXPECT(!lengthDetails->dispNeedsFixup);
+		EXPECT(lengthDetails->lengthOp == 1);
+		EXPECT(lengthDetails->lengthDisp == 0);
+		EXPECT(lengthDetails->lengthImm == 8);
+		EXPECT(lengthDetails->GetLength() == 9);
+	}
+	DEFINE_TEST_END
+
 	// Two-byte opcode
 	DEFINE_TEST_START(MovzxFromDisp32)
 	{
-		// REX.W movzx  rax, byte ptr [74172A1A21h]
+		// REX.W movzx  rax, byte ptr [rip + 44332211h]
 		const static uint8_t k_inMovzxFromDisp32[] { 0x48, 0x0F, 0xB6, 0x05, 0x11, 0x22, 0x33, 0x44 };
 
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inMovzxFromDisp32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
 		EXPECT(lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 2);
 		EXPECT(lengthDetails->lengthDisp == 4);
@@ -95,6 +131,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inPushMem });
 		auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(!lengthDetails->sib);
 		EXPECT(lengthDetails->dispNeedsFixup);
@@ -113,6 +153,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inPushMem });
 		auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -135,6 +179,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inMovImm32ToMem32 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -153,6 +201,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inMovImm32ToDisp8 });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -171,6 +223,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inJmpNearAbsIndir });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(lengthDetails->modRegRm);
 		EXPECT(lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
@@ -190,6 +246,10 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inJmpNearRel });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
 		EXPECT(!lengthDetails->modRegRm);
 		EXPECT(!lengthDetails->sib);
 		EXPECT(lengthDetails->dispNeedsFixup);
@@ -209,6 +269,12 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 		gan::InstructionDecoder decoder(gan::Arch::Amd64, gan::ConstMemAddr{ k_inPushR_Eax });
 		const auto lengthDetails = decoder.GetNextLength();
 		ASSERT(lengthDetails);
+		EXPECT(!lengthDetails->prefixSeg);
+		EXPECT(!lengthDetails->prefix66);
+		EXPECT(!lengthDetails->prefix67);
+		EXPECT(!lengthDetails->prefixRex);
+		EXPECT(!lengthDetails->modRegRm);
+		EXPECT(!lengthDetails->sib);
 		EXPECT(!lengthDetails->dispNeedsFixup);
 		EXPECT(lengthDetails->lengthOp == 1);
 		EXPECT(lengthDetails->lengthDisp == 0);
