@@ -56,6 +56,9 @@
     <ClInclude Include="include\ModuleList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\PE.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gandr\ProcessList.cpp">
@@ -95,6 +98,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Handle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gandr\PE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

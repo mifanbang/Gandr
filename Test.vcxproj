@@ -180,6 +180,7 @@
     <ClCompile Include="src\Test\TestInstructionDecoder64.cpp" />
     <ClCompile Include="src\Test\TestModuleList.cpp" />
     <ClCompile Include="src\Test\TestMutex.cpp" />
+    <ClCompile Include="src\Test\TestPE.cpp" />
     <ClCompile Include="src\Test\TestProcessList.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -190,6 +190,7 @@
     <ClInclude Include="include\ModuleList.h" />
     <ClInclude Include="include\Mutex.h" />
     <ClInclude Include="include\InstructionDecoder.h" />
+    <ClInclude Include="include\PE.h" />
     <ClInclude Include="include\ProcessList.h" />
     <ClInclude Include="include\Types.h" />
   </ItemGroup>
@@ -206,6 +207,7 @@
     <ClCompile Include="src\Gandr\Hook.cpp" />
     <ClCompile Include="src\Gandr\InstructionDecoder.cpp" />
     <ClCompile Include="src\Gandr\ModuleList.cpp" />
+    <ClCompile Include="src\Gandr\PE.cpp" />
     <ClCompile Include="src\Gandr\ProcessList.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
