@@ -67,6 +67,19 @@ gan::Rva SearchFunctionRvaByName(const gan::ImageExportData::ExportedFunctionLis
 
 DEFINE_TESTSUITE_START(PE)
 
+	DEFINE_TEST_START(TestExeHasNoExport)
+	{
+		auto [hMod, baseAddr] = GetModuleInfo(L"Test.exe");
+		ASSERT(hMod);
+		ASSERT(baseAddr);
+
+		const gan::ConstMemAddr modBaseAddr{ baseAddr };
+		auto peHeaders = gan::PeImageHelper::GetLoadedHeaders(modBaseAddr);
+		ASSERT(peHeaders);
+		EXPECT(!peHeaders->exportData);
+	}
+	DEFINE_TEST_END
+
 	DEFINE_TEST_START(Export_Kernel32_GetCurrentThreadId)
 	{
 		auto [hMod, baseAddr] = GetModuleInfo(L"kernel32");
@@ -76,6 +89,7 @@ DEFINE_TESTSUITE_START(PE)
 		const gan::ConstMemAddr modBaseAddr{ baseAddr };
 		auto peHeaders = gan::PeImageHelper::GetLoadedHeaders(modBaseAddr);
 		ASSERT(peHeaders);
+		ASSERT(peHeaders->exportData);
 
 		constexpr static auto k_funcName = "GetCurrentThreadId"sv;
 		const auto addrLoadedFunction = ::GetProcAddress(hMod, k_funcName.data());
@@ -83,7 +97,7 @@ DEFINE_TESTSUITE_START(PE)
 		EXPECT(
 			addrLoadedFunction ==
 				modBaseAddr
-				.Offset(SearchFunctionRvaByName(peHeaders->exportData.functions, k_funcName))
+				.Offset(SearchFunctionRvaByName(peHeaders->exportData->functions, k_funcName))
 				.ConstPtr<void>()
 		);
 	}
@@ -98,6 +112,7 @@ DEFINE_TESTSUITE_START(PE)
 		const gan::ConstMemAddr modBaseAddr{ baseAddr };
 		auto peHeaders = gan::PeImageHelper::GetLoadedHeaders(modBaseAddr);
 		ASSERT(peHeaders);
+		ASSERT(peHeaders->exportData);
 
 		constexpr static auto k_funcName = "CreateWindowExW"sv;
 		const auto addrLoadedFunction = ::GetProcAddress(hMod, k_funcName.data());
@@ -105,7 +120,7 @@ DEFINE_TESTSUITE_START(PE)
 		EXPECT(
 			addrLoadedFunction ==
 				modBaseAddr
-				.Offset(SearchFunctionRvaByName(peHeaders->exportData.functions, k_funcName))
+				.Offset(SearchFunctionRvaByName(peHeaders->exportData->functions, k_funcName))
 				.ConstPtr<void>()
 		);
 	}

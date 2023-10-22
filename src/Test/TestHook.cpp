@@ -199,6 +199,7 @@ DEFINE_TESTSUITE_START(Hook_Gdi32_AllFunctions)
 		const gan::ConstMemAddr modBaseAddr{ modInfo.lpBaseOfDll };
 		auto peHeaders = gan::PeImageHelper::GetLoadedHeaders(modBaseAddr);
 		ASSERT(peHeaders);
+		ASSERT(peHeaders->exportData);
 
 		// Calculate memory range for the code section. This will be used to determine
 		// whether the exported symbol is a function.
@@ -211,7 +212,7 @@ DEFINE_TESTSUITE_START(Hook_Gdi32_AllFunctions)
 		};
 
 		std::vector<gan::Hook> installedHooks;
-		for (const auto& exportedFunc : peHeaders->exportData.functions)
+		for (const auto& exportedFunc : peHeaders->exportData->functions)
 		{
 			// Skip forwarding and non-code exports
 			if (exportedFunc.forwarding
@@ -228,7 +229,7 @@ DEFINE_TESTSUITE_START(Hook_Gdi32_AllFunctions)
 			const auto installResult = hook.Install();
 			EXPECT(installResult == gan::Hook::OpResult::Hooked || installResult == gan::Hook::OpResult::AddressInUse);
 			if (installResult == gan::Hook::OpResult::Hooked)
-				installedHooks.emplace_back(hook);
+				installedHooks.emplace_back(std::move(hook));
 		}
 
 		for (auto& hook : installedHooks)

@@ -49,11 +49,14 @@ struct ImageNtHeaders
 
 	constexpr Arch GetArch() const { return fileHeader.Machine == IMAGE_FILE_MACHINE_AMD64 ? Arch::Amd64 : Arch::IA32; }
 
-	// Address getters
-#define REQUIRES_SELF(t)	requires std::is_same_v<std::remove_cv_t<t>, ImageNtHeaders>
-	template <class T> REQUIRES_SELF(T)
-	auto GetDataDirectories(this T self) { return self.GetArch() == Arch::Amd64 ? self.optHeader64.DataDirectory : self.optHeader32.DataDirectory; }
-#undef REQUIRES_SELF
+	// Getters that read different offsets in the struct on different architectures
+#define DEFINE_GETTER(funcName, memberName)	\
+	template <class T>	\
+	auto funcName(this T self) { return self.GetArch() == Arch::Amd64 ? self.optHeader64.memberName : self.optHeader32.memberName; }
+
+	DEFINE_GETTER(GetDataDirectories, DataDirectory);
+	DEFINE_GETTER(GetNumOfDataDirectories, NumberOfRvaAndSizes);
+#undef DEFINE_GETTER
 };
 
 
@@ -87,7 +90,7 @@ struct PeHeaders
 	ImageSectionHeaderList sectionHeaderList;
 
 	// Directory data
-	ImageExportData exportData;
+	std::optional<ImageExportData> exportData;
 	
 	// Helpers
 	// Note: behavior is undefined if the PEHeaders instance isn't loaded by Gandr API, e.g., GetLoadedHeaders().

@@ -48,14 +48,21 @@ void SetUpSectionHeaders(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 // Fill in data in PeHeaders::exportData
 void SetUpExportDirectory(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 {
-	const auto& addrDir = headers.ntHeaders.GetDataDirectories()[IMAGE_DIRECTORY_ENTRY_EXPORT];
-	gan::ConstMemAddr addrExportDir = baseAddr.Offset(addrDir.VirtualAddress);
-	headers.exportData.directory = addrExportDir.ConstRef<IMAGE_EXPORT_DIRECTORY>();
+	if (headers.ntHeaders.GetNumOfDataDirectories() < IMAGE_DIRECTORY_ENTRY_EXPORT)
+		return;  // IMAGE_EXPORT_DIRECTORY doesn't exist in the image
 
-	const auto& exportDir = headers.exportData.directory;
+	const auto& addrDir = headers.ntHeaders.GetDataDirectories()[IMAGE_DIRECTORY_ENTRY_EXPORT];
+	if (addrDir.Size == 0)
+		return;  // Empty export directory
+
+	// Initialize .directory
+	gan::ConstMemAddr addrExportDir = baseAddr.Offset(addrDir.VirtualAddress);
+	headers.exportData = { .directory = addrExportDir.ConstRef<IMAGE_EXPORT_DIRECTORY>() };
+	const auto& exportDir = headers.exportData->directory;
 	assert(exportDir.NumberOfFunctions >= exportDir.NumberOfNames);
 
-	auto& exportFuncs = headers.exportData.functions;
+	// Initialize .functions
+	auto& exportFuncs = headers.exportData->functions;
 	exportFuncs.reserve(exportDir.NumberOfFunctions);
 
 	// Export Address Table
