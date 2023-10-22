@@ -77,6 +77,11 @@ struct Opcode
 	{
 		return length == other.length && op16i == other.op16i;
 	}
+
+	constexpr uint8_t GetLastByte() const
+	{
+		return bytes[length - 1];
+	}
 };
 
 
@@ -204,6 +209,18 @@ constexpr OpcodeDefinition k_opDefTable[] {
 	{ 0x81, RegField::R4,	MakeFlags(Operand::R_M, Operand::Imm32) },
 	{ 0x83, RegField::R4,	MakeFlags(Operand::R_M, Operand::Imm8) },
 
+	// BSWAP
+	{ { 0x0F, 0xC8 },		MakeFlags(Operand::InOpcode) },
+
+	// BTR - Bit Test and Reset
+	{ { 0x0F, 0xB3 },				MakeFlags(Operand::R_M, Operand::Reg) },
+	{ { 0x0F, 0xBA }, RegField::R6,	MakeFlags(Operand::R_M, Operand::Imm8) },
+
+	// CALL
+	{ 0xE8,					MakeFlags(Operand::Imm32) },
+	{ 0xFF, RegField::R2,	MakeFlags(Operand::R_M) },
+	// No support for opcodes "0x9A" and "0xFF /3".
+
 	// CMP
 	{ 0x38,					MakeFlags(Operand::R_M, Operand::Reg) },
 	{ 0x39,					MakeFlags(Operand::R_M, Operand::Reg) },
@@ -223,10 +240,46 @@ constexpr OpcodeDefinition k_opDefTable[] {
 	// INT3
 	{ 0xCC },
 
+	// Jcc - Jump if Condition Is Met
+	{ 0x70,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x71,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x72,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x73,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x74,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x75,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x76,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x77,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x78,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x79,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x7A,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x7B,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x7C,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x7D,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x7E,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0x7F,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0xE3,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x80 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x81 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x82 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x83 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x84 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x85 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x86 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x87 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x88 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x89 },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x8A },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x8B },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x8C },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x8D },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x8E },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ { 0x0F, 0x8F },		MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+
 	// JMP
 	{ 0xE9,					MakeFlags(Operand::Imm32),	MakeFlags(MiscFlags::TreatImmAsDisp) },
+	{ 0xEB,					MakeFlags(Operand::Imm8),	MakeFlags(MiscFlags::TreatImmAsDisp) },
 	{ 0xFF,	RegField::R4,	MakeFlags(Operand::R_M) },
-	// No support for opcodes "0xEB", "0xEA" and "0xFF /5".
+	// No support for opcodes "0xEA" and "0xFF /5".
 
 	// LEA
 	{ 0x8D,					MakeFlags(Operand::Reg, Operand::R_M) },
@@ -247,12 +300,24 @@ constexpr OpcodeDefinition k_opDefTable[] {
 	{ 0xC6,	RegField::R0,	MakeFlags(Operand::R_M, Operand::Imm8) },
 	{ 0xC7,	RegField::R0,	MakeFlags(Operand::R_M, Operand::Imm32) },
 
-	// MOVZX
+	// MOVSX/MOVSXD - Move with Sign-Extension
+	{ { 0x0F, 0xBE },		MakeFlags(Operand::Reg, Operand::R_M) },
+	{ { 0x0F, 0xBF },		MakeFlags(Operand::Reg, Operand::R_M) },
+	{ 0x63,					MakeFlags(Operand::Reg, Operand::R_M) },
+
+	// TODO: MOVUPD; MOVUPD is basically MOVUPS with prefix 0x66
+
+	// MOVUPS
+	{ { 0x0F, 0x10 },		MakeFlags(Operand::Reg, Operand::R_M) },
+	{ { 0x0F, 0x11 },		MakeFlags(Operand::R_M, Operand::Reg) },
+
+	// MOVZX - Move with Zero-Extend
 	{ { 0x0F, 0xB6 },		MakeFlags(Operand::Reg, Operand::R_M) },
 	{ { 0x0F, 0xB7 },		MakeFlags(Operand::Reg, Operand::R_M) },
 
 	// NOP
-	{ 0xC9 },
+	{ 0x90 },
+	{ { 0x0F, 0x1F }, RegField::R0, MakeFlags(Operand::R_M) },
 
 	// OR
 	{ 0x08,					MakeFlags(Operand::R_M, Operand::Reg) },
@@ -266,17 +331,40 @@ constexpr OpcodeDefinition k_opDefTable[] {
 	{ 0x83, RegField::R1,	MakeFlags(Operand::R_M, Operand::Imm8) },
 
 	// PUSH
-	{ 0x06,					0 },
-	{ 0x0E,					0 },
-	{ 0x16,					0 },
-	{ 0x1E,					0 },
+	{ 0x06 },
+	{ 0x0E },
+	{ 0x16 },
+	{ 0x1E },
 	{ 0x50,					MakeFlags(Operand::InOpcode) },
 	{ 0x68,					MakeFlags(Operand::Imm32) },
 	{ 0x6A,					MakeFlags(Operand::Imm8) },
 	{ 0xFF,	RegField::R6,	MakeFlags(Operand::R_M) },
 
 	// RET
+	{ 0xC2,					MakeFlags(Operand::Imm16) },
 	{ 0xC3 },
+	{ 0xCA,					MakeFlags(Operand::Imm16) },
+	{ 0xCB },
+
+	// SAL/SAR/SHL/SHR
+	{ 0xC0, RegField::R4, MakeFlags(Operand::R_M, Operand::Imm8) },  // SAL=SHL
+	{ 0xC1, RegField::R4, MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xD0, RegField::R4, MakeFlags(Operand::R_M) },
+	{ 0xD1, RegField::R4, MakeFlags(Operand::R_M) },
+	{ 0xD2, RegField::R4, MakeFlags(Operand::R_M) },
+	{ 0xD3, RegField::R4, MakeFlags(Operand::R_M) },
+	{ 0xC0, RegField::R7, MakeFlags(Operand::R_M, Operand::Imm8) },  // SAR
+	{ 0xC1, RegField::R7, MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xD0, RegField::R7, MakeFlags(Operand::R_M) },
+	{ 0xD1, RegField::R7, MakeFlags(Operand::R_M) },
+	{ 0xD2, RegField::R7, MakeFlags(Operand::R_M) },
+	{ 0xD3, RegField::R7, MakeFlags(Operand::R_M) },
+	{ 0xC0, RegField::R5, MakeFlags(Operand::R_M, Operand::Imm8) },  // SHR
+	{ 0xC1, RegField::R5, MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xD0, RegField::R5, MakeFlags(Operand::R_M) },
+	{ 0xD1, RegField::R5, MakeFlags(Operand::R_M) },
+	{ 0xD2, RegField::R5, MakeFlags(Operand::R_M) },
+	{ 0xD3, RegField::R5, MakeFlags(Operand::R_M) },
 
 	// SUB
 	{ 0x28,					MakeFlags(Operand::R_M, Operand::Reg) },
@@ -288,6 +376,17 @@ constexpr OpcodeDefinition k_opDefTable[] {
 	{ 0x80,	RegField::R5,	MakeFlags(Operand::R_M, Operand::Imm8) },
 	{ 0x81,	RegField::R5,	MakeFlags(Operand::R_M, Operand::Imm32) },
 	{ 0x83,	RegField::R5,	MakeFlags(Operand::R_M, Operand::Imm8) },
+
+	// TEST
+	{ 0x84,					MakeFlags(Operand::R_M, Operand::Reg) },
+	{ 0x85,					MakeFlags(Operand::R_M, Operand::Reg) },
+	{ 0xA8,					MakeFlags(Operand::Imm8) },
+	{ 0xA9,					MakeFlags(Operand::Imm32) },
+	{ 0xF6,	RegField::R0,	MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xF7,	RegField::R0,	MakeFlags(Operand::R_M, Operand::Imm32) },
+
+	// TODO: UNPCKLPD
+	// TODO: UNPCKLPS
 
 	// XOR
 	{ 0x30,					MakeFlags(Operand::R_M, Operand::Reg) },
@@ -346,7 +445,7 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 
 		if (HasAnyFlagIn(opDef.operands, Operand::InOpcode)
 			&& lookAhead.opcode.length == opDef.opcode.length
-			&& (lookAhead.opcode.op16i & 0xF8) == opDef.opcode.op16i)
+			&& (lookAhead.opcode.GetLastByte() & 0xF8) == opDef.opcode.GetLastByte())  // Operand in the last byte of opcode
 		{
 			matchedOp = opDef;
 			break;
