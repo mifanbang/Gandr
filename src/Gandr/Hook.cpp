@@ -70,7 +70,7 @@ struct PrologStrategy
 
 struct Prolog
 {
-	constexpr static uint32_t k_maxSize = 16;
+	constexpr static uint32_t k_maxSize = 0x18;
 
 	uint8_t opcode[k_maxSize] { };
 	uint8_t length { 0 };
@@ -93,7 +93,7 @@ struct PrologWithDisp : public Prolog
 
 struct Trampoline
 {
-	constexpr static uint32_t k_size = 32;
+	constexpr static uint32_t k_size = 0x28;
 
 	uint8_t opcode[k_size] { };
 };
@@ -372,7 +372,8 @@ private:
 
 
 // ---------------------------------------------------------------------------
-// Class OpcodeGenerator: filling in instructions to buffer
+// Class OpcodeGenerator: filling in instructions to buffer; might be used
+//                        by both hooks and trampolines.
 // ---------------------------------------------------------------------------
 
 class OpcodeGenerator
@@ -385,7 +386,7 @@ public:
 		constexpr static uint8_t k_length = Length;
 	};
 
-	// This jump modifies rax and should only be used for hooks.
+	// This jump modifies rax and is recommended to only be used for hooks.
 	class AbsLongJmpRax : public Base<12>
 	{
 	public:
@@ -408,7 +409,7 @@ public:
 		}
 	};
 
-	// This jump is longer in length but doesn't have side effects. Trampolines should call this to build code.
+	// This jump is longer in length but doesn't have side effects. Trampolines are recommended to use this.
 	class AbsLongJmp64 : public Base<14>
 	{
 	public:
@@ -439,6 +440,7 @@ public:
 		}
 	};
 
+	// Used by 32-bit trampolines
 	class AbsLongJmp32 : public Base<6>
 	{
 	public:
@@ -467,6 +469,7 @@ public:
 		{
 			static_assert(N >= k_length);
 
+			// jmp imm32
 			out[0] = 0xE9;  // near jmp
 			*reinterpret_cast<int32_t*>(out + 1) = static_cast<int32_t>(
 				targetAddr - originAddr - k_length
@@ -616,7 +619,7 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 		{
 			const uint8_t nextInstLen = nextInstInfo->GetLength();
 
-			if (copiedProlog.length + nextInstLen <= Prolog::k_maxSize)  // Check remaining room for the instruction
+			if (copiedProlog.length + nextInstLen <= Prolog::k_maxSize)  // Check remaining space for the instruction
 			{
 				memcpy(
 					copiedProlog.opcode + copiedProlog.length,
@@ -628,19 +631,30 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 				// Record a displacement if base is EIP/RIP
 				if (nextInstInfo->dispNeedsFixup)
 				{
-					if (nextInstInfo->lengthDisp != 4)
-						return std::nullopt;  // Only a 4-byte displacement is patchable
-
 					// Disp and imm are the last two parts of an instruction
 					const uint8_t offsetData = copiedProlog.length - nextInstInfo->lengthImm - nextInstInfo->lengthDisp;
 
-					const auto disp32 = addr.Offset(offsetData).ConstRef<int32_t>();  // Disp32 field in instruction
-					const Displacement32 newDispEntry {
-						offsetData,
-						copiedProlog.length,
-						addr.Offset(copiedProlog.length).Offset(disp32)
-					};
-					copiedProlog.displacements.emplace_back(newDispEntry);
+					if (nextInstInfo->lengthDisp == 4)
+					{
+						const auto disp32 = addr.Offset(offsetData).ConstRef<int32_t>();  // Disp32 field in instruction
+						const Displacement32 newDispEntry{
+							.offsetData = offsetData,
+							.offsetBase = copiedProlog.length,
+							.targetAddr = addr.Offset(copiedProlog.length).Offset(disp32)
+						};
+						copiedProlog.displacements.emplace_back(newDispEntry);
+					}
+					else
+					{
+						// Normally only a 4-byte displacement is fixable, but in rare instances where it points to
+						// an address inside the prolog, it's safe to just copy as-is.
+						if (nextInstInfo->lengthDisp != 1
+							|| copiedProlog.length + addr.Offset(offsetData).ConstRef<int8_t>() >= length)
+						{
+							return std::nullopt;
+						}
+					}
+
 				}
 
 				continue;  // Only continue decoding the next instruction if we get here successfully
