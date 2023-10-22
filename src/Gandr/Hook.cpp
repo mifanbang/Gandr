@@ -646,8 +646,8 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 					}
 					else
 					{
-						// Normally only a 4-byte displacement is fixable, but in rare instances where it points to
-						// an address inside the prolog, it's safe to just copy as-is.
+						// Normally only a 4-byte displacement is fixable and thus accepted in prolog, but in rare instances
+						// where an 1-byte disp points to an address inside the prolog, it's safe to just copy as-is.
 						if (nextInstInfo->lengthDisp != 1
 							|| copiedProlog.length + addr.Offset(offsetData).ConstRef<int8_t>() >= length)
 						{

@@ -114,7 +114,7 @@ std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t sectionIndex, std:
 			sectionHeaderList.end(),
 			[name] (const auto& sectionHeader) {
 				// sectionHeader.Name isn't guaranteed to be null-terminated
-				char8_t sectionNameBuf[9]{};
+				char8_t sectionNameBuf[IMAGE_SIZEOF_SHORT_NAME + 1]{};
 				memcpy(sectionNameBuf, sectionHeader.Name, IMAGE_SIZEOF_SHORT_NAME);
 				return std::u8string_view{ sectionNameBuf } == name;
 			}

@@ -34,16 +34,9 @@ template <unsigned int NumOfBits>
 struct Hash
 {
 	static_assert((NumOfBits & 7) == 0, "NumOfBits not a multiple of 8");
-	using Type = Hash<NumOfBits>;
 	constexpr static size_t k_numOfBytes = NumOfBits >> 3;
 
-
 	uint8_t data[k_numOfBytes];
-
-	bool operator==(const Type& other) const
-	{
-		return memcmp(data, other.data, sizeof(data)) == 0;
-	}
 };
 
 

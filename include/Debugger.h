@@ -22,13 +22,10 @@
 
 #include <memory>
 #include <unordered_map>
-#include <string>
-
 
 
 namespace gan
 {
-
 
 
 // ---------------------------------------------------------------------------
@@ -82,7 +79,6 @@ private:
 
 	bool m_flagEventLoopExit;  // flag for main loop
 };
-
 
 
 }  // namespace gan

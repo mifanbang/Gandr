@@ -347,24 +347,24 @@ constexpr OpcodeDefinition k_opDefTable[] {
 	{ 0xCB },
 
 	// SAL/SAR/SHL/SHR
-	{ 0xC0, RegField::R4, MakeFlags(Operand::R_M, Operand::Imm8) },  // SAL=SHL
-	{ 0xC1, RegField::R4, MakeFlags(Operand::R_M, Operand::Imm8) },
-	{ 0xD0, RegField::R4, MakeFlags(Operand::R_M) },
-	{ 0xD1, RegField::R4, MakeFlags(Operand::R_M) },
-	{ 0xD2, RegField::R4, MakeFlags(Operand::R_M) },
-	{ 0xD3, RegField::R4, MakeFlags(Operand::R_M) },
-	{ 0xC0, RegField::R7, MakeFlags(Operand::R_M, Operand::Imm8) },  // SAR
-	{ 0xC1, RegField::R7, MakeFlags(Operand::R_M, Operand::Imm8) },
-	{ 0xD0, RegField::R7, MakeFlags(Operand::R_M) },
-	{ 0xD1, RegField::R7, MakeFlags(Operand::R_M) },
-	{ 0xD2, RegField::R7, MakeFlags(Operand::R_M) },
-	{ 0xD3, RegField::R7, MakeFlags(Operand::R_M) },
-	{ 0xC0, RegField::R5, MakeFlags(Operand::R_M, Operand::Imm8) },  // SHR
-	{ 0xC1, RegField::R5, MakeFlags(Operand::R_M, Operand::Imm8) },
-	{ 0xD0, RegField::R5, MakeFlags(Operand::R_M) },
-	{ 0xD1, RegField::R5, MakeFlags(Operand::R_M) },
-	{ 0xD2, RegField::R5, MakeFlags(Operand::R_M) },
-	{ 0xD3, RegField::R5, MakeFlags(Operand::R_M) },
+	{ 0xC0, RegField::R4,	MakeFlags(Operand::R_M, Operand::Imm8) },  // SAL=SHL
+	{ 0xC1, RegField::R4,	MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xD0, RegField::R4,	MakeFlags(Operand::R_M) },
+	{ 0xD1, RegField::R4,	MakeFlags(Operand::R_M) },
+	{ 0xD2, RegField::R4,	MakeFlags(Operand::R_M) },
+	{ 0xD3, RegField::R4,	MakeFlags(Operand::R_M) },
+	{ 0xC0, RegField::R7,	MakeFlags(Operand::R_M, Operand::Imm8) },  // SAR
+	{ 0xC1, RegField::R7,	MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xD0, RegField::R7,	MakeFlags(Operand::R_M) },
+	{ 0xD1, RegField::R7,	MakeFlags(Operand::R_M) },
+	{ 0xD2, RegField::R7,	MakeFlags(Operand::R_M) },
+	{ 0xD3, RegField::R7,	MakeFlags(Operand::R_M) },
+	{ 0xC0, RegField::R5,	MakeFlags(Operand::R_M, Operand::Imm8) },  // SHR
+	{ 0xC1, RegField::R5,	MakeFlags(Operand::R_M, Operand::Imm8) },
+	{ 0xD0, RegField::R5,	MakeFlags(Operand::R_M) },
+	{ 0xD1, RegField::R5,	MakeFlags(Operand::R_M) },
+	{ 0xD2, RegField::R5,	MakeFlags(Operand::R_M) },
+	{ 0xD3, RegField::R5,	MakeFlags(Operand::R_M) },
 
 	// SUB
 	{ 0x28,					MakeFlags(Operand::R_M, Operand::Reg) },

@@ -210,13 +210,15 @@ DEFINE_TESTSUITE_START(Hook_Gdi32_AllFunctions)
 			.max = codeSection.VirtualAddress + codeSection.Misc.VirtualSize
 		};
 
+		std::vector<gan::Hook> installedHooks;
 		for (const auto& exportedFunc : peHeaders->exportData.functions)
 		{
 			// Skip forwarding and non-code exports
-			if (exportedFunc.forwarding)
+			if (exportedFunc.forwarding
+				|| !codeSectionRange.InRange(exportedFunc.rva))
+			{
 				continue;
-			if (!codeSectionRange.InRange(exportedFunc.rva))
-				continue;
+			}
 
 			void* procAddr = modBaseAddr.Offset(exportedFunc.rva).ConstCast().Ptr<>();
 			gan::Hook hook {
@@ -225,6 +227,14 @@ DEFINE_TESTSUITE_START(Hook_Gdi32_AllFunctions)
 			};
 			const auto installResult = hook.Install();
 			EXPECT(installResult == gan::Hook::OpResult::Hooked || installResult == gan::Hook::OpResult::AddressInUse);
+			if (installResult == gan::Hook::OpResult::Hooked)
+				installedHooks.emplace_back(hook);
+		}
+
+		for (auto& hook : installedHooks)
+		{
+			const auto uninstallResult = hook.Uninstall();
+			EXPECT(uninstallResult == gan::Hook::OpResult::Unhooked);
 		}
 	}
 	DEFINE_TEST_END;
