@@ -21,17 +21,22 @@
 #include "Test.h"
 
 #include <Hook.h>
+#include <PE.h>
 
 #include <cstdint>
+#include <string_view>
 
 #include <windows.h>
 #include <commctrl.h>
+#include <psapi.h>
 #include <xinput.h>
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "xinput.lib")
 
+
+using namespace std::literals;
 
 
 DEFINE_TESTSUITE_START(Hook_General)
@@ -169,6 +174,58 @@ DEFINE_TESTSUITE_START(Hook_User32)
 			EXPECT(wcsstr(wndClass.lpszClassName, k_overridenClassName) != nullptr);
 
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
+	}
+	DEFINE_TEST_END;
+
+DEFINE_TESTSUITE_END
+
+
+
+DEFINE_TESTSUITE_START(Hook_Gdi32_AllFunctions)
+
+	DEFINE_TEST_SHARED_START
+
+		static int __stdcall Dummy() { return 0; }
+		
+	DEFINE_TEST_SHARED_END
+
+	DEFINE_TEST_START(AllFunctions)
+	{
+		MODULEINFO modInfo{ };
+		auto hMod = ::LoadLibraryW(L"gdi32.dll");
+		ASSERT(hMod);
+		ASSERT(::GetModuleInformation(::GetCurrentProcess(), hMod, &modInfo, sizeof(modInfo)));
+
+		const gan::ConstMemAddr modBaseAddr{ modInfo.lpBaseOfDll };
+		auto peHeaders = gan::PeImageHelper::GetLoadedHeaders(modBaseAddr);
+		ASSERT(peHeaders);
+
+		// Calculate memory range for the code section. This will be used to determine
+		// whether the exported symbol is a function.
+		const auto indexCodeSection = peHeaders->FindSectionByName(0, u8".text"sv);
+		ASSERT(indexCodeSection);
+		const auto& codeSection = peHeaders->sectionHeaderList[*indexCodeSection];
+		const gan::Range<gan::Rva> codeSectionRange{
+			.min = codeSection.VirtualAddress,
+			.max = codeSection.VirtualAddress + codeSection.Misc.VirtualSize
+		};
+
+		for (const auto& exportedFunc : peHeaders->exportData.functions)
+		{
+			// Skip forwarding and non-code exports
+			if (exportedFunc.forwarding)
+				continue;
+			if (!codeSectionRange.InRange(exportedFunc.rva))
+				continue;
+
+			void* procAddr = modBaseAddr.Offset(exportedFunc.rva).ConstCast().Ptr<>();
+			gan::Hook hook {
+				reinterpret_cast<FARPROC>(procAddr),
+				reinterpret_cast<FARPROC>(Dummy)
+			};
+			const auto installResult = hook.Install();
+			EXPECT(installResult == gan::Hook::OpResult::Hooked || installResult == gan::Hook::OpResult::AddressInUse);
+		}
 	}
 	DEFINE_TEST_END;
 

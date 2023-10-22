@@ -79,7 +79,7 @@ DEFINE_TESTSUITE_START(PE)
 
 		constexpr static auto k_funcName = "GetCurrentThreadId"sv;
 		const auto addrLoadedFunction = ::GetProcAddress(hMod, k_funcName.data());
-		EXPECT(addrLoadedFunction);
+		ASSERT(addrLoadedFunction);
 		EXPECT(
 			addrLoadedFunction ==
 				modBaseAddr
@@ -101,7 +101,7 @@ DEFINE_TESTSUITE_START(PE)
 
 		constexpr static auto k_funcName = "CreateWindowExW"sv;
 		const auto addrLoadedFunction = ::GetProcAddress(hMod, k_funcName.data());
-		EXPECT(addrLoadedFunction);
+		ASSERT(addrLoadedFunction);
 		EXPECT(
 			addrLoadedFunction ==
 				modBaseAddr

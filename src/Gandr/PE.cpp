@@ -35,7 +35,7 @@ void SetUpSectionHeaders(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 	gan::ConstMemAddr addrSectionHeader =
 		baseAddr
 		.Offset(headers.dosHeader.e_lfanew)
-		.Offset(sizeof(gan::ImageNtHeaders))
+		.Offset(FIELD_OFFSET(gan::ImageNtHeaders, optHeader64))
 		.Offset(headers.ntHeaders.fileHeader.SizeOfOptionalHeader);
 	for (uint16_t i = 0; i < numSections; ++i)
 	{
@@ -100,6 +100,30 @@ void SetUpExportDirectory(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 
 namespace gan
 {
+
+
+std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t sectionIndex, std::u8string_view name) const
+{
+	static_assert(sizeof(IMAGE_SECTION_HEADER::Name) == IMAGE_SIZEOF_SHORT_NAME);
+
+	if (sectionIndex < sectionHeaderList.size()
+		&& name.length() <= IMAGE_SIZEOF_SHORT_NAME)
+	{
+		const auto itr = std::find_if(
+			sectionHeaderList.begin() + sectionIndex,
+			sectionHeaderList.end(),
+			[name] (const auto& sectionHeader) {
+				// sectionHeader.Name isn't guaranteed to be null-terminated
+				char8_t sectionNameBuf[9]{};
+				memcpy(sectionNameBuf, sectionHeader.Name, IMAGE_SIZEOF_SHORT_NAME);
+				return std::u8string_view{ sectionNameBuf } == name;
+			}
+		);
+		if (itr != sectionHeaderList.end())
+			return std::optional<uint32_t>{ static_cast<uint32_t>(std::distance(sectionHeaderList.begin(), itr)) };
+	}
+	return std::optional<uint32_t>{ std::nullopt };
+}
 
 
 std::optional<PeHeaders> PeImageHelper::GetLoadedHeaders(ConstMemAddr addr)
