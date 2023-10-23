@@ -21,10 +21,8 @@
 #include <windows.h>
 
 
-
 namespace
 {
-
 
 
 enum class Dr7UpdateOp : uint8_t
@@ -43,7 +41,7 @@ constexpr size_t GetMaskFromSlot(gan::HWBreakpointSlot slot)
 
 bool UpdateDebugRegisters(gan::WinHandle hThread, gan::ConstMemAddr address, gan::HWBreakpointSlot slot, Dr7UpdateOp opDr7)
 {
-	::CONTEXT ctx;
+	CONTEXT ctx;
 	ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
 	if (::GetThreadContext(hThread, &ctx) == 0)
 		return false;
@@ -63,14 +61,11 @@ bool UpdateDebugRegisters(gan::WinHandle hThread, gan::ConstMemAddr address, gan
 }
 
 
-
 }  // unnamed namespace
-
 
 
 namespace gan
 {
-
 
 
 bool HWBreakpoint::Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot)
@@ -83,7 +78,6 @@ bool HWBreakpoint::Disable(WinHandle thread, HWBreakpointSlot slot)
 {
 	return UpdateDebugRegisters(thread, ConstMemAddr{ }, slot, Dr7UpdateOp::Disable);
 }
-
 
 
 }  // namespace gan

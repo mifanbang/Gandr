@@ -16,15 +16,12 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <Mutex.h>
 
 #include <chrono>
 #include <thread>
-
 
 
 DEFINE_TESTSUITE_START(Mutex)
@@ -62,4 +59,3 @@ DEFINE_TESTSUITE_START(Mutex)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

@@ -22,15 +22,12 @@
 #include <vector>
 
 
-
 // forward declaration
 struct tagPROCESSENTRY32W;  // in tlhelp32.h
 
 
-
 namespace gan
 {
-
 
 
 struct ProcessInfo
@@ -46,7 +43,6 @@ struct ProcessInfo
 
 
 using ProcessList = std::vector<ProcessInfo>;
-
 
 
 // ---------------------------------------------------------------------------
@@ -65,7 +61,6 @@ public:
 
 	static Result Enumerate(ProcessList& out);
 };
-
 
 
 }  // namespace gan

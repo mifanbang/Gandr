@@ -19,15 +19,16 @@
 #include <DebugSession.h>
 
 #include <Buffer.h>
+#include <Types.h>
 
+#include <cstdio>
+#include <format>
 #include <memory>
 #include <string>
 
 
-
 namespace gan
 {
-
 
 
 // ---------------------------------------------------------------------------
@@ -38,31 +39,62 @@ DebugSession::DebugSession(const CreateProcessParam& newProcParam)
 	: m_pid(0)
 	, m_hProc(INVALID_HANDLE_VALUE)
 {
-	STARTUPINFO si;
-	if (newProcParam.startUpInfo != nullptr)
-		si = *newProcParam.startUpInfo;
-	else
-		::ZeroMemory(&si, sizeof(si));
-
-	wchar_t* pArg = nullptr;
-	auto argBuffer = Buffer::Allocate(32768 * sizeof(wchar_t));  // allocate on heap since stack is too small
-	if (argBuffer == nullptr)
+	// Paramater lpCommandLine to CreateProcessW has a max length of 32,767 characters.
+	// Allocate on the heap since stack is too small.
+	// REF: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
+	constexpr size_t k_maxArgLength = 32767;
+	auto cmdlineBuffer = Buffer::Allocate(k_maxArgLength * sizeof(wchar_t));
+	if (!cmdlineBuffer)
 		return;
 
-	if (newProcParam.args != nullptr)
+	// Prepare command line buffer if needed
+	wchar_t* const cmdLinePtr = newProcParam.args ?
+		reinterpret_cast<wchar_t*>(cmdlineBuffer->GetData()) :
+		nullptr;
+	if (cmdLinePtr)
 	{
-		std::wstring tmpStr;
-		tmpStr.push_back('"');
-		tmpStr.append(newProcParam.imagePath);
-		tmpStr.append(L"\" ");
-		tmpStr.append(newProcParam.args);
-
-		CopyMemory(*argBuffer, tmpStr.c_str(), sizeof(wchar_t) * (tmpStr.size() + 1));
-		pArg = reinterpret_cast<wchar_t*>(argBuffer->GetData());
+		if constexpr (UseStdFormat())
+			std::format_to_n(
+				reinterpret_cast<wchar_t*>(cmdlineBuffer->GetData()),
+				k_maxArgLength,
+				L"\"{}\" {}",
+				newProcParam.imagePath,
+				newProcParam.args
+			);
+		else
+			::swprintf(
+				reinterpret_cast<wchar_t*>(cmdlineBuffer->GetData()),
+				k_maxArgLength,
+				L"\"%s\" %s",
+				newProcParam.imagePath,
+				newProcParam.args
+			);
 	}
 
+	STARTUPINFO si = [](const auto* startInfo) {
+		// MSVC still doesn't seem to apply copy elision on ternary conditional operator,
+		// so the plain if-else is used.
+		if (startInfo)
+			return STARTUPINFO{ *startInfo };
+		else
+			return STARTUPINFO{ };
+	} (newProcParam.startUpInfo);
+
+	constexpr LPSECURITY_ATTRIBUTES k_notInheritable = nullptr;
+	constexpr BOOL k_dontLetChildInherit = FALSE;
+	constexpr void* k_useParentsEnv = nullptr;
 	PROCESS_INFORMATION procInfo;
-	if (::CreateProcessW(newProcParam.imagePath, pArg, nullptr, nullptr, FALSE, DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS, nullptr, newProcParam.currentDir, &si, &procInfo) != 0)
+	if (::CreateProcessW(
+		newProcParam.imagePath,
+		cmdLinePtr,
+		k_notInheritable,
+		k_notInheritable,
+		k_dontLetChildInherit,
+		DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS,
+		k_useParentsEnv,
+		newProcParam.currentDir,
+		&si,
+		&procInfo))
 	{
 		m_pid = procInfo.dwProcessId;
 		m_hProc = procInfo.hProcess;

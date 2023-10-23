@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <ModuleList.h>
@@ -26,7 +24,6 @@
 
 #include <shlwapi.h>
 #include <windows.h>
-
 
 
 namespace
@@ -39,7 +36,6 @@ namespace
 		return std::find_if(modList.begin(), modList.end(), funcMatchMod) != modList.end();
 	}
 }  // unnamed namespace
-
 
 
 DEFINE_TESTSUITE_START(ModuleList)
@@ -57,4 +53,3 @@ DEFINE_TESTSUITE_START(ModuleList)
 
 
 DEFINE_TESTSUITE_END
-

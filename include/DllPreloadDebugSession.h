@@ -20,14 +20,11 @@
 
 #include <DebugSession.h>
 
-#include <cstdint>
 #include <string>
-
 
 
 namespace gan
 {
-
 
 
 // ---------------------------------------------------------------------------
@@ -51,11 +48,10 @@ private:
 	virtual ContinueStatus OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo) override;
 	virtual ContinueStatus OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) override;
 
-	HANDLE m_hMainThread;
+	WinHandle m_hMainThread;
 	std::wstring m_payloadPath;
 	Option m_option;
 };
-
 
 
 }  // namespace gan

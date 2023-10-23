@@ -16,14 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <Hook.h>
 #include <PE.h>
 
-#include <cstdint>
 #include <string_view>
 
 #include <windows.h>
@@ -344,4 +341,3 @@ DEFINE_TESTSUITE_START(Hook_XInput)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

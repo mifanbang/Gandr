@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <ProcessList.h>
@@ -25,7 +23,6 @@
 #include <algorithm>
 
 #include <shlwapi.h>
-
 
 
 DEFINE_TESTSUITE_START(ProcessList)
@@ -43,4 +40,3 @@ DEFINE_TESTSUITE_START(ProcessList)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

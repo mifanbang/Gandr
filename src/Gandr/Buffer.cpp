@@ -17,20 +17,18 @@
  */
 
 #include <Buffer.h>
-#include <Types.h>
 
-#include <cassert>
-#include <cstring>
-#include <limits>
+#include <Types.h>
 
 #include <intrin.h>
 #include <windows.h>
 
+#include <cassert>
+#include <limits>
 
 
 namespace
 {
-
 
 
 size_t DetermineCapacity(size_t requestedSize)
@@ -43,6 +41,7 @@ size_t DetermineCapacity(size_t requestedSize)
 	else if (requestedSize >= maxSizeForReservation)
 		return requestedSize;
 
+	// Have to use #if because __lzcnt64 is only defined for AMD64
 #if defined _WIN64
 	return 1ull << (64ull - __lzcnt64(requestedSize));
 #else
@@ -51,19 +50,16 @@ size_t DetermineCapacity(size_t requestedSize)
 }
 
 
-
 }  // unnamed namespace
-
 
 
 namespace gan
 {
 
 
-
 std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 {
-	auto capacity = DetermineCapacity(size);
+	const auto capacity = DetermineCapacity(size);
 	assert(capacity >= size);
 	if (capacity >= size)
 	{

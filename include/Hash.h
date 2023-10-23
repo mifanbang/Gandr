@@ -20,14 +20,9 @@
 
 #include <Types.h>
 
-#include <cstdint>
-#include <cstring>
-
-
 
 namespace gan
 {
-
 
 
 template <unsigned int NumOfBits>
@@ -40,7 +35,6 @@ struct Hash
 };
 
 
-
 class Hasher
 {
 public:
@@ -50,6 +44,4 @@ public:
 };
 
 
-
 }  // namespace gan
-

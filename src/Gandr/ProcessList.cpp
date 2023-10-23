@@ -24,7 +24,6 @@
 #include <tlhelp32.h>  // must be included after windows.h, which sucks
 
 
-
 namespace gan
 {
 

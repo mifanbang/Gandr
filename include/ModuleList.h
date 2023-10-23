@@ -24,15 +24,12 @@
 #include <vector>
 
 
-
 // forward declaration
 struct tagMODULEENTRY32W;  // in tlhelp32.h
 
 
-
 namespace gan
 {
-
 
 
 struct ModuleInfo
@@ -47,7 +44,6 @@ struct ModuleInfo
 
 
 using ModuleList = std::vector<ModuleInfo>;
-
 
 
 // ---------------------------------------------------------------------------
@@ -66,7 +62,6 @@ public:
 
 	static Result Enumerate(uint32_t processId, ModuleList& out);
 };
-
 
 
 }  // namespace gan

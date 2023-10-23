@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Handle.h>
 
-#include <cstdint>
 #include <string>
 
 
@@ -49,7 +48,6 @@ public:
 
 
 	DllInjectorByContext(WinHandle hProcess, WinHandle hThread);
-	~DllInjectorByContext();
 
 	// m_hProcess and m_hThread will be closed in destructor
 	DllInjectorByContext(const DllInjectorByContext&) = delete;
@@ -59,8 +57,8 @@ public:
 
 
 private:
-	WinHandle m_hProcess;
-	WinHandle m_hThread;
+	AutoWinHandle m_hProcess;
+	AutoWinHandle m_hThread;
 	std::wstring m_dllPath;
 };
 

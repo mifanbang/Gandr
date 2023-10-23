@@ -24,7 +24,6 @@
 #include <tlhelp32.h>  // must be included after windows.h, which sucks
 
 
-
 namespace
 {
 
@@ -45,7 +44,6 @@ HANDLE GetModuleListSnapshop(uint32_t processId)
 
 
 }  // unnamed namespace
-
 
 
 namespace gan

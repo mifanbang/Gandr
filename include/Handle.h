@@ -21,15 +21,12 @@
 #include <Types.h>
 
 
-
-// forward declaration
+// Forward declaration
 extern "C" __declspec(dllimport) int __stdcall CloseHandle(_In_ _Post_ptr_invalid_ gan::WinHandle);
-
 
 
 namespace gan
 {
-
 
 
 template <typename TypeHandle, typename FuncDeleter>
@@ -80,7 +77,6 @@ public:
 	AutoWinHandle(AutoWinHandle&& other) noexcept;
 	AutoWinHandle& operator=(AutoWinHandle&& other) noexcept;
 };
-
 
 
 }  // namespace gan

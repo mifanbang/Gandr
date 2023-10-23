@@ -51,8 +51,7 @@ struct ImageNtHeaders
 
 	// Getters that read different offsets in the struct on different architectures
 #define DEFINE_GETTER(funcName, memberName)	\
-	template <class T>	\
-	auto funcName(this T self) { return self.GetArch() == Arch::Amd64 ? self.optHeader64.memberName : self.optHeader32.memberName; }
+	auto funcName(this auto&& self) { return self.GetArch() == Arch::Amd64 ? self.optHeader64.memberName : self.optHeader32.memberName; }
 
 	DEFINE_GETTER(GetDataDirectories, DataDirectory);
 	DEFINE_GETTER(GetNumOfDataDirectories, NumberOfRvaAndSizes);

@@ -20,11 +20,11 @@
 
 #include <windows.h>
 
+#include <cassert>
 
 
 namespace gan
 {
-
 
 
 // ---------------------------------------------------------------------------
@@ -36,12 +36,10 @@ Debugger::Debugger()
 {
 }
 
-
 Debugger::~Debugger()
 {
 	RemoveAllSessions(DebugSession::EndOption::Kill);
 }
-
 
 Debugger::EventLoopResult Debugger::EnterEventLoop()
 {
@@ -53,7 +51,7 @@ Debugger::EventLoopResult Debugger::EnterEventLoop()
 		if (m_sessions.size() == 0)
 			return EventLoopResult::AllDetached;
 
-		DebugSession::ContinueStatus contStatus = DebugSession::ContinueStatus::ContinueThread;  // continue by default
+		auto contStatus = DebugSession::ContinueStatus::ContinueThread;  // continue by default
 
 		if (::WaitForDebugEvent(&dbgEvent, INFINITE) == 0)
 			return EventLoopResult::ErrorOccurred;
@@ -64,8 +62,8 @@ Debugger::EventLoopResult Debugger::EnterEventLoop()
 		auto pSession = itr->second;
 
 		DebugSession::PreEvent preEvent {
-			dbgEvent.dwDebugEventCode,
-			dbgEvent.dwThreadId
+			.eventCode = dbgEvent.dwDebugEventCode,
+			.threadId = dbgEvent.dwThreadId
 		};
 		pSession->OnPreEvent(preEvent);
 
@@ -137,21 +135,16 @@ Debugger::EventLoopResult Debugger::EnterEventLoop()
 	return EventLoopResult::ExitRequested;
 }
 
-
 bool Debugger::AddSessionInstance(const std::shared_ptr<DebugSession>& pSession)
 {
-	if (!pSession->IsValid())
+	assert(pSession);
+	if (!pSession || !pSession->IsValid())
 		return false;
 
-	DebugSession::Identifier sessId = pSession->GetId();
-	auto itr = m_sessions.find(sessId);
-	if (itr != m_sessions.end())
-		return false;
-
-	m_sessions.try_emplace(sessId, pSession);
-	return true;
+	return m_sessions
+		.try_emplace(pSession->GetId(), pSession)
+		.second;
 }
-
 
 bool Debugger::RemoveSession(DebugSession::Identifier sessionId, DebugSession::EndOption option)
 {
@@ -164,7 +157,6 @@ bool Debugger::RemoveSession(DebugSession::Identifier sessionId, DebugSession::E
 	return true;
 }
 
-
 void Debugger::RemoveAllSessions(DebugSession::EndOption option)
 {
 	for (auto& itr : m_sessions)
@@ -172,14 +164,12 @@ void Debugger::RemoveAllSessions(DebugSession::EndOption option)
 	m_sessions.clear();
 }
 
-
 void Debugger::GetSessionList(IdList& output) const
 {
 	output.clear();
 	for (auto& itr : m_sessions)
 		output.push_back(itr.first);
 }
-
 
 
 }  // namespace gan

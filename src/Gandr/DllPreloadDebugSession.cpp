@@ -28,10 +28,8 @@
 #pragma comment(lib, "shlwapi.lib")
 
 
-
 namespace gan
 {
-
 
 
 DllPreloadDebugSession::DllPreloadDebugSession(const CreateProcessParam& newProcParam, const wchar_t* pPayloadPath, Option option)
@@ -47,7 +45,7 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnProcessCreated(const CREA
 {
 	m_hMainThread = procInfo.hThread;
 
-	// install a hardware breakpoint at entry point
+	// Install a hardware breakpoint at entry point
 	HWBreakpoint::Enable(m_hMainThread, ConstMemAddr{ procInfo.lpStartAddress }, HWBreakpointSlot::DR0);
 
 	return ContinueStatus::ContinueThread;
@@ -58,9 +56,9 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 {
 	switch (exceptionInfo.ExceptionRecord.ExceptionCode)
 	{
-		case EXCEPTION_SINGLE_STEP:  // hardware breakpoint triggered
+		case EXCEPTION_SINGLE_STEP:  // Hardware breakpoint triggered
 		{
-			// uninstall the hardware breakpoint at entry point
+			// Uninstall the hardware breakpoint at entry point
 			HWBreakpoint::Disable(m_hMainThread, HWBreakpointSlot::DR0);
 
 			DllInjectorByContext injector(GetHandle(), m_hMainThread);
@@ -71,15 +69,15 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 				ContinueStatus::ContinueThread;
 		}
 
-		case EXCEPTION_BREAKPOINT:  // expecting the breakpoint triggered by Windows Debug API for attaching the process
+		case EXCEPTION_BREAKPOINT:  // Expecting this breakpoint triggered by Windows Debug API upon attaching to the process
 		{
-			// do nothing
+			// Do nothing
 			break;
 		}
 
 		default:
 		{
-			return ContinueStatus::NotHandled;  // forward if exception is other than a breakpoint
+			return ContinueStatus::NotHandled;  // Forward if exception is other than a breakpoint
 		}
 	}
 

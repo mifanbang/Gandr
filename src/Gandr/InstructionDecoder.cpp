@@ -23,7 +23,6 @@
 #include <cassert>
 
 
-
 namespace
 {
 
@@ -529,7 +528,6 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 }  // unnamed namespace
 
 
-
 namespace gan
 {
 
@@ -555,7 +553,6 @@ std::optional<InstructionLengthDetails> InstructionDecoder::GetNextLength()
 	}
 	return std::nullopt;
 }
-
 
 
 }  // namespace gan

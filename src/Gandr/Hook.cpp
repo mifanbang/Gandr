@@ -22,6 +22,7 @@
 #include <Types.h>
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <optional>
 #include <shared_mutex>
@@ -31,7 +32,6 @@
 
 #include <intrin.h>
 #include <windows.h>
-
 
 
 namespace
@@ -858,9 +858,19 @@ Hook::OpResult Hook::Uninstall()
 }
 
 
+void Hook::CheckCtorArgs(MemAddr origFunc, MemAddr hookFunc)
+{
+	assert(origFunc);
+	assert(hookFunc);
+	assert(origFunc != hookFunc);
+}
+
+
 ConstMemAddr Hook::GetTrampolineAddr(ConstMemAddr origFunc)
 {
-	return HookRegistry::GetInstance().GetTrampoline(origFunc.ConstCast());
+	const auto addr = HookRegistry::GetInstance().GetTrampoline(origFunc.ConstCast());
+	assert(addr);
+	return addr;
 }
 
 

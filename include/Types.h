@@ -22,9 +22,7 @@
 	#error Macro NOMINMAX is required for the library
 #endif  // windows.h NOMINMAX check
 
-#include <cstdint>
 #include <functional>
-
 
 
 namespace gan
@@ -171,9 +169,10 @@ enum class Arch : uint8_t { IA32, Amd64 };
 consteval bool Is64() { return sizeof(MemAddr) == 8; }
 consteval Arch BuildArch() { return Is64() ? Arch::Amd64 : Arch::IA32; }
 
+consteval bool UseStdFormat() { return false; }  // Whether to enable the use of std::format which can boast executable size
+
 
 }  // namespace gan
-
 
 
 // std::hash specializations

@@ -25,14 +25,12 @@ namespace gan
 {
 
 
-
 class DynamicCallBase
 {
 protected:
 	// Loads library if not loaded before.
 	static void* ObtainFunction(const wchar_t* libName, const char* funcName);
 };
-
 
 
 // ---------------------------------------------------------------------------
@@ -69,7 +67,6 @@ public:
 private:
 	T* m_pFunc;
 };
-
 
 
 }  // namespace gan

@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <DllInjector.h>
@@ -28,10 +26,8 @@
 #include <windows.h>
 
 
-
 // defined in TestDllInjector.asm
 extern "C" void __stdcall Test_DllInjector_NewThreadProc(uint32_t* signal);
-
 
 
 DEFINE_TESTSUITE_START(DllInjectorByContext)
@@ -91,4 +87,3 @@ DEFINE_TESTSUITE_START(DllInjectorByContext)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

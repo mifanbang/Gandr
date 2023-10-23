@@ -20,9 +20,6 @@
 
 #include <Types.h>
 
-#include <cassert>
-#include <cstdint>
-
 
 namespace gan
 {
@@ -60,28 +57,26 @@ public:
 		, m_funcHook(hookFunc)
 		, m_hooked(false)
 	{
-		assert(m_funcOrig);
-		assert(m_funcHook);
-		assert(m_funcOrig != m_funcHook);
+		CheckCtorArgs(m_funcOrig, m_funcHook);
 	}
 
 	OpResult Install();
 	OpResult Uninstall();
 
-
 	template <typename F>
+		requires std::is_function<F>::value
 	static auto GetTrampoline(const F& origFunc)
 	{
-		static_assert(std::is_function<F>::value);
-		auto trampoline = GetTrampolineAddr(gan::ConstMemAddr{ origFunc });
-		assert(trampoline);
-		return trampoline.ConstRef<F>();
+		return GetTrampolineAddr(gan::ConstMemAddr{ origFunc })
+			.ConstRef<F>();
 	}
 
 
 private:
-	// for hiding implementation as CallTrampoline must be defined in header
+	// Helper functions to hide implementation in the .cpp file to avoid forced inlining
+	static void CheckCtorArgs(MemAddr origFunc, MemAddr hookFunc);
 	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);
+
 
 	MemAddr m_funcOrig;  // address to where the inline hook is installed
 	MemAddr m_funcHook;  // address to the user-defined hook function

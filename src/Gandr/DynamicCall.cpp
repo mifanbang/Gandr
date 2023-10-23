@@ -22,16 +22,13 @@
 #include <Types.h>
 
 #include <algorithm>
-#include <memory>
 #include <vector>
 
 #include <windows.h>
 
 
-
 namespace
 {
-
 
 
 class LibraryManager : public gan::Singleton<LibraryManager>
@@ -74,24 +71,19 @@ private:
 };
 
 
-
 }  // unnamed namespace
-
 
 
 namespace gan
 {
 
 
-
 void* DynamicCallBase::ObtainFunction(const wchar_t* libName, const char* funcName)
 {
-	auto hModule = LibraryManager::GetInstance().Get(libName);
-	if (hModule == nullptr)
-		return nullptr;
-	return ::GetProcAddress(hModule, funcName);
+	if (auto hModule = LibraryManager::GetInstance().Get(libName))
+		return ::GetProcAddress(hModule, funcName);
+	return nullptr;
 }
-
 
 
 }  // namespace gan

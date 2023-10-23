@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <Debugger.h>
@@ -30,7 +28,6 @@
 
 #include <windows.h>
 #include <shlwapi.h>
-
 
 
 // This test suite tests classes Debugger, DebugSession, and DllPreloadDebugSession
@@ -81,4 +78,3 @@ DEFINE_TESTSUITE_START(Debugger)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

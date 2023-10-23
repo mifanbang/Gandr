@@ -18,13 +18,11 @@
 
 #pragma once
 
-#include <cstdint>
 #include <memory>
 
 
 namespace gan
 {
-
 
 
 class Buffer
@@ -60,7 +58,6 @@ private:
 	size_t m_size;  // size in use
 	uint8_t* m_data;
 };
-
 
 
 }  // namespace gan

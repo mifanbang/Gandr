@@ -28,13 +28,11 @@
 #include <windows.h>
 
 
-
 #ifdef _WIN64
 	#define GET_CONTEXT_REG(ctx, reg)	(ctx.R##reg)
 #else
 	#define GET_CONTEXT_REG(ctx, reg)	(ctx.E##reg)
 #endif  // defined _WIN64
-
 
 
 namespace
@@ -44,15 +42,12 @@ namespace
 class InjectionHelper
 {
 public:
-	constexpr static size_t k_targetArch = gan::Is64() ? 64 : 32;
-
-
-	template <size_t N> static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext(::CONTEXT&, const wchar_t*) = delete;
-	template <size_t N> static void FillInContext(const wchar_t* , ::CONTEXT&) = delete;
+	template <gan::Arch arch>
+	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext(CONTEXT&, const wchar_t*);
 
 
 	template <>
-	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<32>(::CONTEXT& context, const wchar_t* remoteDllPath)
+	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<gan::Arch::IA32>(CONTEXT& context, const wchar_t* remoteDllPath)
 	{
 		// write faked stack frame
 		struct StackFrameForLoadLibraryW32
@@ -97,7 +92,7 @@ public:
 	}
 
 	template <>
-	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<64>(::CONTEXT& context, const wchar_t* remoteDllPath)
+	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<gan::Arch::Amd64>(CONTEXT& context, const wchar_t* remoteDllPath)
 	{
 		struct StackFrameForLoadLibraryW64
 		{
@@ -125,9 +120,9 @@ public:
 
 
 private:
-	static void SetIPToLoadLibraryW(::CONTEXT& context)
+	static void SetIPToLoadLibraryW(CONTEXT& context)
 	{
-		gan::DynamicCall<decltype(::LoadLibraryW)> funcLoadLibraryW(L"kernel32", "LoadLibraryW");
+		gan::DynamicCall<decltype(::LoadLibraryW)> funcLoadLibraryW{ L"kernel32", "LoadLibraryW" };
 		assert(funcLoadLibraryW.IsValid());
 
 		GET_CONTEXT_REG(context, ip) = reinterpret_cast<size_t>(funcLoadLibraryW.GetAddress());
@@ -138,11 +133,8 @@ private:
 }  // unnamed namespace
 
 
-
-
 namespace gan
 {
-
 
 
 DllInjectorByContext::DllInjectorByContext(WinHandle hProcess, WinHandle hThread)
@@ -152,29 +144,42 @@ DllInjectorByContext::DllInjectorByContext(WinHandle hProcess, WinHandle hThread
 	assert(hProcess != nullptr);
 	assert(hThread != nullptr);
 
-	HANDLE hCurrentProc = GetCurrentProcess();
+	HANDLE hCurrentProc = ::GetCurrentProcess();
 	HANDLE hDuplicated = INVALID_HANDLE_VALUE;
 
-	::DuplicateHandle(hCurrentProc, hProcess, hCurrentProc, &hDuplicated, 0, FALSE, DUPLICATE_SAME_ACCESS);
+	constexpr DWORD k_desiredAccessIgnored = 0;  // Because DUPLICATE_SAME_ACCESS is specified
+	constexpr BOOL k_handleNotInheritable = FALSE;
+	const auto dupProcResult = ::DuplicateHandle(
+		hCurrentProc,
+		hProcess,
+		hCurrentProc,
+		&hDuplicated,
+		k_desiredAccessIgnored,
+		k_handleNotInheritable,
+		DUPLICATE_SAME_ACCESS
+	);
+	assert(dupProcResult);
 	m_hProcess = hDuplicated;
 
-	::DuplicateHandle(hCurrentProc, hThread, hCurrentProc, &hDuplicated, 0, FALSE, DUPLICATE_SAME_ACCESS);
+	const auto dupThreadResult = ::DuplicateHandle(
+		hCurrentProc,
+		hThread,
+		hCurrentProc,
+		&hDuplicated,
+		k_desiredAccessIgnored,
+		k_handleNotInheritable,
+		DUPLICATE_SAME_ACCESS
+	);
+	assert(dupThreadResult);
 	m_hThread = hDuplicated;
-}
-
-
-DllInjectorByContext::~DllInjectorByContext()
-{
-	::CloseHandle(m_hProcess);
-	::CloseHandle(m_hThread);
 }
 
 
 DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPath)
 {
-	constexpr DWORD k_contextFlags = CONTEXT_INTEGER | CONTEXT_CONTROL;
+	constexpr DWORD k_contextFlags{ CONTEXT_INTEGER | CONTEXT_CONTROL };
 
-	::CONTEXT context;
+	CONTEXT context;
 	ZeroMemory(&context, sizeof(context));
 
 	// Make a copy of registers of interest
@@ -185,12 +190,12 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPat
 	// Allocate buffer in the memory space of target process and write DLL path to it
 	size_t dwBufferSize = sizeof(WCHAR) * (wcslen(pDllPath) + 1);
 	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(m_hProcess, nullptr, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
-	bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(m_hProcess, remoteBuffer, pDllPath, dwBufferSize, nullptr) != 0);
+	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(m_hProcess, remoteBuffer, pDllPath, dwBufferSize, nullptr) != 0);
 	if (!isDllPathWritten)
 		return Result::DLLPathNotWritten;
 
 	// Generate a "synthesized" stack frame and modify registers accordingly
-	auto bufferStackFrame = InjectionHelper::GenerateStackFrameAndUpdateContext<InjectionHelper::k_targetArch>(context, remoteBuffer);
+	auto bufferStackFrame = InjectionHelper::GenerateStackFrameAndUpdateContext<BuildArch()>(context, remoteBuffer);
 	assert(bufferStackFrame);
 	if (!bufferStackFrame)
 		return Result::StackFrameNotWritten;
@@ -206,14 +211,13 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPat
 	if (stackFrameWritten == FALSE)
 		return Result::StackFrameNotWritten;
 
-	// manipulate IP (and other registers on amd64) to fake a function call
+	// Manipulate IP (and other registers on AMD64) to fake a function call
 	context.ContextFlags = k_contextFlags;
 	if (::SetThreadContext(m_hThread, &context) == FALSE)
 		return Result::SetContextFailed;
 
 	return Result::Succeeded;
 }
-
 
 
 }  // namespace gan

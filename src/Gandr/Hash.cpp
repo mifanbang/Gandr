@@ -34,8 +34,8 @@ namespace gan
 
 WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 {
-	AutoHandle hProv(BCRYPT_ALG_HANDLE(nullptr), [](auto prov) { ::BCryptCloseAlgorithmProvider(prov, 0); });
-	AutoHandle hHash(BCRYPT_HASH_HANDLE(nullptr), ::BCryptDestroyHash);
+	AutoHandle hProv(BCRYPT_ALG_HANDLE{ nullptr }, [](auto prov) { ::BCryptCloseAlgorithmProvider(prov, 0); });
+	AutoHandle hHash(BCRYPT_HASH_HANDLE{ nullptr }, ::BCryptDestroyHash);
 
 	// Initialization of service provider
 	ULONG numByteRead = 0;
@@ -87,7 +87,7 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 	if (!hashSucceeded)
 		return GetLastError();
 
-	::CopyMemory(&out, &hash, sizeof(hash));
+	out = hash;
 	return NO_ERROR;
 }
 

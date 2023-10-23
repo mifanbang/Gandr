@@ -16,12 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <InstructionDecoder.h>
-
 
 
 DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
@@ -284,4 +281,3 @@ DEFINE_TESTSUITE_START(InstructionDecoder_Amd64)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

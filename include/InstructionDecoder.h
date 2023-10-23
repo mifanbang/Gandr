@@ -20,9 +20,7 @@
 
 #include <Types.h>
 
-#include <cstdint>
 #include <optional>
-
 
 
 namespace gan

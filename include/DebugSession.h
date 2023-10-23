@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include <cstdint>
+#include <Types.h>
 
 #include <windows.h>
 
 
-
 namespace gan
 {
-
 
 
 // ---------------------------------------------------------------------------
@@ -41,10 +39,10 @@ public:
 
 	struct CreateProcessParam
 	{
-		LPCWSTR imagePath;
-		LPCWSTR args;
-		LPCWSTR currentDir;
-		LPSTARTUPINFOW startUpInfo;
+		const wchar_t* imagePath;
+		const wchar_t* args;
+		const wchar_t* currentDir;
+		STARTUPINFOW* startUpInfo;
 
 		constexpr CreateProcessParam()
 			: imagePath(nullptr)
@@ -85,11 +83,11 @@ public:
 	bool IsValid() const;
 
 	Identifier GetId() const		{ return m_pid;	}
-	const HANDLE GetHandle() const	{ return m_hProc; }
+	const WinHandle GetHandle() const	{ return m_hProc; }
 
 	// Event handlers
 	// Handlers shouldn't close handles in related debug info structures as class Debugger will close them.
-	virtual void OnPreEvent([[maybe_unused]] const PreEvent& event) { }
+	virtual void OnPreEvent([[maybe_unused]] PreEvent event) { }
 	virtual ContinueStatus OnExceptionTriggered([[maybe_unused]] const EXCEPTION_DEBUG_INFO& exceptionInfo) { return ContinueStatus::ContinueThread; }
 	virtual ContinueStatus OnThreadCreated([[maybe_unused]] const CREATE_THREAD_DEBUG_INFO& threadInfo) { return ContinueStatus::ContinueThread; }
 	virtual ContinueStatus OnProcessCreated([[maybe_unused]] const CREATE_PROCESS_DEBUG_INFO& procInfo) { return ContinueStatus::ContinueThread; }
@@ -103,9 +101,8 @@ public:
 
 private:
 	Identifier m_pid;
-	HANDLE m_hProc;
+	WinHandle m_hProc;
 };
-
 
 
 }  // namespace gan

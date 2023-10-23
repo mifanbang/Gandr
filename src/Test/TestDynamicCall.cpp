@@ -16,16 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <DynamicCall.h>
 
-#include <cstdint>
-
 #include <windows.h>
-
 
 
 DEFINE_TESTSUITE_START(DynamicCall)
@@ -65,4 +60,3 @@ DEFINE_TESTSUITE_START(DynamicCall)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

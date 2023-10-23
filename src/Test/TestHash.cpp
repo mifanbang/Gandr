@@ -16,14 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <Hash.h>
 
 #include <windows.h>
-
 
 
 DEFINE_TESTSUITE_START(Hash)
@@ -50,4 +47,3 @@ DEFINE_TESTSUITE_START(Hash)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-

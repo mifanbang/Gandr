@@ -16,14 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #include "Test.h"
 
 #include <Breakpoint.h>
 
 #include <windows.h>
-
 
 
 namespace
@@ -32,7 +29,6 @@ namespace
 __declspec(thread) bool t_isBpHit;
 
 }  // unnamed namespace
-
 
 
 DEFINE_TESTSUITE_START(Breakpoint)
@@ -86,5 +82,3 @@ DEFINE_TESTSUITE_START(Breakpoint)
 	DEFINE_TEST_END
 
 DEFINE_TESTSUITE_END
-
-

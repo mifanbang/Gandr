@@ -19,13 +19,11 @@
 #include "Test.h"
 
 #include <cassert>
-#include <cstdint>
 #include <string>
 #include <unordered_map>
 
 #include <strsafe.h>
 #include <windows.h>
-
 
 
 namespace

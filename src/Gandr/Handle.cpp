@@ -25,7 +25,6 @@ namespace gan
 {
 
 
-
 AutoWinHandle AutoWinHandle::Duplicate(WinHandle handle)
 {
 	constexpr uint32_t k_ignoredParam = 0;
@@ -33,9 +32,17 @@ AutoWinHandle AutoWinHandle::Duplicate(WinHandle handle)
 
 	HANDLE newHandle;
 	HANDLE currProcess = GetCurrentProcess();
-	const auto dupResult = ::DuplicateHandle(currProcess, handle, currProcess, &newHandle, k_ignoredParam, k_newHandleInheritable, DUPLICATE_SAME_ACCESS);
+	const auto dupResult = ::DuplicateHandle(
+		currProcess,
+		handle,
+		currProcess,
+		&newHandle,
+		k_ignoredParam,
+		k_newHandleInheritable,
+		DUPLICATE_SAME_ACCESS
+	);
 
-	return dupResult != FALSE ? AutoWinHandle(newHandle) : nullptr;
+	return dupResult ? AutoWinHandle(newHandle) : nullptr;
 }
 
 
@@ -72,7 +79,6 @@ AutoWinHandle& AutoWinHandle::operator=(AutoWinHandle&& other) noexcept
 	other.GetRef() = nullptr;
 	return *this;
 }
-
 
 
 }  // namespace gan
