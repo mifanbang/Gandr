@@ -138,8 +138,8 @@ namespace gan
 
 
 DllInjectorByContext::DllInjectorByContext(WinHandle hProcess, WinHandle hThread)
-	: m_hProcess(INVALID_HANDLE_VALUE)
-	, m_hThread(INVALID_HANDLE_VALUE)
+	: m_hProcess()
+	, m_hThread()
 {
 	assert(hProcess != nullptr);
 	assert(hThread != nullptr);
@@ -184,13 +184,13 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPat
 
 	// Make a copy of registers of interest
 	context.ContextFlags = k_contextFlags;
-	if (::GetThreadContext(m_hThread, &context) == FALSE)
+	if (::GetThreadContext(*m_hThread, &context) == FALSE)
 		return Result::GetContextFailed;
 
 	// Allocate buffer in the memory space of target process and write DLL path to it
 	size_t dwBufferSize = sizeof(WCHAR) * (wcslen(pDllPath) + 1);
-	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(m_hProcess, nullptr, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
-	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(m_hProcess, remoteBuffer, pDllPath, dwBufferSize, nullptr) != 0);
+	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(*m_hProcess, nullptr, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
+	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(*m_hProcess, remoteBuffer, pDllPath, dwBufferSize, nullptr) != 0);
 	if (!isDllPathWritten)
 		return Result::DLLPathNotWritten;
 
@@ -202,7 +202,7 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPat
 
 	// Write the stack frame target process memory
 	const auto stackFrameWritten = ::WriteProcessMemory(
-		m_hProcess,
+		*m_hProcess,
 		reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, sp)),
 		bufferStackFrame->GetData(),
 		bufferStackFrame->GetSize(),
@@ -213,7 +213,7 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPat
 
 	// Manipulate IP (and other registers on AMD64) to fake a function call
 	context.ContextFlags = k_contextFlags;
-	if (::SetThreadContext(m_hThread, &context) == FALSE)
+	if (::SetThreadContext(*m_hThread, &context) == FALSE)
 		return Result::SetContextFailed;
 
 	return Result::Succeeded;

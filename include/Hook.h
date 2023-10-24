@@ -52,6 +52,7 @@ public:
 
 
 	template <typename F>
+		requires std::is_function_v<F>
 	constexpr Hook(const F* origFunc, const F* hookFunc)
 		: m_funcOrig(origFunc)
 		, m_funcHook(hookFunc)
@@ -64,8 +65,8 @@ public:
 	OpResult Uninstall();
 
 	template <typename F>
-		requires std::is_function<F>::value
-	static auto GetTrampoline(const F& origFunc)
+		requires std::is_function_v<F>
+	static auto GetTrampoline(const F* origFunc)
 	{
 		return GetTrampolineAddr(gan::ConstMemAddr{ origFunc })
 			.ConstRef<F>();
@@ -73,7 +74,7 @@ public:
 
 
 private:
-	// Helper functions to hide implementation in the .cpp file to avoid forced inlining
+	// Helper functions as a layer of abstraction not to expose implementation in header
 	static void CheckCtorArgs(MemAddr origFunc, MemAddr hookFunc);
 	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);
 

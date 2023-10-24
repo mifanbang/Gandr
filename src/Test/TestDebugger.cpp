@@ -58,7 +58,7 @@ DEFINE_TESTSUITE_START(Debugger)
 			ASSERT(session);
 
 			pid = session->GetId();
-			process = std::move(gan::AutoWinHandle::Duplicate(session->GetHandle()));
+			process = gan::AutoWinHandleImpl::Duplicate(session->GetHandle());
 
 			EXPECT(debugger.EnterEventLoop() == gan::Debugger::EventLoopResult::AllDetached);
 		}
@@ -73,7 +73,7 @@ DEFINE_TESTSUITE_START(Debugger)
 		);
 		EXPECT(loadedInTargetProcess);
 
-		EXPECT(TerminateProcess(process, 0) != FALSE);
+		EXPECT(TerminateProcess(*process, 0) != FALSE);
 	}
 	DEFINE_TEST_END
 

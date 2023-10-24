@@ -25,7 +25,13 @@ namespace gan
 {
 
 
-AutoWinHandle AutoWinHandle::Duplicate(WinHandle handle)
+void AutoWinHandleImpl::Close(WinHandle handle)
+{
+	::CloseHandle(handle);
+}
+
+
+WinHandle AutoWinHandleImpl::Duplicate(WinHandle handle)
 {
 	constexpr uint32_t k_ignoredParam = 0;
 	constexpr BOOL k_newHandleInheritable = TRUE;
@@ -42,42 +48,7 @@ AutoWinHandle AutoWinHandle::Duplicate(WinHandle handle)
 		DUPLICATE_SAME_ACCESS
 	);
 
-	return dupResult ? AutoWinHandle(newHandle) : nullptr;
-}
-
-
-AutoWinHandle::AutoWinHandle(WinHandle handle)
-	: super(handle, ::CloseHandle)
-{
-}
-
-
-bool AutoWinHandle::IsValid() const
-{
-	return static_cast<bool>(*this);
-}
-
-
-AutoWinHandle::operator bool() const
-{
-	const WinHandle handle = operator WinHandle();
-	return handle != nullptr && handle != INVALID_HANDLE_VALUE;
-}
-
-
-AutoWinHandle::AutoWinHandle(AutoWinHandle&& other) noexcept
-	: super(other.GetRef(), ::CloseHandle)
-{
-	other.GetRef() = nullptr;
-}
-
-
-AutoWinHandle& AutoWinHandle::operator=(AutoWinHandle&& other) noexcept
-{
-	::CloseHandle(GetRef());
-	GetRef() = other.GetRef();
-	other.GetRef() = nullptr;
-	return *this;
+	return dupResult ? newHandle : nullptr;
 }
 
 

@@ -61,19 +61,19 @@ ModuleInfo::ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry)
 
 ModuleEnumerator::Result ModuleEnumerator::Enumerate(uint32_t processId, ModuleList& out)
 {
-	AutoWinHandle hSnap = GetModuleListSnapshop(processId);
-	if (hSnap == INVALID_HANDLE_VALUE)
+	AutoWinHandle hSnap{ GetModuleListSnapshop(processId) };
+	if (!hSnap)
 		return Result::SnapshotFailed;
 
 	ModuleList newModList;
 	MODULEENTRY32 modEntry;
 	modEntry.dwSize = sizeof(modEntry);
 
-	BOOL mod32Result = ::Module32FirstW(hSnap, &modEntry);
+	BOOL mod32Result = ::Module32FirstW(*hSnap, &modEntry);
 	while (mod32Result == TRUE)
 	{
 		newModList.emplace_back(modEntry);
-		mod32Result = ::Module32NextW(hSnap, &modEntry);
+		mod32Result = ::Module32NextW(*hSnap, &modEntry);
 	}
 
 	// Module32Next() ends with returning FALSE and setting error code to ERROR_NO_MORE_FILES

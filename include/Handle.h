@@ -21,62 +21,89 @@
 #include <Types.h>
 
 
-// Forward declaration
-extern "C" __declspec(dllimport) int __stdcall CloseHandle(_In_ _Post_ptr_invalid_ gan::WinHandle);
-
-
 namespace gan
 {
 
 
-template <typename TypeHandle, typename FuncDeleter>
+template <typename ImplType>
+	requires (requires (ImplType) {
+		typename ImplType::RawHandle;
+		{ ImplType::Close((ImplType::RawHandle)(0)) };
+	})
 class AutoHandle
 {
 public:
-	AutoHandle(TypeHandle handle, FuncDeleter& deleter)
+	AutoHandle() = default;
+	constexpr explicit AutoHandle(ImplType::RawHandle handle)
 		: m_handle(handle)
-		, m_deleter(deleter)
 	{ }
-	AutoHandle(TypeHandle handle, FuncDeleter&& deleter)
-		: m_handle(handle)
-		, m_deleter(deleter)
-	{ }
-
 	~AutoHandle()
 	{
-		m_deleter(m_handle);
+		Invalidate();
+	}
+	AutoHandle& operator =(ImplType::RawHandle handle)
+	{
+		Invalidate();
+		m_handle = handle;
+		return *this;
 	}
 
-	__forceinline operator TypeHandle() const	{ return m_handle; }
-	__forceinline TypeHandle& GetRef()			{ return m_handle; }
-
-	// Non-copyable and non-movable by default
+	// Non-copyable
 	AutoHandle(const AutoHandle&) = delete;
 	AutoHandle& operator=(const AutoHandle&) = delete;
 
+	// Movable
+	constexpr AutoHandle(AutoHandle&& other) noexcept
+		: m_handle(std::move(other.m_handle))
+	{
+		other.m_handle = (ImplType::RawHandle)(0);
+	}
+	AutoHandle& operator=(AutoHandle&& other) noexcept
+	{
+		Invalidate();
+		m_handle = other.m_handle;
+		other.m_handle = reinterpret_cast<ImplType::RawHandle>(nullptr);
+		return *this;
+	}
+
+	constexpr operator bool() const
+	{
+		return m_handle != (ImplType::RawHandle)(0)
+			&& m_handle != (ImplType::RawHandle)(-1);  // INVALID_HANDLE_VALUE := -1
+	}
+	constexpr ImplType::RawHandle operator*() const	{ return m_handle; }
+	ImplType::RawHandle& GetRef() { return m_handle; }
+
+	constexpr bool operator ==(const AutoHandle&) const = default;
+	constexpr bool operator ==(ImplType::RawHandle otherRawHandle) const { return m_handle == otherRawHandle; }
+
+	void Invalidate()
+	{
+		if (operator bool())
+		{
+			ImplType::Close(m_handle);
+			m_handle = reinterpret_cast<ImplType::RawHandle>(nullptr);
+		}
+	}
+
+	// Support of duplication is optional
+	template <class Self>
+	auto Duplicate(this Self&& self) { return Self{ ImplType::Duplicate(self.m_handle) }; }
 
 private:
-	FuncDeleter& m_deleter;
-	TypeHandle m_handle;
+	ImplType::RawHandle m_handle;
 };
 
 
-class AutoWinHandle : public AutoHandle<WinHandle, decltype(::CloseHandle)>
+struct AutoWinHandleImpl
 {
-	using super = AutoHandle<WinHandle, decltype(::CloseHandle)>;
+	using RawHandle = WinHandle;
 
-public:
-	AutoWinHandle(WinHandle handle);
-
-	static AutoWinHandle Duplicate(WinHandle handle);
-
-	bool IsValid() const;
-	operator bool() const;
-
-	// movable
-	AutoWinHandle(AutoWinHandle&& other) noexcept;
-	AutoWinHandle& operator=(AutoWinHandle&& other) noexcept;
+	static void Close(RawHandle handle);
+	static RawHandle Duplicate(RawHandle handle);
 };
+
+using AutoWinHandle = AutoHandle<AutoWinHandleImpl>;
 
 
 }  // namespace gan

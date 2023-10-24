@@ -62,13 +62,13 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 
 		{
 			gan::AutoWinHandle handle1(event);
-			ASSERT(handle1.IsValid());
+			ASSERT(handle1);
 
 			gan::AutoWinHandle handle2(std::move(handle1));
-			EXPECT(!handle1.IsValid());
-			EXPECT(handle2.IsValid());
+			EXPECT(!handle1);
+			EXPECT(handle2);
 			EXPECT(handle2 == event);
-			EXPECT(IsHandleValidToSystem(handle2));
+			EXPECT(IsHandleValidToSystem(*handle2));
 		}
 
 		EXPECT(!IsHandleValidToSystem(event));
@@ -84,16 +84,16 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 
 		{
 			gan::AutoWinHandle handle1(event1);
-			ASSERT(handle1.IsValid());
+			ASSERT(handle1);
 
 			gan::AutoWinHandle handle2(event2);
-			ASSERT(handle2.IsValid());
+			ASSERT(handle2);
 
 			handle2 = std::move(handle1);
-			EXPECT(!handle1.IsValid());
-			EXPECT(handle2.IsValid());
+			EXPECT(!handle1);
+			EXPECT(handle2);
 			EXPECT(handle2 == event1);
-			EXPECT(IsHandleValidToSystem(handle2));
+			EXPECT(IsHandleValidToSystem(*handle2));
 			EXPECT(!IsHandleValidToSystem(event2));  // The original event of handle2 should be closed by now
 		}
 

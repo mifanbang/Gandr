@@ -28,14 +28,37 @@
 #pragma comment(lib, "bcrypt.lib")
 
 
+namespace
+{
+
+
+struct AutoBcryptAlgHandleImpl
+{
+	using RawHandle = BCRYPT_ALG_HANDLE;
+	static void Close(RawHandle handle)	{ ::BCryptCloseAlgorithmProvider(handle, 0); }
+};
+using AutoBcryptAlgHandle = gan::AutoHandle<AutoBcryptAlgHandleImpl>;
+
+
+struct AutoBcryptHashHandleImpl
+{
+	using RawHandle = BCRYPT_HASH_HANDLE;
+	static void Close(RawHandle handle) { ::BCryptDestroyHash(handle); }
+};
+using AutoBcryptHashHandle = gan::AutoHandle<AutoBcryptHashHandleImpl>;
+
+
+}  // unnamed namespace
+
+
 namespace gan
 {
 
 
 WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 {
-	AutoHandle hProv(BCRYPT_ALG_HANDLE{ nullptr }, [](auto prov) { ::BCryptCloseAlgorithmProvider(prov, 0); });
-	AutoHandle hHash(BCRYPT_HASH_HANDLE{ nullptr }, ::BCryptDestroyHash);
+	AutoBcryptAlgHandle hProv{ };
+	AutoBcryptHashHandle hHash{ };
 
 	// Initialization of service provider
 	ULONG numByteRead = 0;
@@ -48,7 +71,7 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 			0
 		))
 		&& BCRYPT_SUCCESS(::BCryptGetProperty(
-			hProv,
+			*hProv,
 			BCRYPT_OBJECT_LENGTH,
 			reinterpret_cast<uint8_t*>(&hashObjSize),
 			sizeof(hashObjSize),
@@ -62,7 +85,7 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 	const bool hashSucceeded =
 		initSucceeded
 		&& BCRYPT_SUCCESS(::BCryptCreateHash(
-			hProv,
+			*hProv,
 			&hHash.GetRef(),
 			hashObj.get(),
 			hashObjSize,
@@ -73,13 +96,13 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 		// Win32 API bug: the 2nd param of BCryptHashData should be const as it's pure input
 		// REF: https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcrypthashdata
 		&& BCRYPT_SUCCESS(::BCryptHashData(
-			hHash,
+			*hHash,
 			dataAddr.ConstCast().Ptr<uint8_t>(),
 			static_cast<ULONG>(size),
 			0
 		))
 		&& BCRYPT_SUCCESS(::BCryptFinishHash(
-			hHash,
+			*hHash,
 			reinterpret_cast<uint8_t*>(&hash.data),
 			sizeof(hash),
 			0

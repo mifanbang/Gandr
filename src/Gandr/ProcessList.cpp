@@ -42,19 +42,19 @@ ProcessEnumerator::Result ProcessEnumerator::Enumerate(ProcessList& out)
 {
 	constexpr uint32_t k_ignoredParam = 0;
 
-	AutoWinHandle hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, k_ignoredParam);
-	if (hSnap == INVALID_HANDLE_VALUE)
+	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, k_ignoredParam) };
+	if (!hSnap)
 		return Result::SnapshotFailed;
 
 	ProcessList newProcList;
 	PROCESSENTRY32 procEntry;
 	procEntry.dwSize = sizeof(procEntry);
 
-	BOOL proc32Result = ::Process32FirstW(hSnap, &procEntry);
+	BOOL proc32Result = ::Process32FirstW(*hSnap, &procEntry);
 	while (proc32Result == TRUE)
 	{
 		newProcList.emplace_back(procEntry);
-		proc32Result = ::Process32NextW(hSnap, &procEntry);
+		proc32Result = ::Process32NextW(*hSnap, &procEntry);
 	}
 
 	// Process32Next() ends with returning FALSE and setting error code to ERROR_NO_MORE_FILES
