@@ -1,10 +1,11 @@
 # Gandr
 
-A minimalism user-mode library for hacking x86-based Windows processes
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/29260/badge.svg)](https://scan.coverity.com/projects/mifanbang-gandr)
+<br>A minimalism user-mode library for hacking x86-based Windows processes
 
 ## Introduction
 
-Gandr was originally written as the foundation of [Purifier](https://github.com/mifanbang/Purifier), an ad-remover for older Windows versions of Skype. The library aims to wrap Win32 API into simple yet modern C++ interface and accelerate your work to mess up victim processes in userland. Both 32-bit and 64-bit target processes are supported.
+Gandr was originally written as the foundation of [Purifier](https://github.com/mifanbang/Purifier), an ad-remover for older Windows versions of Skype. The library aims to wrap Win32 API into simple yet modern C++ interface and accelerate your work to mess up target processes in userland. Both 32-bit and 64-bit targets are supported.
 
 ## Features
 
@@ -18,11 +19,11 @@ This is a non-exhaustive list of main features of Gandr:
 
 - An *overly* simple x86+amd64 instruction length decoder (class `InstructionDecoder`)
 
-- A helper for installing and removing inline hooks (class `Hook`)
+- A helper for installing and uninstalling inline hooks (class `Hook`)
 
 ## Building Gandr
 
-Visual Studio 2019 is used for the development of Gandr. The solution consists of two parts: a static library, and unit tests.
+Visual Studio 2022 is used for the development of Gandr. The solution consists of two parts: a static library, and unit tests.
 
 There is no external dependency required by the solution, so all you need to do is hitting the "Build Solution" button. Compiled and linked binary files can then be found in the folder `bin\[project name]\[platform]\[build configuration]\`.
 
@@ -38,13 +39,13 @@ Additionally, as a bonus, `Test.cpp` and `Test.h` from the project `Test` consti
 
 ### Preloading a DLL to a New Process
 
-The following example illustrates how easy it is to create a process and force it to preload a DLL before any code in the victim executable file is executed. You can find a slightly more verbose example in the test code `TestDebugger.cpp`.
+The following example illustrates how easy it is to create a process and force it to preload a DLL before any code in the target executable file is executed. You can find a slightly more verbose example in the test code `TestDebugger.cpp`.
 
 ```cpp
 gan::DebugSession::CreateProcessParam param;
 param.imagePath = L"victimProcess.exe";
 
-// Prepare to reload myHackCode.dll into victimProcess.exe
+// Prepare to preload myHackCode.dll into victimProcess.exe
 gan::Debugger debugger;
 debugger.AddSession<gan::DllPreloadDebugSession>(
     param,
@@ -60,7 +61,7 @@ assert(result == gan::Debugger::EventLoopResult::AllDetached);
 
 ### Installing a Hook
 
-Class `Hook` requires function signatures of the victim and the hook to exactly match. This ensures that both have the same number of parameters, calling convention, and other stuff which may potential crash the process. Please note that compiler optimization may break the example below. For more examples of `Hook` usage, see test code `TestHook.cpp`.
+Class `Hook` requires function signatures of the target and the hook to exactly match. This ensures that both have the same number of parameters, calling convention, and other stuff which may potential crash the process. Please note that compiler's inlining optimization might break the example below. For more examples of `Hook` usage, see test code `TestHook.cpp`.
 
 ```cpp
 __declspec(noinline) size_t Add(size_t n1, size_t n2) {
@@ -79,7 +80,7 @@ assert(Add(123, 321) == 444);  // Oh no! This assert will fail!
 
 ## Copyright
 
-Copyright (C) 2020 Mifan Bang <https://debug.tw>.
+Copyright (C) 2020-2023 Mifan Bang <https://debug.tw>.
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
