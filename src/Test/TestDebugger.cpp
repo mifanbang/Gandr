@@ -44,10 +44,10 @@ DEFINE_TESTSUITE_START(Debugger)
 
 		// For later use
 		gan::DebugSession::Identifier pid;
-		gan::AutoWinHandle process(nullptr);
+		gan::AutoWinHandle process{ };
 
 		{
-			gan::DebugSession::CreateProcessParam param;
+			gan::DebugSession::CreateProcessParam param { };
 			param.imagePath = imagePath.c_str();
 
 			constexpr gan::DllPreloadDebugSession::Option k_option = gan::DllPreloadDebugSession::Option::EndSessionSync;
@@ -58,7 +58,7 @@ DEFINE_TESTSUITE_START(Debugger)
 			ASSERT(session);
 
 			pid = session->GetId();
-			process = gan::AutoWinHandleImpl::Duplicate(session->GetHandle());
+			process = gan::HandleHelper::Duplicate(session->GetHandle());
 
 			EXPECT(debugger.EnterEventLoop() == gan::Debugger::EventLoopResult::AllDetached);
 		}

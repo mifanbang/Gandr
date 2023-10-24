@@ -25,6 +25,16 @@ namespace gan
 {
 
 
+class HandleHelper
+{
+public:
+	template <class HandleType>
+	static HandleType Duplicate(HandleType handle) = delete;
+
+	template <> static WinHandle Duplicate<WinHandle>(WinHandle handle);
+};
+
+
 template <typename ImplType>
 	requires (requires (ImplType) {
 		typename ImplType::RawHandle;
@@ -88,7 +98,7 @@ public:
 
 	// Support of duplication is optional
 	template <class Self>
-	auto Duplicate(this Self&& self) { return Self{ ImplType::Duplicate(self.m_handle) }; }
+	auto Duplicate(this Self&& self) { return Self{ HandleHelper::Duplicate<ImplType>(self.m_handle) }; }
 
 private:
 	ImplType::RawHandle m_handle;
@@ -100,9 +110,7 @@ struct AutoWinHandleImpl
 	using RawHandle = WinHandle;
 
 	static void Close(RawHandle handle);
-	static RawHandle Duplicate(RawHandle handle);
 };
-
 using AutoWinHandle = AutoHandle<AutoWinHandleImpl>;
 
 

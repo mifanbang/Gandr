@@ -31,7 +31,8 @@ void AutoWinHandleImpl::Close(WinHandle handle)
 }
 
 
-WinHandle AutoWinHandleImpl::Duplicate(WinHandle handle)
+template <>
+WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle)
 {
 	constexpr uint32_t k_ignoredParam = 0;
 	constexpr BOOL k_newHandleInheritable = TRUE;

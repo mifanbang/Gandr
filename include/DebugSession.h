@@ -43,13 +43,6 @@ public:
 		const wchar_t* args;
 		const wchar_t* currentDir;
 		STARTUPINFOW* startUpInfo;
-
-		constexpr CreateProcessParam()
-			: imagePath(nullptr)
-			, args(nullptr)
-			, currentDir(nullptr)
-			, startUpInfo(nullptr)
-		{ }
 	};
 
 	struct PreEvent
