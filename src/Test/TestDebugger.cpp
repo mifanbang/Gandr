@@ -77,4 +77,26 @@ DEFINE_TESTSUITE_START(Debugger)
 	}
 	DEFINE_TEST_END
 
+	// This is for testing whether the sample code in README.md builds
+	DEFINE_TEST_START(ReadMeSample)
+	{
+		gan::DebugSession::CreateProcessParam param{
+			.imagePath = L"victimProcess.exe"
+		};
+
+		// Prepare to preload myHackCode.dll into victimProcess.exe
+		gan::Debugger debugger;
+		debugger.AddSession<gan::DllPreloadDebugSession>(
+			param,
+			L"myHackCode.dll",
+			gan::DllPreloadDebugSession::Option::EndSessionSync
+		);
+
+		// Run the debugger event loop. DllPreloadDebugSession will make
+		// it return once its job is done.
+		const auto result = debugger.EnterEventLoop();
+		ASSERT(result == gan::Debugger::EventLoopResult::AllDetached);
+	}
+	DEFINE_TEST_END
+
 DEFINE_TESTSUITE_END

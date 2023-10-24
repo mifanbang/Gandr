@@ -33,24 +33,25 @@ All Gandr headers exposed to users are located in the folder `include\`. You sho
 
 Due to my shameful laziness, there is currently no documentation for the Gandr API. However the test code should provide you with decent examples of how to use most classes.
 
-Additionally, as a bonus, `Test.cpp` and `Test.h` from the project `Test` constitute yet another minimalism unit test framework that might hopefully be helpful to your project.
+Additionally, as a bonus, `Test.cpp` and `Test.h` from the project `Test` constitute yet another minimalism unit test framework that might hopefully be helpful to your projects.
 
 ## Selected Code Examples
 
-### Preloading a DLL to a New Process
+### Preloading a DLL to a new process
 
-The following example illustrates how easy it is to create a process and force it to preload a DLL before any code in the target executable file is executed. You can find a slightly more verbose example in the test code `TestDebugger.cpp`.
+The following example illustrates how easy it is to create a process and force it to preload a DLL before any code in the target executable file is executed.
 
 ```cpp
-gan::DebugSession::CreateProcessParam param;
-param.imagePath = L"victimProcess.exe";
+gan::DebugSession::CreateProcessParam param{
+    .imagePath = L"victimProcess.exe"
+};
 
 // Prepare to preload myHackCode.dll into victimProcess.exe
 gan::Debugger debugger;
 debugger.AddSession<gan::DllPreloadDebugSession>(
-    param,
-    L"myHackCode.dll",
-    gan::DllPreloadDebugSession::Option::EndSessionSync
+    param,
+    L"myHackCode.dll",
+    gan::DllPreloadDebugSession::Option::EndSessionSync
 );
 
 // Run the debugger event loop. DllPreloadDebugSession will make
@@ -59,9 +60,11 @@ const auto result = debugger.EnterEventLoop();
 assert(result == gan::Debugger::EventLoopResult::AllDetached);
 ```
 
-### Installing a Hook
+You can find another example which is slightly more verbose than the one above in the source file `src\Test\TestDebugger.cpp`.
 
-Class `Hook` requires function signatures of the target and the hook to exactly match. This ensures that both have the same number of parameters, calling convention, and other stuff which may potential crash the process. Please note that compiler's inlining optimization might break the example below. For more examples of `Hook` usage, see test code `TestHook.cpp`.
+### Installing a hook
+
+Class `Hook` requires both target and hook functions to have the exact same signature. This ensures that both have the same number of parameters, calling convention, and other stuff which may potential crash the process. The following example is a code snippet from the source file `src\Test\TestHook.cpp`. More usage of the class `Hook` can be found in the said file.
 
 ```cpp
 __declspec(noinline) size_t Add(size_t n1, size_t n2) {
@@ -77,6 +80,30 @@ const auto result = hook.Install();
 assert(result == gan::Hook::OpResult::Hooked);
 assert(Add(123, 321) == 444);  // Oh no! This assert will fail!
 ```
+
+### Instruction length decoding
+
+Class `InstructionDecoder` supports a very limited (but very commonly-used!) set of x86/amd64 instructions in both 32-bit and 64-bit modes. Also, the mode is passed in as an argument which enables you to decode instructions in a mode different from the one your code is built for. The following example is a code snippet from the source file `src\Test\TestInstructionDecoder64.cpp`:
+
+```cpp
+// REX.WB mov  r15, 0BBAA785600003412h
+const static uint8_t k_inMovImm64ToReg64[] {
+    0x49, 0xBF, 0x12, 0x34, 0, 0, 0x56, 0x78, 0xAA, 0xBB
+};
+
+gan::InstructionDecoder decoder(
+    gan::Arch::Amd64,
+    gan::ConstMemAddr{ k_inMovImm64ToReg64 }
+);
+const auto lengthDetails = decoder.GetNextLength();
+assert(lengthDetails);
+assert(lengthDetails->lengthOp == 1);
+assert(lengthDetails->lengthDisp == 0);
+assert(lengthDetails->lengthImm == 8);
+assert(lengthDetails->GetLength() == 10);
+```
+
+Please do note that `InstructionDecoder` works like a forward iterator: every time its `.GetNextLength()` is called, its internal memory pointer increments to point to the next instruction ready for decoding.
 
 ## Copyright
 
