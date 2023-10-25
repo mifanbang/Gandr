@@ -28,6 +28,7 @@
 
 // defined in TestDllInjector.asm
 extern "C" void __stdcall Test_DllInjector_NewThreadProc(uint32_t* signal);
+extern "C" void __stdcall Test_DllInjector_ExitThreadProc();
 
 
 DEFINE_TESTSUITE_START(DllInjectorByContext)
@@ -54,8 +55,29 @@ DEFINE_TESTSUITE_START(DllInjectorByContext)
 
 		DEFINE_TEST_TEARDOWN
 		{
-			const uint32_t k_exitCodeSuccess = 0;
-			TerminateThread(m_thread, k_exitCodeSuccess);
+			WaitForSignal();
+
+			SuspendThread(m_thread);
+			// Set IP to Test_DllInjector_ExitThreadProc which should gracefully and voluntarily exit the thread.
+			{
+				CONTEXT ctx{ .ContextFlags = CONTEXT_CONTROL };
+				GetThreadContext(m_thread, &ctx);
+#ifdef _WIN64
+				ctx.Rip = reinterpret_cast<size_t>(Test_DllInjector_ExitThreadProc);
+#else
+				ctx.Eip = reinterpret_cast<size_t>(Test_DllInjector_ExitThreadProc);
+#endif  // defined _WIN64
+				SetThreadContext(m_thread, &ctx);
+			}
+			ResumeThread(m_thread);
+
+			for (DWORD exitCode = STILL_ACTIVE; exitCode == STILL_ACTIVE; )
+			{
+				const auto getCodeResult = GetExitCodeThread(m_thread, &exitCode);
+				ASSERT(getCodeResult);
+				if (!getCodeResult)
+					break;
+			}
 		}
 
 		void WaitForSignal()

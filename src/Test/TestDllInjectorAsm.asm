@@ -20,14 +20,26 @@ IFDEF _WIN64
 
 	_TEXT SEGMENT
 
-	Test_DllInjector_NewThreadProc PROC
+	; IP can be assigned with LoadLibraryW anytime within the loop starting
+	; at LoopStart, so a nonvolatile register, e.g., RBX, must be used or
+	; the MOV instruction is going to cause access violation.
+	Test_DllInjector_NewThreadProc PROC PUBLIC
+	option PROLOGUE:NONE, EPILOGUE:NONE
 		push	rbx
-		mov		rbx, rcx
+		sub 	rsp, 20h
+		mov 	rbx, rcx
 	LoopStart:
-		mov		dword ptr [rbx], 1
-		jmp		LoopStart
-		ret
+		mov 	dword ptr [rbx], 1
+		jmp 	LoopStart
 	Test_DllInjector_NewThreadProc ENDP
+
+	Test_DllInjector_ExitThreadProc PROC PUBLIC
+	option PROLOGUE:NONE, EPILOGUE:NONE
+		add 	rsp, 20h
+		pop 	rbx
+		xor 	rax, rax
+		ret
+	Test_DllInjector_ExitThreadProc ENDP
 
 	_TEXT ENDS
 
@@ -37,21 +49,25 @@ ELSE
 
 	_TEXT SEGMENT
 
-	Test_DllInjector_NewThreadProc PROC signal:DWORD
+	Test_DllInjector_NewThreadProc PROC PUBLIC signal:DWORD
+	option PROLOGUE:NONE, EPILOGUE:NONE
 		push	ebx
-		mov		ebx, dword ptr [signal]
+		mov 	ebx, dword ptr signal
 	LoopStart:
-		mov		dword ptr [ebx], 1
-		jmp		LoopStart
-		ret		4
+		mov 	dword ptr [ebx], 1
+		jmp 	LoopStart
 	Test_DllInjector_NewThreadProc ENDP
+
+	Test_DllInjector_ExitThreadProc PROC
+	option PROLOGUE:NONE, EPILOGUE:NONE
+		pop 	ebx
+		xor 	eax, eax
+		ret 	4
+	Test_DllInjector_ExitThreadProc ENDP
 
 	_TEXT ENDS
 
 ENDIF
-
-
-PUBLIC Test_DllInjector_NewThreadProc
 
 
 END
