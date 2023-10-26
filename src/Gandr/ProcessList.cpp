@@ -28,12 +28,20 @@ namespace gan
 {
 
 
-ProcessInfo::ProcessInfo(const ::tagPROCESSENTRY32W& procEntry)
+ProcessInfo::ProcessInfo(const PROCESSENTRY32W& procEntry)
 	: pid(procEntry.th32ProcessID)
 	, nThread(procEntry.cntThreads)
 	, pidParent(procEntry.th32ParentProcessID)
 	, basePriority(procEntry.pcPriClassBase)
 	, imageName(procEntry.szExeFile)
+{
+}
+
+
+ThreadInfo::ThreadInfo(const THREADENTRY32& threadEntry)
+	: tid(threadEntry.th32ThreadID)
+	, pidParent(threadEntry.th32OwnerProcessID)
+	, basePriority(threadEntry.tpBasePri)
 {
 }
 
@@ -47,8 +55,7 @@ ProcessEnumerator::Result ProcessEnumerator::Enumerate(ProcessList& out)
 		return Result::SnapshotFailed;
 
 	ProcessList newProcList;
-	PROCESSENTRY32 procEntry;
-	procEntry.dwSize = sizeof(procEntry);
+	PROCESSENTRY32W procEntry{ .dwSize = sizeof(procEntry) };
 
 	BOOL proc32Result = ::Process32FirstW(*hSnap, &procEntry);
 	while (proc32Result == TRUE)
@@ -62,6 +69,39 @@ ProcessEnumerator::Result ProcessEnumerator::Enumerate(ProcessList& out)
 		return Result::Process32Failed;
 
 	out = std::move(newProcList);
+	return Result::Success;
+}
+
+
+ThreadEnumerator::Result ThreadEnumerator::Enumerate(ThreadList& out)
+{
+	return Enumerate(std::nullopt, out);
+}
+
+ThreadEnumerator::Result ThreadEnumerator::Enumerate(std::optional<uint32_t> pid, ThreadList& out)
+{
+	constexpr uint32_t k_ignoredParam = 0;
+
+	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, k_ignoredParam) };
+	if (!hSnap)
+		return Result::SnapshotFailed;
+
+	ThreadList resultThreadList;
+	THREADENTRY32 threadEntry{ .dwSize = sizeof(threadEntry) };
+
+	BOOL thread32Result = ::Thread32First(*hSnap, &threadEntry);
+	while (thread32Result == TRUE)
+	{
+		if (!pid || *pid == threadEntry.th32OwnerProcessID)
+			resultThreadList.emplace_back(threadEntry);
+		thread32Result = ::Thread32Next(*hSnap, &threadEntry);
+	}
+
+	// Process32Next() ends with returning FALSE and setting error code to ERROR_NO_MORE_FILES
+	if (thread32Result == FALSE && ::GetLastError() != ERROR_NO_MORE_FILES)
+		return Result::Thread32Failed;
+
+	out = std::move(resultThreadList);
 	return Result::Success;
 }
 

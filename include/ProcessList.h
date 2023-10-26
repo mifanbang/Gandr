@@ -18,12 +18,14 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
 
 // forward declaration
 struct tagPROCESSENTRY32W;  // in tlhelp32.h
+struct tagTHREADENTRY32;  // in tlhelp32.h
 
 
 namespace gan
@@ -38,15 +40,24 @@ struct ProcessInfo
 	uint32_t basePriority;
 	std::wstring imageName;  // incl. file extension
 
-	ProcessInfo(const ::tagPROCESSENTRY32W& procEntry);
+	explicit ProcessInfo(const tagPROCESSENTRY32W& procEntry);
 };
-
-
 using ProcessList = std::vector<ProcessInfo>;
 
 
+struct ThreadInfo
+{
+	uint32_t tid;
+	uint32_t pidParent;
+	uint32_t basePriority;
+
+	explicit ThreadInfo(const tagTHREADENTRY32& threadEntry);
+};
+using ThreadList = std::vector<ThreadInfo>;
+
+
 // ---------------------------------------------------------------------------
-// Class ProcessEnumerator - process list snapshot taker
+// Class ProcessEnumerator - process list snapshot helper
 // ---------------------------------------------------------------------------
 
 class ProcessEnumerator
@@ -61,6 +72,26 @@ public:
 
 	static Result Enumerate(ProcessList& out);
 };
+
+
+// ---------------------------------------------------------------------------
+// Class ProcessEnumerator - thread list snapshot helper
+// ---------------------------------------------------------------------------
+
+class ThreadEnumerator
+{
+public:
+	enum class Result : uint8_t
+	{
+		Success,
+		SnapshotFailed,  // CreateToolhelp32Snapshot() failed
+		Thread32Failed,  // A Thread32*() function failed
+	};
+
+	static Result Enumerate(ThreadList& out);
+	static Result Enumerate(std::optional<uint32_t> pid, ThreadList& out);
+};
+
 
 
 }  // namespace gan

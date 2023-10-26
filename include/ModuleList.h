@@ -39,7 +39,7 @@ struct ModuleInfo
 	std::wstring imageName;  // incl. file extension
 	std::wstring imagePath;
 
-	ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry);
+	explicit ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry);
 };
 
 

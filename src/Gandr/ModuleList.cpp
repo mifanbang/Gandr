@@ -50,7 +50,7 @@ namespace gan
 {
 
 
-ModuleInfo::ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry)
+ModuleInfo::ModuleInfo(const MODULEENTRY32W& moduleEntry)
 	: baseAddr(ConstMemAddr{ moduleEntry.modBaseAddr })
 	, size(moduleEntry.modBaseSize)
 	, imageName(moduleEntry.szModule)
@@ -66,8 +66,7 @@ ModuleEnumerator::Result ModuleEnumerator::Enumerate(uint32_t processId, ModuleL
 		return Result::SnapshotFailed;
 
 	ModuleList newModList;
-	MODULEENTRY32 modEntry;
-	modEntry.dwSize = sizeof(modEntry);
+	MODULEENTRY32W modEntry{ .dwSize = sizeof(modEntry) };
 
 	BOOL mod32Result = ::Module32FirstW(*hSnap, &modEntry);
 	while (mod32Result == TRUE)
