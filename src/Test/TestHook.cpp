@@ -25,6 +25,7 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <processthreadsapi.h>
 #include <psapi.h>
 #include <xinput.h>
 
@@ -40,11 +41,25 @@ DEFINE_TESTSUITE_START(Hook_General)
 
 	DEFINE_TEST_SHARED_START
 
-		// Zero() enforces runtime evaluation to prevent compiler from treating Add() as constexpr.
+		// Zero() must enforce runtime evaluation to prevent compiler from treating Add() as constexpr.
 		static size_t Zero() { return reinterpret_cast<size_t>(GetModuleHandleA("ThisModuleMustNotExistOrWeAreScrewed")); }
 
 		__declspec(noinline) static size_t Add(size_t n1, size_t n2) { return Zero() ? 0 : n1 + n2; }
 		__declspec(noinline) static size_t Mul(size_t n1, size_t n2) { return Zero() ? 0 : n1 * n2; }
+
+		struct Dummy
+		{
+			__declspec(noinline) size_t Add(size_t n2) const { return Zero() ? 0 : n + n2; }
+			__declspec(noinline) size_t Mul(size_t n2) const { return Zero() ? 0 : n * n2; }
+
+			__declspec(noinline) size_t AddAndDouble(size_t n2) const
+			{
+				const auto trampoline = gan::Hook::GetTrampoline(&Dummy::Add);
+				return (this->*trampoline)(n2) << 1;
+			}
+
+			size_t n;
+		};
 
 	DEFINE_TEST_SHARED_END
 
@@ -61,6 +76,16 @@ DEFINE_TESTSUITE_START(Hook_General)
 	}
 	DEFINE_TEST_END
 
+	DEFINE_TEST_START(DoubleUninstallation)
+	{
+		gan::Hook hook { Add, Mul };
+
+		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
+		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
+		ASSERT(hook.Uninstall() == gan::Hook::OpResult::NotHooked);
+	}
+	DEFINE_TEST_END
+
 	DEFINE_TEST_START(InstallAndUninstall)
 	{
 		gan::Hook hook { Add, Mul };
@@ -70,6 +95,32 @@ DEFINE_TESTSUITE_START(Hook_General)
 		EXPECT(Add(123, 321) == 39483);
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
 		EXPECT(Add(123, 321) == 444);
+	}
+	DEFINE_TEST_END
+
+	DEFINE_TEST_START(InstallAndUninstall_MemberFunc)
+	{
+		gan::Hook hook { &Dummy::Add, &Dummy::Mul };
+
+		const Dummy dummy{ 123 };
+		EXPECT(dummy.Add(321) == 444);
+		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
+		EXPECT(dummy.Add(321) == 39483);
+		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
+		EXPECT(dummy.Add(321) == 444);
+	}
+	DEFINE_TEST_END
+
+	DEFINE_TEST_START(Trampoline_MemberFunc)
+	{
+		gan::Hook hook{ &Dummy::Add, &Dummy::AddAndDouble };
+
+		const Dummy dummy{ 123 };
+		EXPECT(dummy.Add(321) == 444);
+		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
+		EXPECT(dummy.Add(321) == 888);
+		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
+		EXPECT(dummy.Add(321) == 444);
 	}
 	DEFINE_TEST_END
 
@@ -90,6 +141,12 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 				return gan::Hook::GetTrampoline(GetProcAddress)(hModule, lpProcName);
 		}
 
+		static DWORD __stdcall _GetCurrentProcessId()
+		{
+			const auto func = GetProcAddress(GetModuleHandleA("kernel32"), "GetCurrentProcessId");
+			return gan::Hook::GetTrampolineUnsafe<decltype(&GetCurrentProcessId)>(gan::ConstMemAddr{ func })();
+		}
+
 		DEFINE_TEST_SETUP
 		{
 			m_hMod = GetModuleHandleA("kernel32");
@@ -105,6 +162,16 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
 		EXPECT(GetProcAddress(m_hMod, "GetProcAddress") == reinterpret_cast<FARPROC>(_GetProcAddress));
+		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
+	}
+	DEFINE_TEST_END
+
+	// Test for calling gan::Hook::GetTrampolineUnsafe (see the hook function, _GetCurrentProcessId).
+	DEFINE_TEST_START(GetTrampolineUnsafe)
+	{
+		gan::Hook hook { GetCurrentProcessId, _GetCurrentProcessId };
+		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
+		GetCurrentProcessId();
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
 	}
 	DEFINE_TEST_END

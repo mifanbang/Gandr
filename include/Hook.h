@@ -25,11 +25,51 @@ namespace gan
 {
 
 
+// Helper data structure for casting between functions and raw pointers.
+template <class F>
+union _MemFnAddr
+{
+	F func;
+	void* addr;
+};
+
+// Generalized concept to cover pointers of:
+//     1. Non-member functions
+//     2. Static member functions
+//     3. Non-static member functions
+template <class F>
+concept IsAnyFuncPtr =
+	std::is_member_function_pointer_v<F>
+	|| (std::is_pointer_v<F> && std::is_function_v<std::remove_pointer_t<F>>);
+
+
+// ---------------------------------------------------------------------------
+// Function ToMemFn & FromMemFn:
+//     Low-level and therefore unsafe casting between a void* raw pointer and
+//     a non-static member function pointer.
+// ---------------------------------------------------------------------------
+
+template <class F>
+	requires std::is_member_function_pointer_v<F>
+constexpr F ToMemFn(void* addr)
+{
+	return _MemFnAddr<F>{ .addr = addr }.func;
+}
+
+template <class F>
+	requires std::is_member_function_pointer_v<F>
+constexpr void* FromMemFn(F func)
+{
+	return _MemFnAddr<F>{ .func = func }.addr;
+}
+
+
 // ---------------------------------------------------------------------------
 // Class Hook: Just a hook.
 //
 // The following Win32 API functions are used by Hook and shouldn't be hooked:
 //   - GetSystemInfo()
+// 	 - VirtualAlloc()
 //   - VirtualProtect()
 //   - VirtualQuery()
 // ---------------------------------------------------------------------------
@@ -42,45 +82,63 @@ public:
 		Hooked,
 		Unhooked,
 
-		// The followings are errors
+		// Warnings
+		NotHooked,				// Caused by uninstalling an function not previously hooked.
 		AddressInUse,			// A previous hook installed by Gandr is still active.
+
+		// Errors
 		PrologNotSupported,		// Failed to decode the instructions in target prolog.
 		TrampolineAllocFailed,	// Failed to allocate memory for a new trampoline.
 		PrologMismatched,		// Failed to uninstall due to our hook getting hooked by something else.
 		AccessDenied,			// Failed to write to memory.
 	};
 
-
-	template <typename F>
-		requires std::is_function_v<F>
-	constexpr Hook(const F* origFunc, const F* hookFunc)
-		: m_funcOrig(origFunc)
-		, m_funcHook(hookFunc)
+	template <class F>
+		requires IsAnyFuncPtr<F>
+	constexpr Hook(F origFunc, F hookFunc)
+		: m_funcOrig(FromAnyFn(origFunc))
+		, m_funcHook(FromAnyFn(hookFunc))
 		, m_hooked(false)
 	{
-		CheckCtorArgs(m_funcOrig, m_funcHook);
+		AssertCtorArgs(m_funcOrig, m_funcHook);
 	}
 
 	OpResult Install();
 	OpResult Uninstall();
 
-	template <typename F>
-		requires std::is_function_v<F>
-	static auto GetTrampoline(const F* origFunc)
+	template <class F>
+		requires IsAnyFuncPtr<F>
+	static auto GetTrampoline(F origFunc)
 	{
-		return GetTrampolineAddr(gan::ConstMemAddr{ origFunc })
-			.ConstRef<F>();
+		return ToAnyFn<F>(
+			GetTrampolineAddr(gan::ConstMemAddr{ FromAnyFn(origFunc) })
+			.ConstCast()
+			.Ptr<>()
+		);
 	}
 
+	// Unsafe because of the casting from raw pointer to function pointer.
+	template <class F>
+		requires IsAnyFuncPtr<F>
+	static auto GetTrampolineUnsafe(gan::ConstMemAddr origFunc)
+	{
+		return ToAnyFn<F>(GetTrampolineAddr(origFunc).ConstCast().Ptr<>());
+	}
 
 private:
-	// Helper functions as a layer of abstraction not to expose implementation in header
-	static void CheckCtorArgs(MemAddr origFunc, MemAddr hookFunc);
-	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);
+	// Helper functions as a layer of abstraction not to expose implementation in header.
+	static void AssertCtorArgs(MemAddr origFunc, MemAddr hookFunc);
+	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);  // Usage of this function is highly discouraged.
+
+	// Generalized versions of ToMemFn and FromMemFn
+	template <class F> requires IsAnyFuncPtr<F>
+	constexpr static F ToAnyFn(void* addr) { return _MemFnAddr<F>{ .addr = addr }.func; }
+	template <class F> requires IsAnyFuncPtr<F>
+	constexpr static void* FromAnyFn(F func) { return _MemFnAddr<F>{ .func = func }.addr; }
 
 
-	MemAddr m_funcOrig;  // address to where the inline hook is installed
-	MemAddr m_funcHook;  // address to the user-defined hook function
+	MemAddr m_funcOrig;  // address to where the inline hook is installed.
+	MemAddr m_funcHook;  // address to the user-defined hook function.
 	bool m_hooked;
 };
 

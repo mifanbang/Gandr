@@ -824,7 +824,7 @@ Hook::OpResult Hook::Install()
 Hook::OpResult Hook::Uninstall()
 {
 	if (!m_hooked)
-		return OpResult::Unhooked;
+		return OpResult::NotHooked;
 
 	HookRegistry& hookReg = HookRegistry::GetInstance();
 	if (const auto record = hookReg.LookUp(m_funcOrig))
@@ -851,14 +851,17 @@ Hook::OpResult Hook::Uninstall()
 
 		if (AuxiliaryPrologHelper::ShouldUseAuxProlog(record->strategy.type))
 			AuxiliaryPrologHelper::Delete(m_funcOrig, record->strategy.imm8);
+
+		m_hooked = false;
+		return OpResult::Unhooked;
 	}
 
 	m_hooked = false;
-	return OpResult::Unhooked;
+	return OpResult::NotHooked;
 }
 
 
-void Hook::CheckCtorArgs(MemAddr origFunc, MemAddr hookFunc)
+void Hook::AssertCtorArgs(MemAddr origFunc, MemAddr hookFunc)
 {
 	assert(origFunc);
 	assert(hookFunc);
