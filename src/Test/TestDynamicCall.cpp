@@ -30,7 +30,7 @@ DEFINE_TESTSUITE_START(DynamicCall)
 
 	DEFINE_TEST_START(LoadDllAndFunctions)
 	{
-		constexpr std::wstring_view k_glu32 = L"glu32.dll"sv;  // A DLL not in the Import Address Table of Test.exe
+		constexpr static std::wstring_view k_glu32 = L"glu32.dll"sv;  // A DLL not in the Import Address Table of Test.exe
 
 		ASSERT(GetModuleHandleW(k_glu32.data()) == nullptr);
 
@@ -48,7 +48,7 @@ DEFINE_TESTSUITE_START(DynamicCall)
 
 	DEFINE_TEST_START(CallFunctions)
 	{
-		constexpr std::wstring_view k_kernel32 = L"kernel32.dll"sv;
+		constexpr static std::wstring_view k_kernel32 = L"kernel32.dll"sv;
 
 		// Void return type
 		auto funcOutputDebugStringW = gan::DynamicCall::Get<void(__stdcall*)(const wchar_t*)>(k_kernel32, "OutputDebugStringW"sv);

@@ -139,45 +139,20 @@ namespace gan
 
 
 DllInjectorByContext::DllInjectorByContext(WinHandle hProcess, WinHandle hThread)
-	: m_hProcess()
-	, m_hThread()
+	: m_hProcess(HandleHelper::Duplicate(hProcess))
+	, m_hThread(HandleHelper::Duplicate(hThread))
 {
 	assert(hProcess != nullptr);
 	assert(hThread != nullptr);
-
-	HANDLE hCurrentProc = ::GetCurrentProcess();
-	HANDLE hDuplicated = INVALID_HANDLE_VALUE;
-
-	constexpr DWORD k_desiredAccessIgnored = 0;  // Because DUPLICATE_SAME_ACCESS is specified
-	constexpr BOOL k_handleNotInheritable = FALSE;
-	const auto dupProcResult = ::DuplicateHandle(
-		hCurrentProc,
-		hProcess,
-		hCurrentProc,
-		&hDuplicated,
-		k_desiredAccessIgnored,
-		k_handleNotInheritable,
-		DUPLICATE_SAME_ACCESS
-	);
-	assert(dupProcResult);
-	m_hProcess = hDuplicated;
-
-	const auto dupThreadResult = ::DuplicateHandle(
-		hCurrentProc,
-		hThread,
-		hCurrentProc,
-		&hDuplicated,
-		k_desiredAccessIgnored,
-		k_handleNotInheritable,
-		DUPLICATE_SAME_ACCESS
-	);
-	assert(dupThreadResult);
-	m_hThread = hDuplicated;
+	assert(m_hProcess);
+	assert(m_hThread);
 }
 
 
-DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPath)
+DllInjectorByContext::Result DllInjectorByContext::Inject(std::wstring_view dllPath)
 {
+	assert(dllPath.data());
+
 	constexpr DWORD k_contextFlags{ CONTEXT_INTEGER | CONTEXT_CONTROL };
 
 	CONTEXT context;
@@ -189,9 +164,9 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(const wchar_t* pDllPat
 		return Result::GetContextFailed;
 
 	// Allocate buffer in the memory space of target process and write DLL path to it
-	size_t dwBufferSize = sizeof(WCHAR) * (wcslen(pDllPath) + 1);
+	size_t dwBufferSize = sizeof(WCHAR) * (dllPath.size() + 1);
 	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(*m_hProcess, nullptr, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
-	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(*m_hProcess, remoteBuffer, pDllPath, dwBufferSize, nullptr) != 0);
+	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(*m_hProcess, remoteBuffer, dllPath.data(), dwBufferSize, nullptr) != 0);
 	if (!isDllPathWritten)
 		return Result::DLLPathNotWritten;
 

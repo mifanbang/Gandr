@@ -20,15 +20,19 @@
 
 #include <DllInjector.h>
 
-#include <thread>
-
 #include <intrin.h>
 #include <windows.h>
+
+#include <thread>
+#include <string_view>
 
 
 // defined in TestDllInjector.asm
 extern "C" void __stdcall Test_DllInjector_NewThreadProc(uint32_t* signal);
 extern "C" void __stdcall Test_DllInjector_ExitThreadProc();
+
+
+using namespace std::literals;
 
 
 DEFINE_TESTSUITE_START(DllInjectorByContext)
@@ -90,19 +94,21 @@ DEFINE_TESTSUITE_START(DllInjectorByContext)
 
 	DEFINE_TEST_START(Inject)
 	{
-		ASSERT(GetModuleHandleW(L"glu32.dll") == nullptr);
+		constexpr static std::wstring_view k_glu32Dll = L"glu32.dll"sv;
+
+		ASSERT(GetModuleHandleW(k_glu32Dll.data()) == nullptr);
 
 		gan::DllInjectorByContext injector(GetCurrentProcess(), m_thread);
 		WaitForSignal();  // Wait for thread initialization
 
 		SuspendThread(m_thread);
 		m_signal = 0;  // Reset signal
-		injector.Inject(L"glu32.dll");
+		injector.Inject(k_glu32Dll);
 		ResumeThread(m_thread);
 
 		WaitForSignal();  // Make sure IP has returned to the main loop
 
-		auto hModGlu32 = GetModuleHandleW(L"glu32.dll");
+		auto hModGlu32 = GetModuleHandleW(k_glu32Dll.data());
 		ASSERT(hModGlu32 != nullptr);
 		EXPECT(FreeLibrary(hModGlu32) != 0);
 	}

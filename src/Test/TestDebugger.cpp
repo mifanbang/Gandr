@@ -30,6 +30,9 @@
 #include <shlwapi.h>
 
 
+using namespace std::literals;
+
+
 // This test suite tests classes Debugger, DebugSession, and DllPreloadDebugSession
 DEFINE_TESTSUITE_START(Debugger)
 
@@ -88,7 +91,7 @@ DEFINE_TESTSUITE_START(Debugger)
 		gan::Debugger debugger;
 		debugger.AddSession<gan::DllPreloadDebugSession>(
 			param,
-			L"myHackCode.dll",
+			L"myHackCode.dll"sv,
 			gan::DllPreloadDebugSession::Option::EndSessionSync
 		);
 

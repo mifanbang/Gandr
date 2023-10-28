@@ -34,7 +34,7 @@ void AutoWinHandleImpl::Close(WinHandle handle)
 template <>
 WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle)
 {
-	constexpr uint32_t k_ignoredParam = 0;
+	constexpr uint32_t k_ignoredParam = 0;  // Because DUPLICATE_SAME_ACCESS is specified
 	constexpr BOOL k_newHandleInheritable = TRUE;
 
 	HANDLE newHandle;

@@ -32,10 +32,10 @@ namespace gan
 {
 
 
-DllPreloadDebugSession::DllPreloadDebugSession(const CreateProcessParam& newProcParam, const wchar_t* pPayloadPath, Option option)
+DllPreloadDebugSession::DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option)
 	: DebugSession(newProcParam)
 	, m_hMainThread(INVALID_HANDLE_VALUE)
-	, m_payloadPath(pPayloadPath)
+	, m_payloadPath(payloadPath)
 	, m_option(option)
 {
 }
@@ -62,7 +62,7 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 			HWBreakpoint::Disable(m_hMainThread, HWBreakpointSlot::DR0);
 
 			DllInjectorByContext injector(GetHandle(), m_hMainThread);
-			injector.Inject(m_payloadPath.c_str());
+			injector.Inject(m_payloadPath);
 
 			return m_option == Option::EndSessionAsync ?
 				ContinueStatus::CloseSession :

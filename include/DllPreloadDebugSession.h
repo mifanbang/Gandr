@@ -21,6 +21,7 @@
 #include <DebugSession.h>
 
 #include <string>
+#include <string_view>
 
 
 namespace gan
@@ -41,7 +42,7 @@ public:
 		KeepAlive  // Keep the session alive
 	};
 
-	DllPreloadDebugSession(const CreateProcessParam& newProcParam, const wchar_t* pPayloadPath, Option option);
+	DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option);
 
 private:
 	virtual ContinueStatus OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) override;

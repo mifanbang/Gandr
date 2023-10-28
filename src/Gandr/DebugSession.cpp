@@ -48,14 +48,14 @@ DebugSession::DebugSession(const CreateProcessParam& newProcParam)
 		return;
 
 	// Prepare command line buffer if needed
-	wchar_t* const cmdLinePtr = newProcParam.args ?
+	auto const cmdLinePtr = newProcParam.args ?
 		reinterpret_cast<wchar_t*>(cmdlineBuffer->GetData()) :
 		nullptr;
 	if (cmdLinePtr)
 	{
 		if constexpr (UseStdFormat())
 			std::format_to_n(
-				reinterpret_cast<wchar_t*>(cmdlineBuffer->GetData()),
+				cmdLinePtr,
 				k_maxArgLength,
 				L"\"{}\" {}",
 				newProcParam.imagePath,
@@ -63,7 +63,7 @@ DebugSession::DebugSession(const CreateProcessParam& newProcParam)
 			);
 		else
 			::swprintf(
-				reinterpret_cast<wchar_t*>(cmdlineBuffer->GetData()),
+				cmdLinePtr,
 				k_maxArgLength,
 				L"\"%s\" %s",
 				newProcParam.imagePath,

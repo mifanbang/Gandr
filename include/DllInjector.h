@@ -21,12 +21,11 @@
 #include <Handle.h>
 
 #include <string>
-
+#include <string_view>
 
 
 namespace gan
 {
-
 
 
 // ---------------------------------------------------------------------------
@@ -51,9 +50,9 @@ public:
 
 	// m_hProcess and m_hThread will be closed in destructor
 	DllInjectorByContext(const DllInjectorByContext&) = delete;
-	DllInjectorByContext& operator = (const DllInjectorByContext&) = delete;
+	DllInjectorByContext& operator=(const DllInjectorByContext&) = delete;
 
-	Result Inject(const wchar_t* pDllPath);
+	Result Inject(std::wstring_view dllPath);
 
 
 private:
