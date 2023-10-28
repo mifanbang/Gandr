@@ -20,6 +20,7 @@
 
 #include <windows.h>
 
+#include <type_traits>
 
 
 namespace gan
@@ -49,11 +50,20 @@ public:
 	template <typename F>
 	auto ApplyOperation(const F& func)
 	{
-		::EnterCriticalSection(&m_lock);
-		auto result = func(m_resInst);
-		::LeaveCriticalSection(&m_lock);
+		constexpr bool HasReturnValue = std::is_same_v<void, decltype(func(m_resInst))>;
 
-		return result;
+		::EnterCriticalSection(&m_lock);
+		if constexpr (HasReturnValue)
+		{
+			func(m_resInst);
+			::LeaveCriticalSection(&m_lock);
+		}
+		else
+		{
+			auto result = func(m_resInst);
+			::LeaveCriticalSection(&m_lock);
+			return result;
+		}
 	}
 
 

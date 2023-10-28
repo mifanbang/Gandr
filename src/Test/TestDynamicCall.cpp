@@ -23,21 +23,24 @@
 #include <windows.h>
 
 
+using namespace std::literals;
+
+
 DEFINE_TESTSUITE_START(DynamicCall)
 
 	DEFINE_TEST_START(LoadDllAndFunctions)
 	{
-		constexpr wchar_t k_glu32[] = L"glu32.dll";  // A DLL not in the Import Address Table of Test.exe
+		constexpr std::wstring_view k_glu32 = L"glu32.dll"sv;  // A DLL not in the Import Address Table of Test.exe
 
-		ASSERT(GetModuleHandleW(k_glu32) == nullptr);
+		ASSERT(GetModuleHandleW(k_glu32.data()) == nullptr);
 
-		gan::DynamicCall<const uint8_t* __stdcall (uint32_t)> funcGluGetString(k_glu32, "gluGetString");
-		EXPECT(funcGluGetString.IsValid());
+		auto funcGluGetString = gan::DynamicCall::Get<uint8_t*(__stdcall*)(uint32_t)>(k_glu32, "gluGetString"sv);
+		EXPECT(funcGluGetString);
 
-		gan::DynamicCall<void ()> funcNotExist(k_glu32, "gluNotAnyOfYourFunctions");
-		EXPECT(!funcNotExist.IsValid());
+		auto funcNotExist = gan::DynamicCall::Get<void(*)()>(k_glu32, "gluNotAnyOfYourFunctions"sv);
+		EXPECT(!funcNotExist);
 
-		const auto hModGlu32 = GetModuleHandleW(k_glu32);
+		const auto hModGlu32 = GetModuleHandleW(k_glu32.data());
 		ASSERT(hModGlu32 != nullptr);
 		ASSERT(FreeLibrary(hModGlu32) != FALSE);
 	}
@@ -45,16 +48,16 @@ DEFINE_TESTSUITE_START(DynamicCall)
 
 	DEFINE_TEST_START(CallFunctions)
 	{
-		constexpr wchar_t k_kernel32[] = L"kernel32.dll";
+		constexpr std::wstring_view k_kernel32 = L"kernel32.dll"sv;
 
-		// void return type
-		gan::DynamicCall<void __stdcall (const wchar_t*)> funcOutputDebugStringW(k_kernel32, "OutputDebugStringW");
-		ASSERT(funcOutputDebugStringW.IsValid());
+		// Void return type
+		auto funcOutputDebugStringW = gan::DynamicCall::Get<void(__stdcall*)(const wchar_t*)>(k_kernel32, "OutputDebugStringW"sv);
+		ASSERT(funcOutputDebugStringW);
 		funcOutputDebugStringW(L"Hi there debugger\n");
 
-		// non-void return type
-		gan::DynamicCall<HANDLE __stdcall ()> funcGetCurrentProcess(k_kernel32, "GetCurrentProcess");
-		ASSERT(funcGetCurrentProcess.IsValid());
+		// Non-void return type
+		auto funcGetCurrentProcess = gan::DynamicCall::Get<HANDLE(__stdcall*)()>(k_kernel32, "GetCurrentProcess"sv);
+		ASSERT(funcGetCurrentProcess);
 		ASSERT(funcGetCurrentProcess() == HANDLE(-1));  // GetCurrentProcess() returns a pseudo handle which has the value -1
 	}
 	DEFINE_TEST_END

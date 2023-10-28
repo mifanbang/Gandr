@@ -131,8 +131,6 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 
 	DEFINE_TEST_SHARED_START
 
-		HMODULE m_hMod { nullptr };
-
 		static FARPROC __stdcall _GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		{
 			if (strcmp(lpProcName, "GetProcAddress") == 0)
@@ -147,21 +145,17 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 			return gan::Hook::GetTrampolineUnsafe<decltype(&GetCurrentProcessId)>(gan::ConstMemAddr{ func })();
 		}
 
-		DEFINE_TEST_SETUP
-		{
-			m_hMod = GetModuleHandleA("kernel32");
-			return m_hMod != nullptr;
-		}
-
 	DEFINE_TEST_SHARED_END
 
 
 	DEFINE_TEST_START(GetProcAddress)
 	{
+		HMODULE hMod = GetModuleHandleA("kernel32");
+		ASSERT(hMod);
 		gan::Hook hook { GetProcAddress, _GetProcAddress };
 
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
-		EXPECT(GetProcAddress(m_hMod, "GetProcAddress") == reinterpret_cast<FARPROC>(_GetProcAddress));
+		EXPECT(GetProcAddress(hMod, "GetProcAddress") == reinterpret_cast<FARPROC>(_GetProcAddress));
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
 	}
 	DEFINE_TEST_END
@@ -170,6 +164,7 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 	DEFINE_TEST_START(GetTrampolineUnsafe)
 	{
 		gan::Hook hook { GetCurrentProcessId, _GetCurrentProcessId };
+
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
 		GetCurrentProcessId();
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);

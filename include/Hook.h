@@ -25,45 +25,6 @@ namespace gan
 {
 
 
-// Helper data structure for casting between functions and raw pointers.
-template <class F>
-union _MemFnAddr
-{
-	F func;
-	void* addr;
-};
-
-// Generalized concept to cover pointers of:
-//     1. Non-member functions
-//     2. Static member functions
-//     3. Non-static member functions
-template <class F>
-concept IsAnyFuncPtr =
-	std::is_member_function_pointer_v<F>
-	|| (std::is_pointer_v<F> && std::is_function_v<std::remove_pointer_t<F>>);
-
-
-// ---------------------------------------------------------------------------
-// Function ToMemFn & FromMemFn:
-//     Low-level and therefore unsafe casting between a void* raw pointer and
-//     a non-static member function pointer.
-// ---------------------------------------------------------------------------
-
-template <class F>
-	requires std::is_member_function_pointer_v<F>
-constexpr F ToMemFn(void* addr)
-{
-	return _MemFnAddr<F>{ .addr = addr }.func;
-}
-
-template <class F>
-	requires std::is_member_function_pointer_v<F>
-constexpr void* FromMemFn(F func)
-{
-	return _MemFnAddr<F>{ .func = func }.addr;
-}
-
-
 // ---------------------------------------------------------------------------
 // Class Hook: Just a hook.
 //
@@ -129,13 +90,6 @@ private:
 	// Helper functions as a layer of abstraction not to expose implementation in header.
 	static void AssertCtorArgs(MemAddr origFunc, MemAddr hookFunc);
 	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);  // Usage of this function is highly discouraged.
-
-	// Generalized versions of ToMemFn and FromMemFn
-	template <class F> requires IsAnyFuncPtr<F>
-	constexpr static F ToAnyFn(void* addr) { return _MemFnAddr<F>{ .addr = addr }.func; }
-	template <class F> requires IsAnyFuncPtr<F>
-	constexpr static void* FromAnyFn(F func) { return _MemFnAddr<F>{ .func = func }.addr; }
-
 
 	MemAddr m_funcOrig;  // address to where the inline hook is installed.
 	MemAddr m_funcHook;  // address to the user-defined hook function.

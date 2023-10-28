@@ -18,54 +18,31 @@
 
 #pragma once
 
-#include <utility>
+#include <Types.h>
+
+#include <string_view>
 
 
 namespace gan
 {
 
 
-class DynamicCallBase
-{
-protected:
-	// Loads library if not loaded before.
-	static void* ObtainFunction(const wchar_t* libName, const char* funcName);
-};
-
-
 // ---------------------------------------------------------------------------
-// Class DynamicCall - Dynamically loading and calling a function
+// Class DynamicCall - Dynamically load and resolve a function
 // ---------------------------------------------------------------------------
 
-template <typename T>
-class DynamicCall : private DynamicCallBase
+class DynamicCall
 {
 public:
-	DynamicCall(const wchar_t* libName, const char* funcName)
-		: m_pFunc(nullptr)
+	template <class F>
+		requires IsAnyFuncPtr<F>
+	static F Get(std::wstring_view lib, std::string_view func)
 	{
-		m_pFunc = reinterpret_cast<T*>(ObtainFunction(libName, funcName));
+		return ToAnyFn<F>(LoadLibAndGetProc(lib, func));
 	}
-
-	inline bool IsValid() const
-	{
-		return m_pFunc != nullptr;
-	}
-
-	inline T* GetAddress() const
-	{
-		return m_pFunc;
-	}
-
-	template <typename... Arg>
-	auto operator()(Arg&&... arg) const
-	{
-		return m_pFunc(std::forward<Arg>(arg)...);
-	}
-
 
 private:
-	T* m_pFunc;
+	static void* LoadLibAndGetProc(std::wstring_view lib, std::string_view func);
 };
 
 

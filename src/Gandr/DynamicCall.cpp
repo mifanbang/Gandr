@@ -21,10 +21,11 @@
 #include <Mutex.h>
 #include <Types.h>
 
-#include <algorithm>
-#include <vector>
-
 #include <windows.h>
+
+#include <algorithm>
+#include <cassert>
+#include <vector>
 
 
 namespace
@@ -36,38 +37,34 @@ class LibraryManager : public gan::Singleton<LibraryManager>
 	friend class gan::Singleton<LibraryManager>;
 
 public:
-	HMODULE Get(LPCWSTR name)
+	HMODULE Get(std::wstring_view lib)
 	{
-		auto hModule = ::GetModuleHandleW(name);
-		if (hModule == nullptr)
+		if (auto hModule = ::GetModuleHandleW(lib.data()))
+			return hModule;
+
+		if (auto hModule = ::LoadLibraryW(lib.data()))
 		{
-			hModule = ::LoadLibraryW(name);
-			if (hModule == nullptr)
-				return nullptr;
-
-			// unload library in the future
-			m_libUnloadList.ApplyOperation( [hModule](auto& libs) {
-				return libs.emplace_back(hModule);
-			} );
+			// FreeLibrary on destructor
+			m_libUnloadList.ApplyOperation(
+				[hModule](auto& libs) { return libs.emplace_back(hModule); }
+			);
+			return hModule;
 		}
-		return hModule;
+		return nullptr;
 	}
-
 
 private:
 	LibraryManager() = default;
 
-	class LibraryUnloadList : public std::vector<HMODULE>
+	~LibraryManager()
 	{
-	public:
-		~LibraryUnloadList()
-		{
-			for (auto& item : *this)
+		m_libUnloadList.ApplyOperation( [](auto& libs) {
+			for (auto item : libs)
 				::FreeLibrary(item);
-		}
-	};
+		} );
+	}
 
-	gan::ThreadSafeResource<LibraryUnloadList> m_libUnloadList;
+	gan::ThreadSafeResource<std::vector<HMODULE>> m_libUnloadList;
 };
 
 
@@ -78,10 +75,13 @@ namespace gan
 {
 
 
-void* DynamicCallBase::ObtainFunction(const wchar_t* libName, const char* funcName)
+void* DynamicCall::LoadLibAndGetProc(std::wstring_view lib, std::string_view func)
 {
-	if (auto hModule = LibraryManager::GetInstance().Get(libName))
-		return ::GetProcAddress(hModule, funcName);
+	assert(lib.data());
+	assert(func.data());
+
+	if (auto hModule = LibraryManager::GetInstance().Get(lib))
+		return ::GetProcAddress(hModule, func.data());
 	return nullptr;
 }
 

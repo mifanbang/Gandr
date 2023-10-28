@@ -37,6 +37,7 @@
 
 namespace
 {
+	using namespace std::literals;
 
 
 class InjectionHelper
@@ -63,8 +64,8 @@ public:
 			uint32_t freeType;
 		};
 
-		gan::DynamicCall<decltype(VirtualFree)> funcVirtualFree(L"kernel32", "VirtualFree");
-		assert(funcVirtualFree.IsValid());
+		auto funcVirtualFree = gan::DynamicCall::Get<decltype(&::VirtualFree)>(L"kernel32"sv, "VirtualFree"sv);
+		assert(funcVirtualFree);
 
 		auto output = gan::Buffer::Allocate(sizeof(StackFrameForLoadLibraryW32));
 		assert(output);
@@ -76,7 +77,7 @@ public:
 		auto bufferData = gan::MemAddr{ output->GetData() };
 		bufferData.Ref<StackFrameForLoadLibraryW32>() = {
 			// for LoadLibraryW()
-			funcVirtualFree.GetAddress(),
+			funcVirtualFree,
 			remoteDllPath,
 
 			// for VirtualFree()
@@ -122,10 +123,10 @@ public:
 private:
 	static void SetIPToLoadLibraryW(CONTEXT& context)
 	{
-		gan::DynamicCall<decltype(::LoadLibraryW)> funcLoadLibraryW{ L"kernel32", "LoadLibraryW" };
-		assert(funcLoadLibraryW.IsValid());
+		auto funcLoadLibraryW = gan::DynamicCall::Get<decltype(&::LoadLibraryW)>(L"kernel32"sv, "LoadLibraryW"sv);
+		assert(funcLoadLibraryW);
 
-		GET_CONTEXT_REG(context, ip) = reinterpret_cast<size_t>(funcLoadLibraryW.GetAddress());
+		GET_CONTEXT_REG(context, ip) = reinterpret_cast<size_t>(funcLoadLibraryW);
 	}
 };
 
