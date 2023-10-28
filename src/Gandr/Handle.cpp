@@ -25,7 +25,7 @@ namespace gan
 {
 
 
-void AutoWinHandleImpl::Close(WinHandle handle)
+void internal::AutoWinHandleImpl::Close(WinHandle handle)
 {
 	::CloseHandle(handle);
 }

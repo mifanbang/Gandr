@@ -27,7 +27,6 @@ namespace gan
 {
 
 
-
 template <typename T>
 class ThreadSafeResource
 {
@@ -66,12 +65,10 @@ public:
 		}
 	}
 
-
 private:
 	T m_resInst;
 	CRITICAL_SECTION m_lock;
 };
-
 
 
 }  // namespace gan

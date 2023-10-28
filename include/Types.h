@@ -32,29 +32,30 @@ namespace gan
 
 enum class MemType { Mutable, Immutable };
 
-
-template <MemType Mutability> class MemAddrWrapper;
-using MemAddr = MemAddrWrapper<MemType::Mutable>;
-using ConstMemAddr = MemAddrWrapper<MemType::Immutable>;
+namespace internal {
+	template <MemType Mutability> class _MemAddrWrapper;
+}
+using MemAddr = internal::_MemAddrWrapper<MemType::Mutable>;
+using ConstMemAddr = internal::_MemAddrWrapper<MemType::Immutable>;
 
 
 // A wrapper for the ease of casting and offseting memory addresses
 template <MemType Mutability>
-class MemAddrWrapper
+class internal::_MemAddrWrapper
 {
 	constexpr static bool IsImmutable = Mutability == MemType::Immutable;
 
 public:
 	using IntegralType = size_t;  // Integral type for memory address
 
-	constexpr MemAddrWrapper() = default;
-	constexpr MemAddrWrapper(const MemAddrWrapper& other) = default;
-	explicit MemAddrWrapper(const void* addr) requires IsImmutable
+	constexpr _MemAddrWrapper() = default;
+	constexpr _MemAddrWrapper(const _MemAddrWrapper& other) = default;
+	explicit _MemAddrWrapper(const void* addr) requires IsImmutable
 		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
-	explicit MemAddrWrapper(void* addr) requires !IsImmutable
+	explicit _MemAddrWrapper(void* addr) requires !IsImmutable
 		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
 
-	constexpr MemAddrWrapper& operator=(const MemAddrWrapper& other) = default;
+	constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper& other) = default;
 
 	// Casting
 	template <class S = void>
@@ -114,19 +115,19 @@ public:
 	}
 
 	// Bitwise binary
-	MemAddrWrapper operator&(IntegralType mask) const { return MemAddrWrapper{ m_addr & mask }; }
+	_MemAddrWrapper operator&(IntegralType mask) const { return _MemAddrWrapper{ m_addr & mask }; }
 
 	// Arithmetics
-	MemAddrWrapper Offset(intptr_t offset) const	{ return MemAddrWrapper{ m_addr + offset }; }
-	ptrdiff_t operator-(MemAddrWrapper other) const	{ return m_addr - other.m_addr; }
-	MemAddrWrapper& operator++()
+	_MemAddrWrapper Offset(intptr_t offset) const	{ return _MemAddrWrapper{ m_addr + offset }; }
+	ptrdiff_t operator-(_MemAddrWrapper other) const	{ return m_addr - other.m_addr; }
+	_MemAddrWrapper& operator++()
 	{
 		++m_addr;
 		return *this;
 	}
 
 private:
-	explicit MemAddrWrapper(IntegralType addr) : m_addr(addr) { }
+	explicit _MemAddrWrapper(IntegralType addr) : m_addr(addr) { }
 
 	IntegralType m_addr;
 };
@@ -183,14 +184,16 @@ concept IsAnyFuncPtr =
 	|| (std::is_pointer_v<F> && std::is_function_v<std::remove_pointer_t<F>>);
 
 
-// Helper data structure for casting between functions and raw pointers.
-template <class F>
-union _MemFnAddr
+namespace internal
 {
-	F func;
-	void* addr;
-};
-
+	// Helper data structure for casting between functions and raw pointers.
+	template <class F>
+	union _MemFnAddr
+	{
+		F func;
+		void* addr;
+	};
+}  // namespace internal
 
 // ---------------------------------------------------------------------------
 // Function ToMemFn & FromMemFn:
@@ -202,14 +205,14 @@ template <class F>
 	requires std::is_member_function_pointer_v<F>
 constexpr F ToMemFn(void* addr)
 {
-	return _MemFnAddr<F>{ .addr = addr }.func;
+	return internal::_MemFnAddr<F>{ .addr = addr }.func;
 }
 
 template <class F>
 	requires std::is_member_function_pointer_v<F>
 constexpr void* FromMemFn(F func)
 {
-	return _MemFnAddr<F>{ .func = func }.addr;
+	return internal::_MemFnAddr<F>{ .func = func }.addr;
 }
 
 // ---------------------------------------------------------------------------
@@ -221,14 +224,14 @@ template <class F>
 	requires IsAnyFuncPtr<F>
 constexpr static F ToAnyFn(void* addr)
 {
-	return _MemFnAddr<F>{ .addr = addr }.func;
+	return internal::_MemFnAddr<F>{ .addr = addr }.func;
 }
 
 template <class F>
 	requires IsAnyFuncPtr<F>
 constexpr static void* FromAnyFn(F func)
 {
-	return _MemFnAddr<F>{ .func = func }.addr;
+	return internal::_MemFnAddr<F>{ .func = func }.addr;
 }
 
 
@@ -242,12 +245,15 @@ namespace std
 template <>
 struct hash<gan::MemAddr>
 {
-	std::size_t operator()(gan::MemAddr key) const
-	{
-		return hash<const uint8_t*>{}(
-			key.ConstPtr<uint8_t>()
-		);
-	}
+	using ImplType = hash<const void*>;
+	std::size_t operator()(gan::MemAddr key) const { return ImplType{}(key.ConstPtr<>()); }
+};
+
+template <>
+struct hash<gan::ConstMemAddr>
+{
+	using ImplType = hash<const void*>;
+	std::size_t operator()(gan::ConstMemAddr key) const { return ImplType{}(key.ConstPtr<>()); }
 };
 
 }  // namespace std

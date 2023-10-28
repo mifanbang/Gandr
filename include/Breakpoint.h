@@ -21,10 +21,8 @@
 #include <Types.h>
 
 
-
 namespace gan
 {
-
 
 
 enum class HWBreakpointSlot : uint8_t
@@ -43,7 +41,6 @@ public:
 	static bool Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot);
 	static bool Disable(WinHandle thread, HWBreakpointSlot slot);
 };
-
 
 
 }  // namespace gan

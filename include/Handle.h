@@ -105,13 +105,15 @@ private:
 };
 
 
-struct AutoWinHandleImpl
+namespace internal
 {
-	using RawHandle = WinHandle;
-
-	static void Close(RawHandle handle);
-};
-using AutoWinHandle = AutoHandle<AutoWinHandleImpl>;
+	struct AutoWinHandleImpl
+	{
+		using RawHandle = WinHandle;
+		static void Close(RawHandle handle);
+	};
+}
+using AutoWinHandle = AutoHandle<internal::AutoWinHandleImpl>;
 
 
 }  // namespace gan
