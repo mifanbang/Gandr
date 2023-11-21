@@ -482,7 +482,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make(gan::MemAddr originAddr, int8_t offset, uint8_t(&out)[N])
+		static uint8_t Make([[maybe_unused]] gan::MemAddr originAddr, int8_t offset, uint8_t(&out)[N])
 		{
 			static_assert(N >= k_length);
 
@@ -861,7 +861,7 @@ Hook::OpResult Hook::Uninstall()
 }
 
 
-void Hook::AssertCtorArgs(MemAddr origFunc, MemAddr hookFunc)
+void Hook::AssertCtorArgs([[maybe_unused]] MemAddr origFunc, [[maybe_unused]] MemAddr hookFunc)
 {
 	assert(origFunc);
 	assert(hookFunc);

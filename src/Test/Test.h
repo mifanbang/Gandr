@@ -35,6 +35,7 @@ struct TestCaseBase
 	std::vector<const char*> __m_failedAssertions;
 	std::vector<const char*> __m_failedExpectations;
 
+	virtual ~TestCaseBase() = default;
 	virtual bool SetUp() { return true; }
 	virtual void TearDown() { }
 	virtual void Run() = 0;

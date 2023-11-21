@@ -24,7 +24,6 @@
 #include <windows.h>
 
 #include <cassert>
-#include <limits>
 
 
 namespace
@@ -33,7 +32,6 @@ namespace
 
 size_t DetermineCapacity(size_t requestedSize)
 {
-	constexpr size_t maxSize = std::numeric_limits<size_t>::max();
 	constexpr size_t maxSizeForReservation = 1 << 26;  // Not to reserve memory if requestedSize >= 64 MB
 
 	if (requestedSize < static_cast<size_t>(gan::Buffer::k_minSize))

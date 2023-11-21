@@ -212,7 +212,7 @@ DEFINE_TESTSUITE_START(Hook_User32)
 
 		constexpr static wchar_t k_overridenClassName[] = L"button";
 
-		static int __stdcall _GetClassInfoW(HINSTANCE hInstance, LPCWSTR lpClassName, LPWNDCLASSW lpWndClass)
+		static int __stdcall _GetClassInfoW(HINSTANCE hInstance, [[maybe_unused]] LPCWSTR lpClassName, LPWNDCLASSW lpWndClass)
 		{
 			return gan::Hook::GetTrampoline(GetClassInfoW)(hInstance, k_overridenClassName, lpWndClass);
 		}

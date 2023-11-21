@@ -32,7 +32,8 @@ namespace gan
 
 enum class MemType { Mutable, Immutable };
 
-namespace internal {
+namespace internal
+{
 	template <MemType Mutability> class _MemAddrWrapper;
 }
 using MemAddr = internal::_MemAddrWrapper<MemType::Mutable>;
@@ -64,8 +65,8 @@ public:
 		return reinterpret_cast<const S*>(m_addr);
 	}
 	template <class S = void>
-	S* Ptr() const
 		requires !IsImmutable
+	S* Ptr() const
 	{
 		return reinterpret_cast<S*>(m_addr);
 	}
@@ -84,14 +85,14 @@ public:
 	template <class S>
 	const S& ConstRef() const
 	{
-		if constexpr (std::is_function_v<S>)  // keyword "const" for function would be redundant
+		if constexpr (std::is_function_v<S>)  // Keyword "const" for function would be redundant
 			return *reinterpret_cast<S*>(m_addr);
 		else
 			return *reinterpret_cast<const S*>(m_addr);
 	}
 	template <class S>
-	S& Ref() const
 		requires !IsImmutable
+	S& Ref() const
 	{
 		return *reinterpret_cast<S*>(m_addr);
 	}
@@ -102,14 +103,14 @@ public:
 
 	// Comparisons
 	template <class OtherT>
-	constexpr bool operator==(OtherT other) const noexcept
 		requires (requires (OtherT otherT) { {otherT.m_addr} -> std::equality_comparable_with<IntegralType>; })
+	constexpr bool operator==(OtherT other) const noexcept
 	{
 		return m_addr == other.m_addr;
 	}
 	template <class OtherT>
-	constexpr std::strong_ordering operator<=>(OtherT other) const noexcept
 		requires (requires (OtherT otherT) { {otherT.m_addr} -> std::three_way_comparable_with<IntegralType>; })
+	constexpr std::strong_ordering operator<=>(OtherT other) const noexcept
 	{
 		return m_addr <=> other.m_addr;
 	}

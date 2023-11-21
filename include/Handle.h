@@ -31,7 +31,7 @@ public:
 	template <class HandleType>
 	static HandleType Duplicate(HandleType handle) = delete;
 
-	template <> static WinHandle Duplicate<WinHandle>(WinHandle handle);
+	template <> WinHandle Duplicate<WinHandle>(WinHandle handle);
 };
 
 

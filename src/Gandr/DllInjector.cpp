@@ -48,7 +48,7 @@ public:
 
 
 	template <>
-	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<gan::Arch::IA32>(CONTEXT& context, const wchar_t* remoteDllPath)
+	std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<gan::Arch::IA32>(CONTEXT& context, const wchar_t* remoteDllPath)
 	{
 		// write faked stack frame
 		struct StackFrameForLoadLibraryW32
@@ -93,7 +93,7 @@ public:
 	}
 
 	template <>
-	static std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<gan::Arch::Amd64>(CONTEXT& context, const wchar_t* remoteDllPath)
+	std::unique_ptr<gan::Buffer> GenerateStackFrameAndUpdateContext<gan::Arch::Amd64>(CONTEXT& context, const wchar_t* remoteDllPath)
 	{
 		struct StackFrameForLoadLibraryW64
 		{
