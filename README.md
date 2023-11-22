@@ -5,37 +5,39 @@
 
 ## Introduction
 
-Gandr was originally written as the foundation of [Purifier](https://github.com/mifanbang/Purifier), an ad-remover for older Windows versions of Skype. The library aims to wrap Win32 API into simple yet modern C++ interface and accelerate your work to mess up target processes in userland. Both 32-bit and 64-bit targets are supported.
+*Gandr* was originally written as the foundation for a couple of other projects that remove/block ads in certain Windows application. The library features wrapping low-level system operations into clean and modern C++ interface to help accelerate your work of hacking in userland. 32-bit and 64-bit configurations are both supported.
 
 ## Features
 
 This is a non-exhaustive list of main features of Gandr:
 
-- Support of modern C++ standards, e.g., move semantics
+- Support of modern C++ standards, *e.g.*, move semantics
 
 - A wrapper of [Windows debugging API](https://docs.microsoft.com/en-us/windows/win32/debug/debugging-functions) (classes `Debugger` and `DebugSession`)
 
 - A DLL injector (class `DllPreloadDebugSession` for the highest-level use case) which creates a new process and forces it to load a specific DLL right before any code of the victim executable is run
 
-- An *overly* simple x86+amd64 instruction length decoder (class `InstructionDecoder`)
+- An *overly* simplified x86+amd64 instruction length decoder (class `InstructionDecoder`)
 
 - A helper for installing and uninstalling inline hooks (class `Hook`)
 
-## Building Gandr
+## Build Instructions
 
-Visual Studio 2022 is used for the development of Gandr. The solution consists of two parts: a static library, and unit tests.
+Visual Studio 2022 is used in the development of Gandr. The solution consists of two parts: a static library, and unit tests.
 
 There is no external dependency required by the solution, so all you need to do is hitting the "Build Solution" button. Compiled and linked binary files can then be found in the folder `bin\[project name]\[platform]\[build configuration]\`.
 
 ## Using Gandr
 
-All Gandr headers exposed to users are located in the folder `include\`. You should add the path to this folder as an additional include path in the building environment of your application. You will also need to add paths to Gandr static library binaries (mentioned in the *Build the Code* section above) as well.
+All Gandr headers exposed to users are located in the folder `include\`. You should add the path to this folder as an additional include path in the building environment of your project. You will also need to add paths to Gandr static library binaries (mentioned in the *Build Instructions* section above) as well.
 
-Due to my shameful laziness, there is currently no documentation for the Gandr API. However the test code should provide you with decent examples of how to use most classes.
+Release builds of Gandr are configured with the `/MT` compiler flag ("Multi-threaded" for the "Runtime Library" property), and Debug builds with `/MDd`. Please make sure your projects are using the same flags.
 
 Additionally, as a bonus, `Test.cpp` and `Test.h` from the project `Test` constitute yet another minimalism unit test framework that might hopefully be helpful to your projects.
 
 ## Selected Code Examples
+
+Due to my shameful laziness, there is currently no documentation for the Gandr API. However the test code should provide you with decent examples of how to use most classes.
 
 ### Preloading a DLL to a new process
 
