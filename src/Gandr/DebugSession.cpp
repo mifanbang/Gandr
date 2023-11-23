@@ -80,9 +80,9 @@ DebugSession::DebugSession(const CreateProcessParam& newProcParam)
 			return STARTUPINFO{ };
 	} (newProcParam.startUpInfo);
 
-	constexpr LPSECURITY_ATTRIBUTES k_notInheritable = nullptr;
+	constexpr auto k_notInheritable = nullptr;
 	constexpr BOOL k_dontLetChildInherit = FALSE;
-	constexpr void* k_useParentsEnv = nullptr;
+	constexpr auto k_useParentsEnv = nullptr;
 	PROCESS_INFORMATION procInfo;
 	if (::CreateProcessW(
 		newProcParam.imagePath,

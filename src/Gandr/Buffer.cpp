@@ -43,7 +43,7 @@ size_t DetermineCapacity(size_t requestedSize) noexcept
 #if defined _WIN64
 	return 1ull << (64ull - __lzcnt64(requestedSize));
 #else
-	return 1ul << (32u - __lzcnt(static_cast<unsigned int>(requestedSize)));
+	return 1ul << (32u - __lzcnt(requestedSize));
 #endif  // _WIN64
 }
 
@@ -61,7 +61,7 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 	assert(capacity >= size);
 	if (capacity >= size)
 	{
-		const MemAddr dataPtr{ ::HeapAlloc(GetProcessHeap(), 0, capacity) };
+		const MemAddr dataPtr{ ::HeapAlloc(::GetProcessHeap(), 0, capacity) };
 		if (dataPtr.IsValid())
 			return std::unique_ptr<Buffer>{ new Buffer{ capacity, size, dataPtr.Ptr<uint8_t>()} };
 	}
@@ -82,11 +82,11 @@ Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr) noexcept
 
 Buffer::~Buffer()
 {
-	::HeapFree(GetProcessHeap(), 0, m_data);
+	::HeapFree(::GetProcessHeap(), 0, m_data);
 }
 
 
-bool Buffer::Resize(size_t newSize)
+bool Buffer::Resize(size_t newSize) noexcept
 {
 	if (newSize < m_capacity)
 		return true;

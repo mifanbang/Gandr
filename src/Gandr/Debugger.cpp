@@ -23,6 +23,65 @@
 #include <cassert>
 
 
+namespace
+{
+
+
+gan::DebugSession::ContinueStatus CallDebugEventHandler(gan::DebugSession& session, const DEBUG_EVENT& event)
+{
+	switch (event.dwDebugEventCode)
+	{
+		case EXCEPTION_DEBUG_EVENT:
+		{
+			return session.OnExceptionTriggered(event.u.Exception);
+		}
+		case CREATE_THREAD_DEBUG_EVENT:
+		{
+			return session.OnThreadCreated(event.u.CreateThread);
+		}
+		case CREATE_PROCESS_DEBUG_EVENT:
+		{
+			const auto result = session.OnProcessCreated(event.u.CreateProcessInfo);
+			::CloseHandle(event.u.CreateProcessInfo.hFile);
+			return result;
+		}
+		case EXIT_THREAD_DEBUG_EVENT:
+		{
+			return session.OnThreadExited(event.u.ExitThread);
+		}
+		case EXIT_PROCESS_DEBUG_EVENT:
+		{
+			return session.OnProcessExited(event.u.ExitProcess);
+		}
+		case LOAD_DLL_DEBUG_EVENT:
+		{
+			const auto result = session.OnDllLoaded(event.u.LoadDll);
+			::CloseHandle(event.u.LoadDll.hFile);
+			return result;
+		}
+		case UNLOAD_DLL_DEBUG_EVENT:
+		{
+			return session.OnDllUnloaded(event.u.UnloadDll);
+		}
+		case OUTPUT_DEBUG_STRING_EVENT:
+		{
+			return session.OnStringOutput(event.u.DebugString);
+		}
+		case RIP_EVENT:
+		{
+			return session.OnRipEvent(event.u.RipInfo);
+		}
+		default:
+		{
+			return gan::DebugSession::ContinueStatus::ContinueThread;  // continue by default
+		}
+	}
+}
+
+
+}  // unnamed namespace
+
+
 namespace gan
 {
 
@@ -43,16 +102,13 @@ Debugger::~Debugger()
 
 Debugger::EventLoopResult Debugger::EnterEventLoop()
 {
-	DEBUG_EVENT dbgEvent;
-
 	m_flagEventLoopExit = false;
 	while (!m_flagEventLoopExit)
 	{
 		if (m_sessions.size() == 0)
 			return EventLoopResult::AllDetached;
 
-		auto contStatus = DebugSession::ContinueStatus::ContinueThread;  // continue by default
-
+		DEBUG_EVENT dbgEvent{ };
 		if (::WaitForDebugEvent(&dbgEvent, INFINITE) == 0)
 			return EventLoopResult::ErrorOccurred;
 
@@ -61,66 +117,12 @@ Debugger::EventLoopResult Debugger::EnterEventLoop()
 			continue;  // this shouldn't happen though
 		auto pSession = itr->second;
 
-		const DebugSession::PreEvent preEvent {
+		pSession->OnPreEvent({
 			.eventCode = dbgEvent.dwDebugEventCode,
 			.threadId = dbgEvent.dwThreadId
-		};
-		pSession->OnPreEvent(preEvent);
+		});
 
-		switch (dbgEvent.dwDebugEventCode)
-		{
-			case EXCEPTION_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnExceptionTriggered(dbgEvent.u.Exception);
-				break;
-			}
-			case CREATE_THREAD_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnThreadCreated(dbgEvent.u.CreateThread);
-				break;
-			}
-			case CREATE_PROCESS_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnProcessCreated(dbgEvent.u.CreateProcessInfo);
-				::CloseHandle(dbgEvent.u.CreateProcessInfo.hFile);
-				break;
-			}
-			case EXIT_THREAD_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnThreadExited(dbgEvent.u.ExitThread);
-				break;
-			}
-			case EXIT_PROCESS_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnProcessExited(dbgEvent.u.ExitProcess);
-				break;
-			}
-			case LOAD_DLL_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnDllLoaded(dbgEvent.u.LoadDll);
-				::CloseHandle(dbgEvent.u.LoadDll.hFile);
-				break;
-			}
-			case UNLOAD_DLL_DEBUG_EVENT:
-			{
-				contStatus = pSession->OnDllUnloaded(dbgEvent.u.UnloadDll);
-				break;
-			}
-			case OUTPUT_DEBUG_STRING_EVENT:
-			{
-				contStatus = pSession->OnStringOutput(dbgEvent.u.DebugString);
-				break;
-			}
-			case RIP_EVENT:
-			{
-				contStatus = pSession->OnRipEvent(dbgEvent.u.RipInfo);
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
+		const auto contStatus = CallDebugEventHandler(*pSession, dbgEvent);
 
 		::ContinueDebugEvent(
 			dbgEvent.dwProcessId,

@@ -37,7 +37,7 @@ WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle) noexcept
 	constexpr uint32_t k_ignoredParam = 0;  // Because DUPLICATE_SAME_ACCESS is specified
 	constexpr BOOL k_newHandleInheritable = TRUE;
 
-	HANDLE newHandle;
+	HANDLE newHandle{ nullptr };
 	HANDLE currProcess = GetCurrentProcess();
 	const auto dupResult = ::DuplicateHandle(
 		currProcess,

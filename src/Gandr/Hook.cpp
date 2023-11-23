@@ -258,9 +258,9 @@ private:
 			const auto addrToFindEnd = desiredAddrRange.max.Offset(-allocGranularity);
 
 			// Iterate through pages until hitting one with the MEM_FREE state.
-			MEMORY_BASIC_INFORMATION memInfo;
 			for (auto addr = addrToFindStart; addr < addrToFindEnd; )
 			{
+				MEMORY_BASIC_INFORMATION memInfo{ };
 				const auto result = ::VirtualQuery(addr.ConstPtr<uint8_t>(), &memInfo, sizeof(memInfo));
 				if (result == 0)
 				{
@@ -556,11 +556,16 @@ Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologSt
 
 bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data) noexcept
 {
-	DWORD oldAttr, dummy;
 	auto rawPtr = address.Ptr<uint8_t>();
+
+	DWORD oldAttr{ };
 	::VirtualProtect(rawPtr, data.size(), PAGE_EXECUTE_READWRITE, &oldAttr);
+
 	memcpy(rawPtr, data.data(), data.size());
+
+	DWORD dummy{ };
 	::VirtualProtect(rawPtr, data.size(), oldAttr, &dummy);
+
 	return true;
 }
 

@@ -48,7 +48,7 @@ public:
 
 	size_t GetCapacity() const noexcept	{ return m_capacity; }
 	size_t GetSize() const noexcept		{ return m_size; }
-	bool Resize(size_t newSize);
+	bool Resize(size_t newSize) noexcept;
 
 
 private:
