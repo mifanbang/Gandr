@@ -50,32 +50,32 @@ public:
 	using IntegralType = size_t;  // Integral type for memory address
 
 	constexpr _MemAddrWrapper() = default;
-	constexpr _MemAddrWrapper(const _MemAddrWrapper& other) = default;
-	explicit _MemAddrWrapper(const void* addr) requires IsImmutable
+	constexpr _MemAddrWrapper(const _MemAddrWrapper&) = default;
+	explicit _MemAddrWrapper(const void* addr) noexcept requires IsImmutable
 		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
-	explicit _MemAddrWrapper(void* addr) requires !IsImmutable
+	explicit _MemAddrWrapper(void* addr) noexcept requires !IsImmutable
 		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
 
-	constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper& other) = default;
+	constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper&) = default;
 
 	// Casting
 	template <class S = void>
-	const S* ConstPtr() const
+	const S* ConstPtr() const noexcept
 	{
 		return reinterpret_cast<const S*>(m_addr);
 	}
 	template <class S = void>
 		requires !IsImmutable
-	S* Ptr() const
+	S* Ptr() const noexcept
 	{
 		return reinterpret_cast<S*>(m_addr);
 	}
-	ConstMemAddr Immutable() const  // MemAddr -> ConstMemAddr
+	ConstMemAddr Immutable() const noexcept  // MemAddr -> ConstMemAddr
 		requires !IsImmutable
 	{
 		return ConstMemAddr{ reinterpret_cast<const void*>(m_addr) };
 	}
-	MemAddr ConstCast() const  // ConstMemAddr -> MemAddr; use with caution
+	MemAddr ConstCast() const noexcept  // ConstMemAddr -> MemAddr; use with caution
 		requires IsImmutable
 	{
 		return MemAddr{ reinterpret_cast<void*>(m_addr) };
@@ -83,7 +83,7 @@ public:
 
 	// Dereferencing
 	template <class S>
-	const S& ConstRef() const
+	const S& ConstRef() const noexcept
 	{
 		if constexpr (std::is_function_v<S>)  // Keyword "const" for function would be redundant
 			return *reinterpret_cast<S*>(m_addr);
@@ -92,14 +92,14 @@ public:
 	}
 	template <class S>
 		requires !IsImmutable
-	S& Ref() const
+	S& Ref() const noexcept
 	{
 		return *reinterpret_cast<S*>(m_addr);
 	}
 
 	// Validity
-	constexpr explicit operator bool() const { return m_addr; }
-	constexpr bool IsValid() const			 { return m_addr; }
+	constexpr explicit operator bool() const noexcept	{ return m_addr; }
+	constexpr bool IsValid() const noexcept				{ return m_addr; }
 
 	// Comparisons
 	template <class OtherT>
@@ -116,19 +116,20 @@ public:
 	}
 
 	// Bitwise binary
-	_MemAddrWrapper operator&(IntegralType mask) const { return _MemAddrWrapper{ m_addr & mask }; }
+	_MemAddrWrapper operator&(IntegralType mask) const noexcept { return _MemAddrWrapper{ m_addr & mask }; }
 
 	// Arithmetics
-	_MemAddrWrapper Offset(intptr_t offset) const	{ return _MemAddrWrapper{ m_addr + offset }; }
-	ptrdiff_t operator-(_MemAddrWrapper other) const	{ return m_addr - other.m_addr; }
-	_MemAddrWrapper& operator++()
+	_MemAddrWrapper Offset(intptr_t offset) const noexcept		{ return _MemAddrWrapper{ m_addr + offset }; }
+	ptrdiff_t operator-(_MemAddrWrapper other) const noexcept	{ return m_addr - other.m_addr; }
+	_MemAddrWrapper& operator++() noexcept
 	{
 		++m_addr;
 		return *this;
 	}
 
 private:
-	explicit _MemAddrWrapper(IntegralType addr) : m_addr(addr) { }
+	explicit _MemAddrWrapper(IntegralType addr) noexcept
+		: m_addr(addr) { }
 
 	IntegralType m_addr;
 };
@@ -154,11 +155,20 @@ template <typename T>
 class Singleton
 {
 public:
-	static T& GetInstance()
+	static T& GetInstance() noexcept(noexcept(T()))
 	{
-		static T* s_inst = new T;
-		return *s_inst;
+		static T s_inst;
+		return s_inst;
 	}
+
+	Singleton() = default;
+	~Singleton() = default;
+
+private:
+	Singleton(const Singleton&) = delete;
+	Singleton(Singleton&&) = delete;
+	Singleton& operator=(const Singleton&) = delete;
+	Singleton& operator=(Singleton&&) = delete;
 };
 
 
@@ -169,10 +179,10 @@ using WinErrorCode = unsigned long;
 
 enum class Arch : uint8_t { IA32, Amd64 };
 
-consteval bool Is64() { return sizeof(MemAddr) == 8; }
-consteval Arch BuildArch() { return Is64() ? Arch::Amd64 : Arch::IA32; }
+consteval bool Is64() noexcept { return sizeof(MemAddr) == 8; }
+consteval Arch BuildArch() noexcept { return Is64() ? Arch::Amd64 : Arch::IA32; }
 
-consteval bool UseStdFormat() { return false; }  // Whether to enable the use of std::format which can boast executable size
+consteval bool UseStdFormat() noexcept { return false; }  // Whether to enable the use of std::format which can boast executable size
 
 
 // Generalized concept to cover pointers of:
@@ -247,14 +257,14 @@ template <>
 struct hash<gan::MemAddr>
 {
 	using ImplType = hash<const void*>;
-	std::size_t operator()(gan::MemAddr key) const { return ImplType{}(key.ConstPtr<>()); }
+	std::size_t operator()(gan::MemAddr key) const noexcept { return ImplType{}(key.ConstPtr<>()); }
 };
 
 template <>
 struct hash<gan::ConstMemAddr>
 {
 	using ImplType = hash<const void*>;
-	std::size_t operator()(gan::ConstMemAddr key) const { return ImplType{}(key.ConstPtr<>()); }
+	std::size_t operator()(gan::ConstMemAddr key) const noexcept { return ImplType{}(key.ConstPtr<>()); }
 };
 
 }  // namespace std

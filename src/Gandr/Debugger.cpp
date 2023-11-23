@@ -31,7 +31,7 @@ namespace gan
 // class Debugger
 // ---------------------------------------------------------------------------
 
-Debugger::Debugger()
+Debugger::Debugger() noexcept
 	: m_flagEventLoopExit(false)
 {
 }
@@ -56,12 +56,12 @@ Debugger::EventLoopResult Debugger::EnterEventLoop()
 		if (::WaitForDebugEvent(&dbgEvent, INFINITE) == 0)
 			return EventLoopResult::ErrorOccurred;
 
-		auto itr = m_sessions.find(dbgEvent.dwProcessId);
+		const auto itr = m_sessions.find(dbgEvent.dwProcessId);
 		if (itr == m_sessions.end())
 			continue;  // this shouldn't happen though
 		auto pSession = itr->second;
 
-		DebugSession::PreEvent preEvent {
+		const DebugSession::PreEvent preEvent {
 			.eventCode = dbgEvent.dwDebugEventCode,
 			.threadId = dbgEvent.dwThreadId
 		};
@@ -148,7 +148,7 @@ bool Debugger::AddSessionInstance(const std::shared_ptr<DebugSession>& pSession)
 
 bool Debugger::RemoveSession(DebugSession::Identifier sessionId, DebugSession::EndOption option)
 {
-	auto itr = m_sessions.find(sessionId);
+	const auto itr = m_sessions.find(sessionId);
 	if (itr == m_sessions.end())
 		return false;
 
@@ -157,7 +157,7 @@ bool Debugger::RemoveSession(DebugSession::Identifier sessionId, DebugSession::E
 	return true;
 }
 
-void Debugger::RemoveAllSessions(DebugSession::EndOption option)
+void Debugger::RemoveAllSessions(DebugSession::EndOption option) noexcept
 {
 	for (auto& itr : m_sessions)
 		itr.second->End(option);

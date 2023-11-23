@@ -109,7 +109,7 @@ DebugSession::~DebugSession()
 }
 
 
-void DebugSession::End(EndOption option)
+void DebugSession::End(EndOption option) noexcept
 {
 	if (IsValid())
 	{
@@ -122,13 +122,6 @@ void DebugSession::End(EndOption option)
 		::CloseHandle(m_hProc);
 	}
 }
-
-
-bool DebugSession::IsValid() const
-{
-	return m_pid != 0;
-}
-
 
 
 }  // namespace gan

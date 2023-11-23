@@ -41,18 +41,18 @@ public:
 	Buffer& operator=(const Buffer&) = delete;
 	Buffer& operator=(Buffer&&) = delete;
 
-	operator const uint8_t*() const	{ return m_data; }
-	operator uint8_t*()				{ return m_data; }
-	const uint8_t* GetData() const	{ return m_data; }
-	uint8_t* GetData() 				{ return m_data; }
+	operator const uint8_t*() const noexcept { return m_data; }
+	operator uint8_t*() noexcept			 { return m_data; }
+	const uint8_t* GetData() const noexcept	 { return m_data; }
+	uint8_t* GetData() noexcept				 { return m_data; }
 
-	size_t GetCapacity() const	{ return m_capacity; }
-	size_t GetSize() const		{ return m_size; }
+	size_t GetCapacity() const noexcept	{ return m_capacity; }
+	size_t GetSize() const noexcept		{ return m_size; }
 	bool Resize(size_t newSize);
 
 
 private:
-	Buffer(size_t capacity, size_t size, uint8_t* addr);
+	Buffer(size_t capacity, size_t size, uint8_t* addr) noexcept;
 
 	size_t m_capacity;
 	size_t m_size;  // size in use

@@ -30,11 +30,11 @@ namespace
 {
 
 
-size_t DetermineCapacity(size_t requestedSize)
+size_t DetermineCapacity(size_t requestedSize) noexcept
 {
 	constexpr size_t maxSizeForReservation = 1 << 26;  // Not to reserve memory if requestedSize >= 64 MB
 
-	if (requestedSize < static_cast<size_t>(gan::Buffer::k_minSize))
+	if (requestedSize < gan::Buffer::k_minSize)
 		return gan::Buffer::k_minSize;
 	else if (requestedSize >= maxSizeForReservation)
 		return requestedSize;
@@ -61,7 +61,7 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 	assert(capacity >= size);
 	if (capacity >= size)
 	{
-		MemAddr dataPtr{ ::HeapAlloc(GetProcessHeap(), 0, capacity) };
+		const MemAddr dataPtr{ ::HeapAlloc(GetProcessHeap(), 0, capacity) };
 		if (dataPtr.IsValid())
 			return std::unique_ptr<Buffer>{ new Buffer{ capacity, size, dataPtr.Ptr<uint8_t>()} };
 	}
@@ -69,7 +69,7 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 }
 
 
-Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr)
+Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr) noexcept
 	: m_capacity(capacity)
 	, m_size(size)
 	, m_data(addr)
@@ -91,12 +91,12 @@ bool Buffer::Resize(size_t newSize)
 	if (newSize < m_capacity)
 		return true;
 
-	auto newCapacity = DetermineCapacity(newSize);
+	const auto newCapacity = DetermineCapacity(newSize);
 	assert(newCapacity >= newSize);
 	if (newCapacity < newSize)
 		return false;
 
-	MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity) };
+	const MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity) };
 	assert(newAddr.IsValid());
 	if (newAddr.IsValid())
 	{

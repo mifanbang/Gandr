@@ -69,14 +69,16 @@ public:
 	virtual ~DebugSession();
 
 	DebugSession(const DebugSession&) = delete;
-	DebugSession& operator = (const DebugSession&) = delete;
+	DebugSession& operator=(const DebugSession&) = delete;
+	DebugSession(DebugSession&&) = default;
+	DebugSession& operator=(DebugSession&&) = default;
 
-	void End(EndOption option);
+	void End(EndOption option) noexcept;
 
-	bool IsValid() const;
+	bool IsValid() const noexcept { return m_pid != 0; }
 
-	Identifier GetId() const		{ return m_pid;	}
-	const WinHandle GetHandle() const	{ return m_hProc; }
+	Identifier GetId() const noexcept			{ return m_pid;	}
+	const WinHandle GetHandle() const noexcept	{ return m_hProc; }
 
 	// Event handlers
 	// Handlers shouldn't close handles in related debug info structures as class Debugger will close them.

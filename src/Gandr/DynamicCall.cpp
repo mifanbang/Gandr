@@ -58,11 +58,16 @@ private:
 
 	~LibraryManager()
 	{
-		m_libUnloadList.ApplyOperation( [](auto& libs) {
+		m_libUnloadList.ApplyOperation( [](auto& libs) noexcept {
 			for (auto item : libs)
 				::FreeLibrary(item);
 		} );
 	}
+
+	LibraryManager(const LibraryManager&) = delete;
+	LibraryManager(LibraryManager&&) = delete;
+	LibraryManager& operator=(const LibraryManager&) = delete;
+	LibraryManager& operator=(LibraryManager&&) = delete;
 
 	gan::ThreadSafeResource<std::vector<HMODULE>> m_libUnloadList;
 };

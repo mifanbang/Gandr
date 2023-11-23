@@ -56,7 +56,7 @@ public:
 
 	template <class F>
 		requires IsAnyFuncPtr<F>
-	constexpr Hook(F origFunc, F hookFunc)
+	Hook(F origFunc, F hookFunc) noexcept
 		: m_funcOrig(FromAnyFn(origFunc))
 		, m_funcHook(FromAnyFn(hookFunc))
 		, m_hooked(false)
@@ -88,7 +88,7 @@ public:
 
 private:
 	// Helper functions as a layer of abstraction not to expose implementation in header.
-	static void AssertCtorArgs(MemAddr origFunc, MemAddr hookFunc);
+	static void AssertCtorArgs(MemAddr origFunc, MemAddr hookFunc) noexcept;
 	static ConstMemAddr GetTrampolineAddr(ConstMemAddr origFunc);  // Usage of this function is highly discouraged.
 
 	MemAddr m_funcOrig;  // address to where the inline hook is installed.

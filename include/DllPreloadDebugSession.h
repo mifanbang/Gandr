@@ -45,9 +45,9 @@ public:
 	DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option);
 
 private:
-	virtual ContinueStatus OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) override;
-	virtual ContinueStatus OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo) override;
-	virtual ContinueStatus OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) override;
+	ContinueStatus OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) noexcept override;
+	ContinueStatus OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo) override;
+	ContinueStatus OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) noexcept override;
 
 	WinHandle m_hMainThread;
 	std::wstring m_payloadPath;

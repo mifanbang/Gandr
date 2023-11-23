@@ -38,7 +38,7 @@ ProcessInfo::ProcessInfo(const PROCESSENTRY32W& procEntry)
 }
 
 
-ThreadInfo::ThreadInfo(const THREADENTRY32& threadEntry)
+ThreadInfo::ThreadInfo(const THREADENTRY32& threadEntry) noexcept
 	: tid(threadEntry.th32ThreadID)
 	, pidParent(threadEntry.th32OwnerProcessID)
 	, basePriority(threadEntry.tpBasePri)

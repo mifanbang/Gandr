@@ -45,11 +45,13 @@ public:
 	using IdList = std::vector<DebugSession::Identifier>;
 
 
-	Debugger();
+	Debugger() noexcept;
 	~Debugger();
 
 	Debugger(const Debugger&) = delete;
-	Debugger& operator = (const Debugger&) = delete;
+	Debugger(Debugger&&) = delete;
+	Debugger& operator=(const Debugger&) = delete;
+	Debugger& operator=(Debugger&&) = delete;
 
 	EventLoopResult EnterEventLoop();
 
@@ -61,12 +63,12 @@ public:
 	}
 
 	bool RemoveSession(DebugSession::Identifier sessionId, DebugSession::EndOption option);
-	void RemoveAllSessions(DebugSession::EndOption option);
+	void RemoveAllSessions(DebugSession::EndOption option) noexcept;
 	void GetSessionList(IdList& output) const;
 
 
 private:
-	void RequestEventLoopExit()
+	void RequestEventLoopExit() noexcept
 	{
 		m_flagEventLoopExit = true;
 	}

@@ -40,7 +40,7 @@ struct InstructionLengthDetails
 	uint8_t lengthDisp;
 	uint8_t lengthImm;
 
-	constexpr uint8_t GetLength() const
+	constexpr uint8_t GetLength() const noexcept
 	{
 		return prefixSeg + prefix66 + prefix67 + prefixRex
 			+ modRegRm + sib
@@ -48,7 +48,7 @@ struct InstructionLengthDetails
 			+ lengthDisp + lengthImm;
 	}
 
-	constexpr InstructionLengthDetails()
+	constexpr InstructionLengthDetails() noexcept
 		: prefixSeg(false)
 		, prefix66(false)
 		, prefix67(false)
@@ -66,10 +66,10 @@ struct InstructionLengthDetails
 class InstructionDecoder
 {
 public:
-	InstructionDecoder(Arch arch, ConstMemAddr address);
+	InstructionDecoder(Arch arch, ConstMemAddr address) noexcept;
 
 	// Using build's target platform as arch
-	explicit InstructionDecoder(ConstMemAddr address)
+	explicit InstructionDecoder(ConstMemAddr address) noexcept
 		: InstructionDecoder(BuildArch(), address)
 	{ }
 

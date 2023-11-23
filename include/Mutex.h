@@ -32,7 +32,7 @@ class ThreadSafeResource
 {
 public:
 	template <typename... Arg>
-	ThreadSafeResource(Arg&&... arg)
+	ThreadSafeResource(Arg&&... arg) noexcept(noexcept(T(std::forward<Arg>(arg)...)))
 		: m_resInst(std::forward<Arg>(arg)...)
 	{
 		::InitializeCriticalSection(&m_lock);
@@ -43,11 +43,13 @@ public:
 		::DeleteCriticalSection(&m_lock);
 	}
 
-	ThreadSafeResource(const ThreadSafeResource<T>&) = delete;
-	ThreadSafeResource(ThreadSafeResource<T>&&) = delete;
+	ThreadSafeResource(const ThreadSafeResource&) = delete;
+	ThreadSafeResource(ThreadSafeResource&&) = delete;
+	ThreadSafeResource& operator=(const ThreadSafeResource&) = delete;
+	ThreadSafeResource& operator=(ThreadSafeResource&&) = delete;
 
 	template <typename F>
-	auto ApplyOperation(const F& func)
+	auto ApplyOperation(const F& func) noexcept(noexcept(func(m_resInst)))
 	{
 		constexpr bool HasReturnValue = std::is_same_v<void, decltype(func(m_resInst))>;
 

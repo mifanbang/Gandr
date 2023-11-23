@@ -81,7 +81,7 @@ struct TestSuite
 		struct TestSuite_##name final : public TestSuite {	\
 			template <typename T> struct PrivateTestCaseBase : public TestCaseBase { };	\
 			TestSuite_##name() { TestManager::Add(this); }	\
-			virtual const char* GetName() const override { return #name; }	\
+			const char* GetName() const override { return #name; }	\
 
 #define DEFINE_TESTSUITE_END		} MAKE_INST_NAME(__COUNTER__); }
 
@@ -91,15 +91,15 @@ struct TestSuite
 
 #define DEFINE_TEST_SHARED_END	};
 
-#define DEFINE_TEST_SETUP		virtual bool SetUp() override
-#define DEFINE_TEST_TEARDOWN	virtual void TearDown() override
+#define DEFINE_TEST_SETUP		bool SetUp() override
+#define DEFINE_TEST_TEARDOWN	void TearDown() override
 
 
 #define DEFINE_TEST_START(name)	\
 			TestCaseRegistry __m_testCaseReg_##name { __m_testCaseRegistryList, (PrivateTestCase_##name*)nullptr };	\
 			struct PrivateTestCase_##name : public PrivateTestCaseBase<void> {	\
 				PrivateTestCase_##name() { __m_name = #name; }				\
-				virtual void Run() override
+				void Run() override
 
 #define DEFINE_TEST_END		};
 

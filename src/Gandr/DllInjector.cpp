@@ -74,7 +74,7 @@ public:
 
 		GET_CONTEXT_REG(context, sp) -= output->GetSize();
 
-		auto bufferData = gan::MemAddr{ output->GetData() };
+		const gan::MemAddr bufferData{ output->GetData() };
 		bufferData.Ref<StackFrameForLoadLibraryW32>() = {
 			// for LoadLibraryW()
 			funcVirtualFree,
@@ -109,7 +109,7 @@ public:
 		GET_CONTEXT_REG(context, sp) -= output->GetSize();
 		GET_CONTEXT_REG(context, cx) = reinterpret_cast<size_t>(remoteDllPath);  // Arg to LoadLibraryW
 
-		gan::MemAddr bufferData{ output->GetData() };
+		const gan::MemAddr bufferData{ output->GetData() };
 		bufferData.Ref<StackFrameForLoadLibraryW64>() = {
 			reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, ip))
 		};
@@ -164,7 +164,7 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(std::wstring_view dllP
 		return Result::GetContextFailed;
 
 	// Allocate buffer in the memory space of target process and write DLL path to it
-	size_t dwBufferSize = sizeof(WCHAR) * (dllPath.size() + 1);
+	const size_t dwBufferSize = sizeof(WCHAR) * (dllPath.size() + 1);
 	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(*m_hProcess, nullptr, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
 	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(*m_hProcess, remoteBuffer, dllPath.data(), dwBufferSize, nullptr) != 0);
 	if (!isDllPathWritten)

@@ -532,7 +532,7 @@ namespace gan
 {
 
 
-InstructionDecoder::InstructionDecoder(Arch arch, ConstMemAddr address)
+InstructionDecoder::InstructionDecoder(Arch arch, ConstMemAddr address) noexcept
 	: m_instPtr(address)
 	, m_arch(arch)
 {

@@ -51,7 +51,7 @@ struct ThreadInfo
 	uint32_t pidParent;
 	uint32_t basePriority;
 
-	explicit ThreadInfo(const tagTHREADENTRY32& threadEntry);
+	explicit ThreadInfo(const tagTHREADENTRY32& threadEntry) noexcept;
 };
 using ThreadList = std::vector<ThreadInfo>;
 

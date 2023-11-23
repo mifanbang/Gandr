@@ -56,7 +56,7 @@ void SetUpExportDirectory(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 		return;  // Empty export directory
 
 	// Initialize .directory
-	gan::ConstMemAddr addrExportDir = baseAddr.Offset(addrDir.VirtualAddress);
+	const gan::ConstMemAddr addrExportDir = baseAddr.Offset(addrDir.VirtualAddress);
 	headers.exportData = { .directory = addrExportDir.ConstRef<IMAGE_EXPORT_DIRECTORY>() };
 	const auto& exportDir = headers.exportData->directory;
 	assert(exportDir.NumberOfFunctions >= exportDir.NumberOfNames);
@@ -109,7 +109,7 @@ namespace gan
 {
 
 
-std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t sectionIndex, std::u8string_view name) const
+std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t sectionIndex, std::u8string_view name) const noexcept
 {
 	static_assert(sizeof(IMAGE_SECTION_HEADER::Name) == IMAGE_SIZEOF_SHORT_NAME);
 
@@ -119,7 +119,7 @@ std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t sectionIndex, std:
 		const auto itr = std::find_if(
 			sectionHeaderList.begin() + sectionIndex,
 			sectionHeaderList.end(),
-			[name] (const auto& sectionHeader) {
+			[name] (const auto& sectionHeader) noexcept {
 				// sectionHeader.Name isn't guaranteed to be null-terminated
 				char8_t sectionNameBuf[IMAGE_SIZEOF_SHORT_NAME + 1]{};
 				memcpy(sectionNameBuf, sectionHeader.Name, IMAGE_SIZEOF_SHORT_NAME);

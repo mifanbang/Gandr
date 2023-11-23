@@ -28,7 +28,7 @@ namespace
 {
 
 
-HANDLE GetModuleListSnapshop(uint32_t processId)
+HANDLE GetModuleListSnapshop(uint32_t processId) noexcept
 {
 	constexpr uint32_t k_list32And64Modules = TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32;
 

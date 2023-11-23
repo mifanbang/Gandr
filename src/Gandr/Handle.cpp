@@ -25,14 +25,14 @@ namespace gan
 {
 
 
-void internal::AutoWinHandleImpl::Close(WinHandle handle)
+void internal::AutoWinHandleImpl::Close(WinHandle handle) noexcept
 {
 	::CloseHandle(handle);
 }
 
 
 template <>
-WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle)
+WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle) noexcept
 {
 	constexpr uint32_t k_ignoredParam = 0;  // Because DUPLICATE_SAME_ACCESS is specified
 	constexpr BOOL k_newHandleInheritable = TRUE;

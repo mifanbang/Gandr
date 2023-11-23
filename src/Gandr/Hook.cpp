@@ -117,8 +117,8 @@ public:
 		gan::MemAddr trampoline;
 		PrologStrategy strategy;
 
-		__forceinline bool IsValid() const	{ return static_cast<bool>(trampoline); }
-		__forceinline operator bool() const	{ return IsValid(); }
+		bool IsValid() const noexcept	{ return static_cast<bool>(trampoline); }
+		operator bool() const noexcept	{ return IsValid(); }
 	};
 
 	bool Register(gan::MemAddr funcAddr, const Record& record)
@@ -205,7 +205,7 @@ public:
 		assert(m_freeLists[pageIndex].size() > 0);
 
 		// get a free slot
-		FreeSlot slot = m_freeLists[pageIndex].back();
+		const FreeSlot slot = m_freeLists[pageIndex].back();
 		m_freeLists[pageIndex].pop_back();
 
 		auto trampolineAddr = m_pages[pageIndex].Offset(slot.pageOffset);
@@ -233,7 +233,7 @@ public:
 	}
 
 private:
-	TrampolineRegistry()
+	TrampolineRegistry() noexcept
 		: m_records()
 		, m_pages()
 		, m_freeLists()
@@ -241,7 +241,7 @@ private:
 		, m_mutex()
 	{ }
 
-	static int GetAllocGranularity()
+	static int GetAllocGranularity() noexcept
 	{
 		SYSTEM_INFO sysInfo;
 		::GetSystemInfo(&sysInfo);
@@ -249,7 +249,7 @@ private:
 	}
 
 	// Assumes that "desiredAddrRange" is aligned with the result from GetAllocGranularity()
-	static gan::MemAddr FindPageForAlloc(gan::MemRange desiredAddrRange)
+	static gan::MemAddr FindPageForAlloc(gan::MemRange desiredAddrRange) noexcept
 	{
 		if constexpr (gan::Is64())
 		{
@@ -285,22 +285,22 @@ private:
 			return gan::MemAddr{ nullptr };  // Don't care in 32 bit
 	}
 
-	static size_t GenerateMaskFromGranularity(unsigned int granularity)
+	static size_t GenerateMaskFromGranularity(unsigned int granularity) noexcept
 	{
 		const auto tzcnt = _tzcnt_u32(granularity);
 		assert(_lzcnt_u32(granularity) + tzcnt == 31);  // "granularity" must a power of 2.
 		return std::numeric_limits<size_t>::max() << tzcnt;
 	}
 
-	static size_t AlignMemAddrWithGranularity(const size_t addr, unsigned int granularity)
+	static size_t AlignMemAddrWithGranularity(const size_t addr, unsigned int granularity) noexcept
 	{
 		const auto offsetMask = GenerateMaskFromGranularity(granularity);
 		return (addr & offsetMask) + (addr & ~offsetMask ? granularity : 0);
 	}
 
-	static gan::MemRange AlignMemRangeWithGranularity(gan::MemRange memRange, unsigned int granularity)
+	static gan::MemRange AlignMemRangeWithGranularity(gan::MemRange memRange, unsigned int granularity) noexcept
 	{
-		auto offsetMask = GenerateMaskFromGranularity(granularity);
+		const auto offsetMask = GenerateMaskFromGranularity(granularity);
 		const auto rangeMin = memRange.min;
 		const auto rangeMax = memRange.max;
 		return {
@@ -310,7 +310,7 @@ private:
 	}
 
 	// Assumes that caller has already obtained a lock
-	std::optional<unsigned int> FindRelevantPageInRange(gan::MemRange desiredAddrRange) const
+	std::optional<unsigned int> FindRelevantPageInRange(gan::MemRange desiredAddrRange) const noexcept
 	{
 		for (unsigned int i = 0; i < static_cast<unsigned int>(m_pages.size()); ++i)
 		{
@@ -333,7 +333,7 @@ private:
 	{
 		const gan::MemRange fixedAddrRange = AlignMemRangeWithGranularity(desiredAddrRange, m_allocGranularity);
 
-		auto desiredAddress{ FindPageForAlloc(fixedAddrRange) };
+		const auto desiredAddress{ FindPageForAlloc(fixedAddrRange) };
 		gan::MemAddr newPageAddr{ ::VirtualAlloc(
 			desiredAddress.Ptr<uint8_t>(),
 			m_allocGranularity,
@@ -391,7 +391,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N])
+		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N]) noexcept
 		{
 			static_assert(k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
@@ -414,7 +414,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N])
+		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N]) noexcept
 		{
 			static_assert(k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
@@ -445,7 +445,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N])
+		static uint8_t Make(gan::MemAddr targetAddr, uint8_t(&out)[N]) noexcept
 		{
 			static_assert(!k_64bitStaticAssert<N>);
 			static_assert(N >= k_length);
@@ -465,7 +465,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make(gan::MemAddr originAddr, gan::MemAddr targetAddr, uint8_t(&out)[N])
+		static uint8_t Make(gan::MemAddr originAddr, gan::MemAddr targetAddr, uint8_t(&out)[N]) noexcept
 		{
 			static_assert(N >= k_length);
 
@@ -482,7 +482,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make([[maybe_unused]] gan::MemAddr originAddr, int8_t offset, uint8_t(&out)[N])
+		static uint8_t Make([[maybe_unused]] gan::MemAddr originAddr, int8_t offset, uint8_t(&out)[N]) noexcept
 		{
 			static_assert(N >= k_length);
 
@@ -532,7 +532,7 @@ PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 }
 
 
-Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologStrategy strategy)
+Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologStrategy strategy) noexcept
 {
 	Prolog result;
 	if constexpr (gan::Is64())
@@ -554,7 +554,7 @@ Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologSt
 }
 
 
-bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data)
+bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data) noexcept
 {
 	DWORD oldAttr, dummy;
 	auto rawPtr = address.Ptr<uint8_t>();
@@ -573,7 +573,7 @@ bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data)
 class AuxiliaryPrologHelper
 {
 public:
-	constexpr static bool ShouldUseAuxProlog(PrologStrategy::Type strategyType)
+	constexpr static bool ShouldUseAuxProlog(PrologStrategy::Type strategyType) noexcept
 	{
 		if constexpr (gan::Is64())
 			return strategyType == PrologStrategy::Type::RelShortJmpToAux;
@@ -581,7 +581,7 @@ public:
 			return false;
 	}
 
-	static bool Create(gan::MemAddr origFunc, gan::MemAddr hookFunc, uint8_t offsetToAux)
+	static bool Create(gan::MemAddr origFunc, gan::MemAddr hookFunc, uint8_t offsetToAux) noexcept
 	{
 		constexpr PrologStrategy k_strategyAbsLongJmp { PrologStrategy::Type::AbsoluteJmp64 };
 		const auto mainHookProlog = GenerateHookProlog(origFunc, hookFunc, k_strategyAbsLongJmp);
@@ -592,7 +592,7 @@ public:
 		);
 	}
 
-	static bool Delete(gan::MemAddr origFunc, uint8_t offsetToAux)
+	static bool Delete(gan::MemAddr origFunc, uint8_t offsetToAux) noexcept
 	{
 		static_assert(OpcodeGenerator::AbsLongJmpRax::k_length == 12);
 		const static uint8_t k_int3Opcodes[OpcodeGenerator::AbsLongJmpRax::k_length] {
@@ -680,7 +680,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 			displacements.begin(),
 			displacements.end(),
 			std::back_inserter(addresses),
-			[](const Displacement32& disp) {
+			[](const Displacement32& disp) noexcept {
 				return disp.targetAddr.ConstCast();
 			}
 		);
@@ -692,7 +692,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 
 		// min and max must be within the range addressable by disp32, and since
 		// the MSB in disp32 is a sign bit, their distance can't go beyond 0x7FFF'FFFF.
-		gan::MemRange addrRange{
+		const gan::MemRange addrRange{
 			.min = itrMax->Offset(-0x7FFF'0000ll),  // min must be addressable by disp32 from itrMax,
 			.max = itrMin->Offset(0x7FFF'0000ll)    // and the same for max.
 		};
@@ -710,7 +710,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 }
 
 
-void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacement32>& displacements)
+void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacement32>& displacements) noexcept
 {
 	for (const Displacement32& disp : displacements)
 	{
@@ -722,7 +722,7 @@ void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacem
 }
 
 
-Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog)
+Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog) noexcept
 {
 	// The longest jump across platforms is 14-byte long. See OpcodeGenerator::AbsLongJmp64.
 	static_assert(Trampoline::k_size >= Prolog::k_maxSize + OpcodeGenerator::AbsLongJmp64::k_length);
@@ -790,14 +790,14 @@ Hook::OpResult Hook::Install()
 
 	// Allocate memory and fix up displacements for trampoline.
 	TrampolineRegistry& trampolineReg = TrampolineRegistry::GetInstance();
-	auto trampolineAddr = trampolineReg.Register(trampoline, desiredTramAddrRange);
+	const auto trampolineAddr = trampolineReg.Register(trampoline, desiredTramAddrRange);
 	if (!trampolineAddr)
 		return OpResult::TrampolineAllocFailed;
 	if (origProlog->displacements.size() > 0)
 		FixupDisplacements(trampolineAddr, origProlog->displacements);
 
 	// Register hook and modify memory
-	HookRegistry::Record newHookRecord {
+	const HookRegistry::Record newHookRecord {
 		.original = *origProlog,
 		.modified = hookProlog,
 		.trampoline = trampolineAddr,
@@ -861,7 +861,7 @@ Hook::OpResult Hook::Uninstall()
 }
 
 
-void Hook::AssertCtorArgs([[maybe_unused]] MemAddr origFunc, [[maybe_unused]] MemAddr hookFunc)
+void Hook::AssertCtorArgs([[maybe_unused]] MemAddr origFunc, [[maybe_unused]] MemAddr hookFunc) noexcept
 {
 	assert(origFunc);
 	assert(hookFunc);

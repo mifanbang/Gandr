@@ -38,8 +38,8 @@ enum class HWBreakpointSlot : uint8_t
 class HWBreakpoint
 {
 public:
-	static bool Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot);
-	static bool Disable(WinHandle thread, HWBreakpointSlot slot);
+	static bool Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot) noexcept;
+	static bool Disable(WinHandle thread, HWBreakpointSlot slot) noexcept;
 };
 
 

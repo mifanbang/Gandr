@@ -79,8 +79,6 @@ DEFINE_TESTSUITE_START(DllInjectorByContext)
 			{
 				const auto getCodeResult = GetExitCodeThread(m_thread, &exitCode);
 				ASSERT(getCodeResult);
-				if (!getCodeResult)
-					break;
 			}
 		}
 

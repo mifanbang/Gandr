@@ -41,7 +41,7 @@ DllPreloadDebugSession::DllPreloadDebugSession(const CreateProcessParam& newProc
 }
 
 
-DebugSession::ContinueStatus DllPreloadDebugSession::OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo)
+DebugSession::ContinueStatus DllPreloadDebugSession::OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) noexcept
 {
 	m_hMainThread = procInfo.hThread;
 
@@ -85,7 +85,7 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 }
 
 
-DebugSession::ContinueStatus DllPreloadDebugSession::OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo)
+DebugSession::ContinueStatus DllPreloadDebugSession::OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) noexcept
 {
 	if (m_option == Option::EndSessionSync)
 	{

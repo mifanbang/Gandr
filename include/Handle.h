@@ -31,15 +31,17 @@ public:
 	template <class HandleType>
 	static HandleType Duplicate(HandleType handle) = delete;
 
-	template <> WinHandle Duplicate<WinHandle>(WinHandle handle);
+	template <> WinHandle Duplicate<WinHandle>(WinHandle handle) noexcept;
 };
 
 
 template <typename ImplType>
-	requires (requires (ImplType) {
-		typename ImplType::RawHandle;
-		{ ImplType::Close((ImplType::RawHandle)(0)) };
-	})
+	requires (
+		requires (ImplType) {
+			typename ImplType::RawHandle;
+			{ ImplType::Close((ImplType::RawHandle)(0)) };
+		}
+	)
 class AutoHandle
 {
 public:
@@ -81,13 +83,13 @@ public:
 		return m_handle != (ImplType::RawHandle)(0)
 			&& m_handle != (ImplType::RawHandle)(-1);  // INVALID_HANDLE_VALUE := -1
 	}
-	constexpr ImplType::RawHandle operator*() const	{ return m_handle; }
-	ImplType::RawHandle& GetRef() { return m_handle; }
+	constexpr ImplType::RawHandle operator*() const noexcept { return m_handle; }
+	ImplType::RawHandle& GetRef() noexcept					 { return m_handle; }
 
 	constexpr bool operator ==(const AutoHandle&) const = default;
 	constexpr bool operator ==(ImplType::RawHandle otherRawHandle) const { return m_handle == otherRawHandle; }
 
-	void Invalidate()
+	void Invalidate() noexcept
 	{
 		if (operator bool())
 		{
@@ -110,7 +112,7 @@ namespace internal
 	struct AutoWinHandleImpl
 	{
 		using RawHandle = WinHandle;
-		static void Close(RawHandle handle);
+		static void Close(RawHandle handle) noexcept;
 	};
 }
 using AutoWinHandle = AutoHandle<internal::AutoWinHandleImpl>;

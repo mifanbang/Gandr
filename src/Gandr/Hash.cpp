@@ -35,7 +35,7 @@ namespace
 struct AutoBcryptAlgHandleImpl
 {
 	using RawHandle = BCRYPT_ALG_HANDLE;
-	static void Close(RawHandle handle)	{ ::BCryptCloseAlgorithmProvider(handle, 0); }
+	static void Close(RawHandle handle) noexcept { ::BCryptCloseAlgorithmProvider(handle, 0); }
 };
 using AutoBcryptAlgHandle = gan::AutoHandle<AutoBcryptAlgHandleImpl>;
 
@@ -43,7 +43,7 @@ using AutoBcryptAlgHandle = gan::AutoHandle<AutoBcryptAlgHandleImpl>;
 struct AutoBcryptHashHandleImpl
 {
 	using RawHandle = BCRYPT_HASH_HANDLE;
-	static void Close(RawHandle handle) { ::BCryptDestroyHash(handle); }
+	static void Close(RawHandle handle) noexcept { ::BCryptDestroyHash(handle); }
 };
 using AutoBcryptHashHandle = gan::AutoHandle<AutoBcryptHashHandleImpl>;
 
@@ -80,7 +80,7 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 		));
 
 	// Hash calculation
-	std::unique_ptr<uint8_t[]> hashObj(new uint8_t[hashObjSize]);
+	auto hashObj = std::make_unique<uint8_t[]>(hashObjSize);
 	Hash<256> hash { { 0 } };
 	const bool hashSucceeded =
 		initSucceeded
