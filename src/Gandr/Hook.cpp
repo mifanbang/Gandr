@@ -681,9 +681,8 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 		std::vector<gan::MemAddr> addresses;
 		addresses.reserve(displacements.size() + 1);
 		addresses.emplace_back(tramAddr);
-		std::transform(
-			displacements.begin(),
-			displacements.end(),
+		std::ranges::transform(
+			displacements,
 			std::back_inserter(addresses),
 			[](const Displacement32& disp) noexcept {
 				return disp.targetAddr.ConstCast();
@@ -691,7 +690,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 		);
 
 		// Get max and min.
-		auto [itrMin, itrMax] = std::minmax_element(addresses.begin(), addresses.end(), std::less<gan::MemAddr>{ });
+		auto [itrMin, itrMax] = std::ranges::minmax_element(addresses, std::less<gan::MemAddr>{ });
 		assert(itrMin != addresses.end());
 		assert(itrMax != addresses.end());
 

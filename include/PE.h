@@ -92,7 +92,7 @@ struct PeHeaders
 	std::optional<ImageExportData> exportData;
 	
 	// Helpers
-	// Note: behavior is undefined if the PEHeaders instance isn't loaded by Gandr API, e.g., GetLoadedHeaders().
+	// Note: behavior is undefined if the PEHeaders instance isn't loaded by Gandr API such as GetLoadedHeaders().
 	std::optional<uint32_t> FindSectionByName(uint32_t start, std::u8string_view name) const noexcept;
 };
 

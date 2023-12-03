@@ -33,7 +33,7 @@ namespace
 		const auto funcMatchMod = [modName](const gan::ModuleInfo& modInfo) {
 			return StrStrIW(modInfo.imageName.c_str(), modName) != nullptr;
 		};
-		return std::find_if(modList.begin(), modList.end(), funcMatchMod) != modList.end();
+		return std::ranges::find_if(modList, funcMatchMod) != modList.end();
 	}
 }  // unnamed namespace
 

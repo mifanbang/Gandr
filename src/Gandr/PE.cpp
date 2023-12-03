@@ -19,6 +19,7 @@
 #include <PE.h>
 
 #include <cassert>
+#include <ranges>
 #include <string_view>
 
 
@@ -109,16 +110,15 @@ namespace gan
 {
 
 
-std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t sectionIndex, std::u8string_view name) const noexcept
+std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t startIndex, std::u8string_view name) const noexcept
 {
 	static_assert(sizeof(IMAGE_SECTION_HEADER::Name) == IMAGE_SIZEOF_SHORT_NAME);
 
-	if (sectionIndex < sectionHeaderList.size()
+	if (startIndex < sectionHeaderList.size()
 		&& name.length() <= IMAGE_SIZEOF_SHORT_NAME)
 	{
-		const auto itr = std::find_if(
-			sectionHeaderList.begin() + sectionIndex,
-			sectionHeaderList.end(),
+		const auto itr = std::ranges::find_if(
+			sectionHeaderList | std::views::drop(startIndex),
 			[name] (const auto& sectionHeader) noexcept {
 				// sectionHeader.Name isn't guaranteed to be null-terminated
 				char8_t sectionNameBuf[IMAGE_SIZEOF_SHORT_NAME + 1]{};

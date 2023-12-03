@@ -35,7 +35,7 @@ DEFINE_TESTSUITE_START(ProcessList)
 		const auto funcMatchSelf = [](const auto& procInfo) {
 			return StrStrIW(procInfo.imageName.c_str(), L"Test.exe") != nullptr;
 		};
-		ASSERT(std::find_if(procList.begin(), procList.end(), funcMatchSelf) != procList.end());
+		ASSERT(std::ranges::find_if(procList, funcMatchSelf) != procList.end());
 	}
 	DEFINE_TEST_END
 
@@ -51,7 +51,7 @@ DEFINE_TESTSUITE_START(ProcessList)
 		const auto funcMatchSelf = [threadId](const auto& threadInfo) {
 			return threadInfo.tid == threadId;
 		};
-		ASSERT(std::find_if(threadList.begin(), threadList.end(), funcMatchSelf) != threadList.end());
+		ASSERT(std::ranges::find_if(threadList, funcMatchSelf) != threadList.end());
 	}
 	DEFINE_TEST_END
 

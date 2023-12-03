@@ -24,6 +24,7 @@
 #include <psapi.h>
 #include <windows.h>
 
+#include <algorithm>
 #include <string_view>
 
 
@@ -48,9 +49,8 @@ std::pair<HMODULE, void*> GetModuleInfo(const wchar_t* modName)
 
 gan::Rva SearchFunctionRvaByName(const gan::ImageExportData::ExportedFunctionList& exportData, std::string_view name)
 {
-	const auto itr = std::find_if(
-		exportData.begin(),
-		exportData.end(),
+	const auto itr = std::ranges::find_if(
+		exportData,
 		[name] (const auto& exportFunc)
 		{
 			return name == exportFunc.name;
