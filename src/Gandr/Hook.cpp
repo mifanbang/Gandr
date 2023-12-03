@@ -85,8 +85,9 @@ struct Displacement32
 };
 
 
-struct PrologWithDisp : public Prolog
+struct PrologWithDisp
 {
+	Prolog prolog;
 	std::vector<Displacement32> displacements;  // disp32 is the only supported displacement type
 };
 
@@ -615,37 +616,37 @@ public:
 
 std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 {
-	PrologWithDisp copiedProlog;
+	PrologWithDisp copiedProlog{ };
 
 	gan::InstructionDecoder decoder(addr);
-	while (copiedProlog.length < length)
+	while (copiedProlog.prolog.length < length)
 	{
 		if (const auto nextInstInfo = decoder.GetNextLength())
 		{
 			const uint8_t nextInstLen = nextInstInfo->GetLength();
 
-			if (copiedProlog.length + nextInstLen <= Prolog::k_maxSize)  // Check remaining space for the instruction
+			if (copiedProlog.prolog.length + nextInstLen <= Prolog::k_maxSize)  // Check remaining space for the instruction
 			{
 				memcpy(
-					copiedProlog.opcode + copiedProlog.length,
-					addr.Offset(copiedProlog.length).ConstPtr<uint8_t>(),
+					copiedProlog.prolog.opcode + copiedProlog.prolog.length,
+					addr.Offset(copiedProlog.prolog.length).ConstPtr<uint8_t>(),
 					nextInstLen
 				);
-				copiedProlog.length += nextInstLen;
+				copiedProlog.prolog.length += nextInstLen;
 
 				// Record a displacement if base is EIP/RIP
 				if (nextInstInfo->dispNeedsFixup)
 				{
 					// Disp and imm are the last two parts of an instruction
-					const uint8_t offsetData = copiedProlog.length - nextInstInfo->lengthImm - nextInstInfo->lengthDisp;
+					const uint8_t offsetData = copiedProlog.prolog.length - nextInstInfo->lengthImm - nextInstInfo->lengthDisp;
 
 					if (nextInstInfo->lengthDisp == 4)
 					{
 						const auto disp32 = addr.Offset(offsetData).ConstRef<int32_t>();  // Disp32 field in instruction
 						const Displacement32 newDispEntry{
 							.offsetData = offsetData,
-							.offsetBase = copiedProlog.length,
-							.targetAddr = addr.Offset(copiedProlog.length).Offset(disp32)
+							.offsetBase = copiedProlog.prolog.length,
+							.targetAddr = addr.Offset(copiedProlog.prolog.length).Offset(disp32)
 						};
 						copiedProlog.displacements.emplace_back(newDispEntry);
 					}
@@ -654,7 +655,7 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 						// Normally only a 4-byte displacement is fixable and thus accepted in prolog, but in rare instances
 						// where an 1-byte disp points to an address inside the prolog, it's safe to just copy as-is.
 						if (nextInstInfo->lengthDisp != 1
-							|| copiedProlog.length + addr.Offset(offsetData).ConstRef<int8_t>() >= length)
+							|| copiedProlog.prolog.length + addr.Offset(offsetData).ConstRef<int8_t>() >= length)
 						{
 							return std::nullopt;
 						}
@@ -786,7 +787,7 @@ Hook::OpResult Hook::Install()
 		return OpResult::PrologNotSupported;
 
 	// Trampoline to get back to the original function body
-	const auto trampoline = GenerateTrampoline(m_funcOrig, *origProlog);
+	const auto trampoline = GenerateTrampoline(m_funcOrig, origProlog->prolog);
 
 	// Find the address range in which all displacements of the original prolog are addressable.
 	// Address of the original function is also taken into consideration.
@@ -802,7 +803,7 @@ Hook::OpResult Hook::Install()
 
 	// Register hook and modify memory
 	const HookRegistry::Record newHookRecord {
-		.original = *origProlog,
+		.original = origProlog->prolog,
 		.modified = hookProlog,
 		.trampoline = trampolineAddr,
 		.strategy = strategy
