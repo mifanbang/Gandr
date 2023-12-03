@@ -30,6 +30,7 @@
 #include <unordered_map>
 #include <vector>
 
+
 #include <intrin.h>
 #include <windows.h>
 
@@ -234,7 +235,7 @@ public:
 	}
 
 private:
-	TrampolineRegistry() noexcept
+	TrampolineRegistry()
 		: m_records()
 		, m_pages()
 		, m_freeLists()

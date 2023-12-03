@@ -381,7 +381,14 @@ DEFINE_TESTSUITE_START(Hook_XInput)
 
 		static DWORD __stdcall _XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState) noexcept
 		{
-			gan::Hook::GetTrampoline(XInputGetState)(dwUserIndex, pState);
+			try
+			{
+				gan::Hook::GetTrampoline(XInputGetState)(dwUserIndex, pState);
+			}
+			catch (...)
+			{
+				return ERROR_DEVICE_NOT_CONNECTED;
+			}
 			pState->Gamepad.bLeftTrigger = k_expectedTrigger;
 			return NO_ERROR;
 		}
@@ -396,7 +403,7 @@ DEFINE_TESTSUITE_START(Hook_XInput)
 		ZeroMemory(&state, sizeof(state));
 
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
-		EXPECT(XInputGetState(3, &state) == 0);
+		EXPECT(XInputGetState(3, &state) == NO_ERROR);
 		EXPECT(state.Gamepad.bLeftTrigger == k_expectedTrigger);
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
 	}

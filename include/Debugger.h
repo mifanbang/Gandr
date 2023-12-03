@@ -45,7 +45,7 @@ public:
 	using IdList = std::vector<DebugSession::Identifier>;
 
 
-	Debugger() noexcept;
+	Debugger();
 	~Debugger();
 
 	Debugger(const Debugger&) = delete;
