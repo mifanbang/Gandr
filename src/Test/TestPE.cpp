@@ -25,6 +25,7 @@
 #include <windows.h>
 
 #include <algorithm>
+#include <ranges>
 #include <string_view>
 
 
@@ -51,10 +52,7 @@ gan::Rva SearchFunctionRvaByName(const gan::ImageExportData::ExportedFunctionLis
 {
 	const auto itr = std::ranges::find_if(
 		exportData,
-		[name] (const auto& exportFunc)
-		{
-			return name == exportFunc.name;
-		}
+		[name] (const auto& exportFunc) { return name == exportFunc.name; }
 	);
 	return itr != exportData.end() ? itr->rva : 0;
 }

@@ -27,12 +27,22 @@ namespace gan
 
 class Buffer
 {
+private:
+	// To prevent user code from calling Buffer(size_t, size_t, uint8_t*, Private) directly
+	// while making it possible in Allocate() to use std::make_unique
+	class Private
+	{
+		friend class Buffer;
+		Private() = default;
+	};
+
 public:
 	constexpr static size_t k_minSize = 128;  // 128 B
 
 	// Factory function
 	static std::unique_ptr<Buffer> Allocate(size_t size);
 
+	Buffer(size_t capacity, size_t size, uint8_t* addr, Private) noexcept;
 	~Buffer();
 
 	// Non-copyable & non-movable, since there can be no invalidated buffer
@@ -52,8 +62,6 @@ public:
 
 
 private:
-	Buffer(size_t capacity, size_t size, uint8_t* addr) noexcept;
-
 	size_t m_capacity;
 	size_t m_size;  // size in use
 	uint8_t* m_data;

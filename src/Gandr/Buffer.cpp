@@ -63,13 +63,13 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 	{
 		const MemAddr dataPtr{ ::HeapAlloc(::GetProcessHeap(), 0, capacity) };
 		if (dataPtr.IsValid())
-			return std::unique_ptr<Buffer>{ new Buffer{ capacity, size, dataPtr.Ptr<uint8_t>()} };
+			return std::make_unique<Buffer>(capacity, size, dataPtr.Ptr<uint8_t>(), Private{});
 	}
 	return nullptr;
 }
 
 
-Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr) noexcept
+Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr, Private) noexcept
 	: m_capacity(capacity)
 	, m_size(size)
 	, m_data(addr)

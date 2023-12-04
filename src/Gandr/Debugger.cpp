@@ -91,7 +91,8 @@ namespace gan
 // ---------------------------------------------------------------------------
 
 Debugger::Debugger()
-	: m_flagEventLoopExit(false)
+	: m_sessions()
+	, m_flagEventLoopExit(false)
 {
 }
 
