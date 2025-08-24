@@ -61,8 +61,7 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 	assert(capacity >= size);
 	if (capacity >= size)
 	{
-		const MemAddr dataPtr{ ::HeapAlloc(::GetProcessHeap(), 0, capacity) };
-		if (dataPtr.IsValid())
+		if (const MemAddr dataPtr{ ::HeapAlloc(::GetProcessHeap(), 0, capacity) })
 			return std::make_unique<Buffer>(capacity, size, dataPtr.Ptr<uint8_t>(), Private{});
 	}
 	return nullptr;
@@ -96,17 +95,13 @@ bool Buffer::Resize(size_t newSize) noexcept
 	if (newCapacity < newSize)
 		return false;
 
-	const MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity) };
-	assert(newAddr.IsValid());
-	if (newAddr.IsValid())
+	if (const MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity) })
 	{
 		m_capacity = newCapacity;
 		m_size = newSize;
 		m_data = newAddr.Ptr<uint8_t>();
-
 		return true;
 	}
-
 	return false;
 }
 

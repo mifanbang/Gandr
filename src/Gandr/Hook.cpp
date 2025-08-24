@@ -770,7 +770,7 @@ Hook::OpResult Hook::Install()
 		return OpResult::Hooked;
 
 	HookRegistry& hookReg = HookRegistry::GetInstance();
-	if (hookReg.GetTrampoline(m_funcOrig).IsValid())
+	if (hookReg.GetTrampoline(m_funcOrig))
 		return OpResult::AddressInUse;
 
 	// Determine what should be written to the target function.

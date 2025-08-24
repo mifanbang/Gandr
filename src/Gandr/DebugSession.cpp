@@ -42,7 +42,7 @@ DebugSession::DebugSession(const CreateProcessParam& newProcParam)
 	// Paramater lpCommandLine to CreateProcessW has a max length of 32,767 characters.
 	// Allocate on the heap since stack is too small.
 	// REF: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
-	constexpr size_t k_maxArgLength = 32767;
+	constexpr size_t k_maxArgLength = 32'767;
 	auto cmdlineBuffer = Buffer::Allocate(k_maxArgLength * sizeof(wchar_t));
 	if (!cmdlineBuffer)
 		return;

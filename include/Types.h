@@ -98,8 +98,7 @@ public:
 	}
 
 	// Validity
-	constexpr explicit operator bool() const noexcept	{ return m_addr; }
-	constexpr bool IsValid() const noexcept				{ return m_addr; }
+	constexpr operator bool() const noexcept	{ return m_addr; }
 
 	// Comparisons
 	template <class OtherT>
