@@ -20,6 +20,7 @@
 
 #include <Types.h>
 
+#include <expected>
 #include <vector>
 
 
@@ -43,13 +44,21 @@ using MemoryRegionList = std::vector<MemoryRegion>;
 class MemoryRegionEnumerator
 {
 public:
-	static MemoryRegionList Enumerate(uint32_t pid)
+	enum class Error
 	{
-		return Enumerate(pid, { ConstMemAddr{ }, ConstMemAddr{ reinterpret_cast<const void*>(-1) } });
+		OpenProcessFailed,
+		MemQueryFailed,
+		InvalidAddressRange
+	};
+
+	static auto Enumerate(uint32_t pid)
+	{
+		constexpr Range<ConstMemAddr> k_maxRange{ ConstMemAddr{ }, ConstMemAddr{ }.Offset(-1) };
+		return Enumerate(pid, k_maxRange);
 	}
 
 	// All regions containing the range [start, end-1]
-	static MemoryRegionList Enumerate(uint32_t pid, Range<ConstMemAddr> range);
+	static std::expected<MemoryRegionList, Error> Enumerate(uint32_t pid, Range<ConstMemAddr> addrRange);
 };
 
 

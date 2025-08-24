@@ -119,8 +119,8 @@ public:
 	_MemAddrWrapper operator&(IntegralType mask) const noexcept { return _MemAddrWrapper{ m_addr & mask }; }
 
 	// Arithmetics
-	_MemAddrWrapper Offset(intptr_t offset) const noexcept		{ return _MemAddrWrapper{ m_addr + offset }; }
-	ptrdiff_t operator-(_MemAddrWrapper other) const noexcept	{ return m_addr - other.m_addr; }
+	constexpr _MemAddrWrapper Offset(intptr_t offset) const noexcept		{ return _MemAddrWrapper{ m_addr + offset }; }
+	constexpr ptrdiff_t operator-(_MemAddrWrapper other) const noexcept	{ return m_addr - other.m_addr; }
 	_MemAddrWrapper& operator++() noexcept
 	{
 		++m_addr;
@@ -128,7 +128,7 @@ public:
 	}
 
 private:
-	explicit _MemAddrWrapper(IntegralType addr) noexcept
+	constexpr explicit _MemAddrWrapper(IntegralType addr) noexcept
 		: m_addr(addr) { }
 
 	IntegralType m_addr;

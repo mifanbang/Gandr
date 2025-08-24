@@ -33,15 +33,17 @@ DEFINE_TESTSUITE_START(Memory)
 		const auto currProcId = GetCurrentProcessId();
 
 		auto memoryResionList1 = gan::MemoryRegionEnumerator::Enumerate(currProcId);
-		EXPECT(!memoryResionList1.empty());
+		ASSERT(memoryResionList1);
+		EXPECT(!memoryResionList1->empty());
 
 		gan::ConstMemAddr maxAddr{ reinterpret_cast<const void*>(-1) };
 		auto memoryResionList2 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ }, maxAddr } );
-		EXPECT(!memoryResionList2.empty());
-		EXPECT(memoryResionList1 == memoryResionList2);
+		ASSERT(memoryResionList2);
+		EXPECT(*memoryResionList2 == *memoryResionList1);
 
 		auto memoryResionList3 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { maxAddr, gan::ConstMemAddr{ } });
-		EXPECT(memoryResionList3.empty());
+		ASSERT(!memoryResionList3);
+		EXPECT(memoryResionList3.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
 	}
 	DEFINE_TEST_END
 

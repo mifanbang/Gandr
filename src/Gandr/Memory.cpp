@@ -27,9 +27,12 @@ namespace gan
 {
 
 
-MemoryRegionList MemoryRegionEnumerator::Enumerate(uint32_t pid, Range<ConstMemAddr> range)
+std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(uint32_t pid, Range<ConstMemAddr> addrRange)
 {
 	MemoryRegionList regions;
+
+	if (addrRange.min > addrRange.max)
+		return std::unexpected{ Error::InvalidAddressRange };
 
 	if (AutoWinHandle process{ ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid) };
 		process)
@@ -38,13 +41,18 @@ MemoryRegionList MemoryRegionEnumerator::Enumerate(uint32_t pid, Range<ConstMemA
 		regions.reserve(k_initListSize);
 
 		::MEMORY_BASIC_INFORMATION memInfo;
-		for (auto addr = range.min;
-			addr < range.max;
+		for (auto addr = addrRange.min;
+			addr < addrRange.max;
 			addr = addr.Offset(ConstMemAddr{ memInfo.BaseAddress } - addr + memInfo.RegionSize))
 		{
-			const auto queryResult = ::VirtualQueryEx(*process, addr.ConstPtr(), &memInfo, sizeof(memInfo));
-			if (queryResult == 0)
-				break;
+			if (const auto queryResult = ::VirtualQueryEx(*process, addr.ConstPtr(), &memInfo, sizeof(memInfo));
+				queryResult == 0)
+			{
+				if (::GetLastError() == ERROR_INVALID_PARAMETER)  // Highest memory address accessible hit
+					break;
+				else
+					return std::unexpected{ Error::MemQueryFailed };
+			}
 
 			if (memInfo.State != MEM_FREE)
 			{
@@ -58,6 +66,9 @@ MemoryRegionList MemoryRegionEnumerator::Enumerate(uint32_t pid, Range<ConstMemA
 			}
 		}
 	}
+	else
+		return std::unexpected{ Error::OpenProcessFailed };
+
 	return regions;
 }
 
