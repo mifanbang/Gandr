@@ -178,6 +178,7 @@
     <ClCompile Include="src\Test\TestHook.cpp" />
     <ClCompile Include="src\Test\TestInstructionDecoder32.cpp" />
     <ClCompile Include="src\Test\TestInstructionDecoder64.cpp" />
+    <ClCompile Include="src\Test\TestMemory.cpp" />
     <ClCompile Include="src\Test\TestModuleList.cpp" />
     <ClCompile Include="src\Test\TestMutex.cpp" />
     <ClCompile Include="src\Test\TestPE.cpp" />

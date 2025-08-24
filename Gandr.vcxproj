@@ -195,6 +195,7 @@
     <ClInclude Include="include\Handle.h" />
     <ClInclude Include="include\Hash.h" />
     <ClInclude Include="include\Hook.h" />
+    <ClInclude Include="include\Memory.h" />
     <ClInclude Include="include\ModuleList.h" />
     <ClInclude Include="include\Mutex.h" />
     <ClInclude Include="include\InstructionDecoder.h" />
@@ -214,6 +215,7 @@
     <ClCompile Include="src\Gandr\Hash.cpp" />
     <ClCompile Include="src\Gandr\Hook.cpp" />
     <ClCompile Include="src\Gandr\InstructionDecoder.cpp" />
+    <ClCompile Include="src\Gandr\Memory.cpp" />
     <ClCompile Include="src\Gandr\ModuleList.cpp" />
     <ClCompile Include="src\Gandr\PE.cpp" />
     <ClCompile Include="src\Gandr\ProcessList.cpp" />

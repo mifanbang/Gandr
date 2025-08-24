@@ -45,6 +45,9 @@
     <ClCompile Include="src\Test\TestPE.cpp">
       <Filter>Test Suites</Filter>
     </ClCompile>
+    <ClCompile Include="src\Test\TestMemory.cpp">
+      <Filter>Test Suites</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Test\Test.h" />

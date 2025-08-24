@@ -136,7 +136,7 @@ private:
 static_assert(sizeof(MemAddr) == sizeof(size_t));
 
 
-// Only closed at the lower endpoing, i.e., [min, max)
+// Only closed at the lower endpoint, i.e., [min, max)
 template <class T>
 struct Range
 {
