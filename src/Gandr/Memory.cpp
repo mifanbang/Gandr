@@ -27,7 +27,7 @@ namespace gan
 {
 
 
-std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(uint32_t pid, Range<ConstMemAddr> addrRange)
+std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(uint32_t pid, ConstMemRange addrRange)
 {
 	MemoryRegionList regions;
 
@@ -40,7 +40,7 @@ std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnume
 		constexpr auto k_initListSize = 64zu;  // Every process likely has >= 32 memory regions
 		regions.reserve(k_initListSize);
 
-		::MEMORY_BASIC_INFORMATION memInfo;
+		::MEMORY_BASIC_INFORMATION memInfo{ };
 		for (auto addr = addrRange.min;
 			addr < addrRange.max;
 			addr = addr.Offset(ConstMemAddr{ memInfo.BaseAddress } - addr + memInfo.RegionSize))
@@ -71,6 +71,28 @@ std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnume
 
 	return regions;
 }
+
+
+static_assert(MemoryStateFlags{ MemoryState::Commit } == MEM_COMMIT);
+static_assert(MemoryStateFlags{ MemoryState::Free } == MEM_FREE);
+static_assert(MemoryStateFlags{ MemoryState::Reserve } == MEM_RESERVE);
+
+static_assert(MemoryProtectFlags{ MemoryProtect::Execute } == PAGE_EXECUTE);
+static_assert(MemoryProtectFlags{ MemoryProtect::ExecuteRead } == PAGE_EXECUTE_READ);
+static_assert(MemoryProtectFlags{ MemoryProtect::ExecuteReadWrite } == PAGE_EXECUTE_READWRITE);
+static_assert(MemoryProtectFlags{ MemoryProtect::ExecuteWriteCopy } == PAGE_EXECUTE_WRITECOPY);
+static_assert(MemoryProtectFlags{ MemoryProtect::NoAccess } == PAGE_NOACCESS);
+static_assert(MemoryProtectFlags{ MemoryProtect::ReadOnly } == PAGE_READONLY);
+static_assert(MemoryProtectFlags{ MemoryProtect::ReadWrite } == PAGE_READWRITE);
+static_assert(MemoryProtectFlags{ MemoryProtect::TargetsInvalid } == PAGE_TARGETS_INVALID);
+static_assert(MemoryProtectFlags{ MemoryProtect::TargetsNoUpdate } == PAGE_TARGETS_NO_UPDATE);
+static_assert(MemoryProtectFlags{ MemoryProtect::Guard } == PAGE_GUARD);
+static_assert(MemoryProtectFlags{ MemoryProtect::NoCache } == PAGE_NOCACHE);
+static_assert(MemoryProtectFlags{ MemoryProtect::WriteCombine } == PAGE_WRITECOMBINE);
+
+static_assert(MemoryTypeFlags{ MemoryType::Image } == MEM_IMAGE);
+static_assert(MemoryTypeFlags{ MemoryType::Mapped } == MEM_MAPPED);
+static_assert(MemoryTypeFlags{ MemoryType::Private } == MEM_PRIVATE);
 
 
 }  // namespace gan

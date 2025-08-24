@@ -28,15 +28,52 @@ namespace gan
 {
 
 
+enum class MemoryState
+{
+	Commit = 12,
+	Reserve = 13,
+	Free = 16,
+	_Count
+};
+using MemoryStateFlags = Flags<MemoryState, WinDword>;
+
+enum class MemoryProtect
+{
+	NoAccess = 0,
+	ReadOnly = 1,
+	ReadWrite = 2,
+	WriteCopy = 3,
+	Execute = 4,
+	ExecuteRead = 5,
+	ExecuteReadWrite = 6,
+	ExecuteWriteCopy = 7,
+	Guard = 8,
+	NoCache = 9,
+	WriteCombine = 10,
+	TargetsInvalid = 30,
+	TargetsNoUpdate = 30,
+	_Count
+};
+using MemoryProtectFlags = Flags<MemoryProtect, WinDword>;
+
+enum class MemoryType
+{
+	Private = 17,
+	Mapped = 18,
+	Image = 24,
+	_Count
+};
+using MemoryTypeFlags = Flags<MemoryType, WinDword>;
+
 struct MemoryRegion
 {
 	ConstMemAddr base;
 	size_t size;
-	uint32_t state;
-	uint32_t protect;
-	uint32_t type;
+	MemoryStateFlags state;
+	MemoryProtectFlags protect;
+	MemoryTypeFlags type;
 
-	constexpr std::strong_ordering operator<=>(const MemoryRegion& other) const noexcept = default;
+	constexpr std::strong_ordering operator<=>(const MemoryRegion&) const = default;
 };
 using MemoryRegionList = std::vector<MemoryRegion>;
 
@@ -53,12 +90,12 @@ public:
 
 	static auto Enumerate(uint32_t pid)
 	{
-		constexpr Range<ConstMemAddr> k_maxRange{ ConstMemAddr{ }, ConstMemAddr{ }.Offset(-1) };
+		constexpr ConstMemRange k_maxRange{ ConstMemAddr{ }, ConstMemAddr{ }.Offset(-1) };
 		return Enumerate(pid, k_maxRange);
 	}
 
 	// All regions containing the range [start, end-1]
-	static std::expected<MemoryRegionList, Error> Enumerate(uint32_t pid, Range<ConstMemAddr> addrRange);
+	static std::expected<MemoryRegionList, Error> Enumerate(uint32_t pid, ConstMemRange addrRange);
 };
 
 
