@@ -109,7 +109,7 @@ Please do note that `InstructionDecoder` works like a forward iterator: every ti
 
 ## Copyright
 
-Copyright (C) 2020-2023 Mifan Bang <https://debug.tw>.
+Copyright (C) 2020-2025 Mifan Bang <https://debug.tw>.
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
