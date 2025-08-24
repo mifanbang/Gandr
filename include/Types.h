@@ -175,6 +175,7 @@ private:
 // Windows API types
 using WinHandle = void*;
 using WinErrorCode = unsigned long;
+using WinDword = unsigned long;
 
 
 enum class Arch : uint8_t { IA32, Amd64 };
@@ -244,6 +245,50 @@ constexpr static void* FromAnyFn(F func)
 {
 	return internal::_MemFnAddr<F>{ .func = func }.addr;
 }
+
+
+template <class Enum, class Storage>
+	requires (static_cast<std::underlying_type_t<Enum>>(Enum::_Count) <= (sizeof(Storage) << 3))
+class Flags
+{
+public:
+	constexpr Flags() = default;
+	constexpr Flags(const Flags&) = default;
+	constexpr Flags(Flags&&) = default;
+
+	constexpr explicit Flags(Storage s)
+		: m_data{ s }
+	{ }
+	constexpr explicit Flags(Enum e)
+		: m_data{ static_cast<Storage>(1) << static_cast<std::underlying_type_t<Enum>>(e) }
+	{ }
+	template <class... T>
+		requires (std::is_same_v<T, Enum> && ...)
+	constexpr Flags(Enum e, T... es)
+		: Flags{ Flags{ es... }.Set(e) }
+	{ }
+
+	constexpr Flags& operator=(const Flags&) = default;
+	constexpr Flags& operator=(Flags&&) = default;
+	constexpr bool operator==(const Flags&) const = default;
+
+	constexpr operator Storage() const
+	{
+		return m_data;
+	}
+
+	[[nodiscard]] constexpr Flags Set(Enum e) const
+	{
+		return Flags{ m_data | Flags{ e }.m_data };
+	}
+	[[nodiscard]] constexpr Flags Clear(Enum e) const
+	{
+		return Flags{ m_data & ~Flags{ e }.m_data };
+	}
+
+private:
+	Storage m_data;
+};
 
 
 }  // namespace gan
