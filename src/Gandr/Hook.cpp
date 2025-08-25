@@ -25,6 +25,7 @@
 #include <cassert>
 #include <iterator>
 #include <optional>
+#include <ranges>
 #include <shared_mutex>
 #include <span>
 #include <unordered_map>
@@ -228,7 +229,7 @@ public:
 			return;
 
 		const auto pageIndex = itr->second;
-		const auto offset = static_cast<unsigned int>(addr - m_pages[pageIndex]);  // negative offset will be treated as a big, positve offset
+		const auto offset = static_cast<uint32_t>(addr - m_pages[pageIndex]);  // negative offset will be treated as a big, positve offset
 		assert(offset <= m_allocGranularity - k_trampolineSize);
 		m_freeLists[pageIndex].emplace_back(offset);
 		m_records.erase(itr);
@@ -287,20 +288,20 @@ private:
 			return gan::MemAddr{ nullptr };  // Don't care in 32 bit
 	}
 
-	static size_t GenerateMaskFromGranularity(unsigned int granularity) noexcept
+	static size_t GenerateMaskFromGranularity(uint32_t granularity) noexcept
 	{
 		const auto tzcnt = _tzcnt_u32(granularity);
 		assert(_lzcnt_u32(granularity) + tzcnt == 31);  // "granularity" must a power of 2.
 		return std::numeric_limits<size_t>::max() << tzcnt;
 	}
 
-	static size_t AlignMemAddrWithGranularity(const size_t addr, unsigned int granularity) noexcept
+	static size_t AlignMemAddrWithGranularity(const size_t addr, uint32_t granularity) noexcept
 	{
 		const auto offsetMask = GenerateMaskFromGranularity(granularity);
 		return (addr & offsetMask) + (addr & ~offsetMask ? granularity : 0);
 	}
 
-	static gan::MemRange AlignMemRangeWithGranularity(gan::MemRange memRange, unsigned int granularity) noexcept
+	static gan::MemRange AlignMemRangeWithGranularity(gan::MemRange memRange, uint32_t granularity) noexcept
 	{
 		const auto offsetMask = GenerateMaskFromGranularity(granularity);
 		const auto rangeMin = memRange.min;
@@ -312,9 +313,9 @@ private:
 	}
 
 	// Assumes that caller has already obtained a lock
-	std::optional<unsigned int> FindRelevantPageInRange(gan::MemRange desiredAddrRange) const noexcept
+	std::optional<size_t> FindRelevantPageInRange(gan::MemRange desiredAddrRange) const noexcept
 	{
-		for (unsigned int i = 0; i < static_cast<unsigned int>(m_pages.size()); ++i)
+		for (size_t i{ }; i < m_pages.size(); ++i)
 		{
 			if (m_freeLists[i].empty())
 				continue;
@@ -331,7 +332,7 @@ private:
 	}
 
 	// Assume: caller has already obtained a lock
-	unsigned int AddNewPage(gan::MemRange desiredAddrRange)
+	size_t AddNewPage(gan::MemRange desiredAddrRange)
 	{
 		const gan::MemRange fixedAddrRange = AlignMemRangeWithGranularity(desiredAddrRange, m_allocGranularity);
 
@@ -344,21 +345,22 @@ private:
 		assert(newPageAddr);
 
 		m_pages.emplace_back(newPageAddr);
-		m_freeLists.emplace_back();
 
 		// Generate free list
-		const unsigned int lastPageIndex = static_cast<unsigned int>(m_pages.size()) - 1;
-		const unsigned int numTrampolinesPerPage = m_allocGranularity / k_trampolineSize;
-		for (unsigned int i = 0, offset = 0; i < numTrampolinesPerPage; ++i, offset += k_trampolineSize)
-			m_freeLists[lastPageIndex].emplace_back(FreeSlot { offset });
+		const auto numTrampolinesPerPage = m_allocGranularity / k_trampolineSize;
+		m_freeLists.emplace_back(
+			std::views::iota(0u, numTrampolinesPerPage)
+			| std::views::transform([](auto idx) { return FreeSlot{ idx * k_trampolineSize }; })
+			| std::ranges::to<FreeList>()
+		);
 
-		return lastPageIndex;
+		return m_pages.size() - 1uz;
 	}
 
 
 	struct FreeSlot
 	{
-		unsigned int pageOffset;
+		uint32_t pageOffset;
 	};
 	using FreeList = std::vector<FreeSlot>;
 
@@ -367,7 +369,7 @@ private:
 	std::vector<gan::MemAddr> m_pages;  // Base addresses of pages
 	std::vector<FreeList> m_freeLists;  // Shared index with "m_pages"
 
-	unsigned int m_allocGranularity;
+	uint32_t m_allocGranularity;
 
 	mutable std::shared_mutex m_mutex;  // For the reason of using mutex, see HookRegistry::m_mutex.
 };
@@ -707,7 +709,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 	}
 	else
 	{
-		// Easy enough for 32-bit system.
+		// Easy enough for 32-bit systems.
 		return {
 			gan::MemAddr{ reinterpret_cast<void*>(0x1'0000u) },
 			gan::MemAddr{ reinterpret_cast<void*>(0x7FFF'0000u) }
@@ -847,7 +849,9 @@ Hook::OpResult Hook::Uninstall()
 
 		const Prolog& origProlog = record->original;
 		if (WriteMemory(m_funcOrig, std::span(origProlog.opcode, origProlog.length)))
+		{
 			TrampolineRegistry::GetInstance().Unregister(record->trampoline);
+		}
 		else
 		{
 			// Failed to write memory somehow. Have to restore hook registry.
