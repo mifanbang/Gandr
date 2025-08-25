@@ -202,9 +202,8 @@ public:
 
 		const auto pageIndex =
 			FindRelevantPageInRange(desiredAddrRange)
-			.value_or(
-				AddNewPage(desiredAddrRange)
-			);
+			.or_else([this, desiredAddrRange] { return std::make_optional(AddNewPage(desiredAddrRange)); })
+			.value();
 		assert(m_freeLists[pageIndex].size() > 0);
 
 		// get a free slot
@@ -315,18 +314,13 @@ private:
 	// Assumes that caller has already obtained a lock
 	std::optional<size_t> FindRelevantPageInRange(gan::MemRange desiredAddrRange) const noexcept
 	{
-		for (size_t i{ }; i < m_pages.size(); ++i)
+		for (auto i : std::views::iota(0uz, m_pages.size()))
 		{
-			if (m_freeLists[i].empty())
-				continue;
-
-			if constexpr (gan::Is64())
+			if (!m_freeLists[i].empty()
+				&& (!gan::Is64() || desiredAddrRange.InRange(m_pages[i])))  // This condition is short-circuited for x86
 			{
-				if (desiredAddrRange.InRange(m_pages[i]))
-					return i;
-			}
-			else
 				return i;
+			}
 		}
 		return std::nullopt;
 	}
