@@ -142,9 +142,7 @@ public:
 		std::shared_lock lock(m_mutex);
 
 		const auto record = LookUp(funcAddr);
-		return record ?
-			record->trampoline.Immutable() :
-			gan::ConstMemAddr{ nullptr };
+		return gan::ConstMemAddr{ record ? record->trampoline.Ptr() : nullptr };
 	}
 
 	std::optional<Record> LookUp(const gan::MemAddr funcAddr) const
@@ -717,7 +715,7 @@ void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacem
 	for (const Displacement32& disp : displacements)
 	{
 		const auto newDisplacement = static_cast<uint32_t>(
-			disp.targetAddr - trampolineAddr.Offset(disp.offsetBase).Immutable()
+			disp.targetAddr - trampolineAddr.Offset(disp.offsetBase)
 		);
 		trampolineAddr.Offset(disp.offsetData).Ref<uint32_t>() = newDisplacement;
 	}
@@ -779,7 +777,7 @@ Hook::OpResult Hook::Install()
 
 	// Generate a new prolog and backup the original one.
 	const auto hookProlog = GenerateHookProlog(m_funcOrig, m_funcHook, strategy);
-	const auto origProlog = CopyProlog(m_funcOrig.Immutable(), hookProlog.length);
+	const auto origProlog = CopyProlog(m_funcOrig, hookProlog.length);
 	if (!origProlog)
 		return OpResult::PrologNotSupported;
 

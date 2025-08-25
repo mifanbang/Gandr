@@ -34,7 +34,8 @@ enum class MemType { Mutable, Immutable };
 
 namespace internal
 {
-	template <MemType Mutability> class _MemAddrWrapper;
+	template <MemType Mutability>
+	class _MemAddrWrapper;
 }
 using MemAddr = internal::_MemAddrWrapper<MemType::Mutable>;
 using ConstMemAddr = internal::_MemAddrWrapper<MemType::Immutable>;
@@ -47,19 +48,29 @@ class internal::_MemAddrWrapper
 	friend class _MemAddrWrapper<MemType::Mutable>;
 	friend class _MemAddrWrapper<MemType::Immutable>;
 
-	constexpr static bool IsImmutable = Mutability == MemType::Immutable;
+	constexpr static bool IsMutable = (Mutability == MemType::Mutable);
 
 public:
 	using IntegralType = size_t;  // Integral type for memory address
 
 	constexpr _MemAddrWrapper() = default;
 	constexpr _MemAddrWrapper(const _MemAddrWrapper&) = default;
-	explicit _MemAddrWrapper(const void* addr) noexcept requires IsImmutable
-		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
-	explicit _MemAddrWrapper(void* addr) noexcept requires !IsImmutable
-		: m_addr(reinterpret_cast<IntegralType>(addr)) { }
+
+	_MemAddrWrapper(const _MemAddrWrapper<MemType::Mutable>& mut)
+		requires !IsMutable
+		: m_addr(mut.m_addr)
+	{ }
+	explicit _MemAddrWrapper(const void* addr) noexcept
+		requires !IsMutable
+		: m_addr(reinterpret_cast<IntegralType>(addr))
+	{ }
+	explicit _MemAddrWrapper(void* addr) noexcept
+		requires IsMutable
+		: m_addr(reinterpret_cast<IntegralType>(addr))
+	{ }
 
 	constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper&) = default;
+	constexpr _MemAddrWrapper& operator=(_MemAddrWrapper&&) = default;
 
 	// Casting
 	template <class S = void>
@@ -68,20 +79,15 @@ public:
 		return reinterpret_cast<const S*>(m_addr);
 	}
 	template <class S = void>
-		requires !IsImmutable
+		requires IsMutable
 	S* Ptr() const noexcept
 	{
 		return reinterpret_cast<S*>(m_addr);
 	}
-	ConstMemAddr Immutable() const noexcept  // MemAddr -> ConstMemAddr
-		requires !IsImmutable
+	_MemAddrWrapper<MemType::Mutable> ConstCast() const noexcept  // ConstMemAddr -> MemAddr; use with caution
+		requires !IsMutable
 	{
-		return ConstMemAddr{ reinterpret_cast<const void*>(m_addr) };
-	}
-	MemAddr ConstCast() const noexcept  // ConstMemAddr -> MemAddr; use with caution
-		requires IsImmutable
-	{
-		return MemAddr{ reinterpret_cast<void*>(m_addr) };
+		return _MemAddrWrapper<MemType::Mutable>{ reinterpret_cast<void*>(m_addr) };
 	}
 
 	// Dereferencing
@@ -94,7 +100,7 @@ public:
 			return *reinterpret_cast<const S*>(m_addr);
 	}
 	template <class S>
-		requires !IsImmutable
+		requires IsMutable
 	S& Ref() const noexcept
 	{
 		return *reinterpret_cast<S*>(m_addr);
@@ -135,7 +141,7 @@ private:
 
 	IntegralType m_addr;
 };
-static_assert(sizeof(MemAddr) == sizeof(size_t));
+static_assert(sizeof(internal::_MemAddrWrapper<MemType::Mutable>) == sizeof(size_t));
 
 
 // Only closed at the lower endpoint, i.e., [min, max)
