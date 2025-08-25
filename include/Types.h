@@ -32,116 +32,129 @@ namespace gan
 
 enum class MemType { Mutable, Immutable };
 
+
 namespace internal
 {
+
+	// Utility for memory address manipulation
 	template <MemType Mutability>
-	class _MemAddrWrapper;
-}
+	class _MemAddrWrapper
+	{
+		friend class _MemAddrWrapper<MemType::Mutable>;
+		friend class _MemAddrWrapper<MemType::Immutable>;
+
+		constexpr static bool IsMutable = (Mutability == MemType::Mutable);
+
+	public:
+		using IntegralType = size_t;  // Integral type for memory address
+
+		constexpr _MemAddrWrapper() = default;
+		constexpr _MemAddrWrapper(const _MemAddrWrapper&) = default;
+
+		_MemAddrWrapper(const _MemAddrWrapper<MemType::Mutable>& mut)
+			requires !IsMutable
+		: _MemAddrWrapper(mut.m_addr)
+		{ }
+		explicit _MemAddrWrapper(const void* addr) noexcept
+			requires !IsMutable
+		: _MemAddrWrapper(reinterpret_cast<IntegralType>(addr))
+		{ }
+		explicit _MemAddrWrapper(void* addr) noexcept
+			requires IsMutable
+		: _MemAddrWrapper(reinterpret_cast<IntegralType>(addr))
+		{ }
+
+		constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper&) = default;
+		constexpr _MemAddrWrapper& operator=(_MemAddrWrapper&&) = default;
+
+		// Casting
+		template <class S = void>
+		const S* ConstPtr() const noexcept
+		{
+			return reinterpret_cast<const S*>(m_addr);
+		}
+		template <class S = void>
+			requires IsMutable
+		S* Ptr() const noexcept
+		{
+			return reinterpret_cast<S*>(m_addr);
+		}
+		_MemAddrWrapper<MemType::Mutable> ConstCast() const noexcept  // ConstMemAddr -> MemAddr; use with caution
+			requires !IsMutable
+		{
+			return _MemAddrWrapper<MemType::Mutable>{ reinterpret_cast<void*>(m_addr) };
+		}
+
+		// Dereferencing
+		template <class S>
+		const S& ConstRef() const noexcept
+		{
+			if constexpr (std::is_function_v<S>)  // Keyword "const" for function would be redundant
+				return *reinterpret_cast<S*>(m_addr);
+			else
+				return *reinterpret_cast<const S*>(m_addr);
+		}
+		template <class S>
+			requires IsMutable
+		S& Ref() const noexcept
+		{
+			return *reinterpret_cast<S*>(m_addr);
+		}
+
+		// Validity
+		constexpr explicit operator bool() const noexcept
+		{
+			return m_addr;
+		}
+
+		// Comparisons
+		template <class OtherT>
+			requires (requires (OtherT otherT) { { otherT.m_addr } -> std::equality_comparable_with<IntegralType>; })
+		constexpr bool operator==(OtherT other) const noexcept
+		{
+			return m_addr == other.m_addr;
+		}
+		template <class OtherT>
+			requires (requires (OtherT otherT) { { otherT.m_addr } -> std::three_way_comparable_with<IntegralType>; })
+		constexpr std::strong_ordering operator<=>(OtherT other) const noexcept
+		{
+			return m_addr <=> other.m_addr;
+		}
+
+		// Bitwise binary
+		_MemAddrWrapper operator&(IntegralType mask) const noexcept
+		{
+			return _MemAddrWrapper{ m_addr & mask };
+		}
+
+		// Arithmetics
+		constexpr _MemAddrWrapper Offset(intptr_t offset) const noexcept
+		{
+			return _MemAddrWrapper{ m_addr + offset };
+		}
+		constexpr ptrdiff_t operator-(_MemAddrWrapper other) const noexcept
+		{
+			return m_addr - other.m_addr;
+		}
+		_MemAddrWrapper& operator++() noexcept
+		{
+			++m_addr;
+			return *this;
+		}
+
+	private:
+		constexpr explicit _MemAddrWrapper(IntegralType addr) noexcept
+			: m_addr(addr)
+		{ }
+
+		IntegralType m_addr;
+	};
+
+}  // namespace internal
 using MemAddr = internal::_MemAddrWrapper<MemType::Mutable>;
 using ConstMemAddr = internal::_MemAddrWrapper<MemType::Immutable>;
-
-
-// A wrapper for the ease of casting and offseting memory addresses
-template <MemType Mutability>
-class internal::_MemAddrWrapper
-{
-	friend class _MemAddrWrapper<MemType::Mutable>;
-	friend class _MemAddrWrapper<MemType::Immutable>;
-
-	constexpr static bool IsMutable = (Mutability == MemType::Mutable);
-
-public:
-	using IntegralType = size_t;  // Integral type for memory address
-
-	constexpr _MemAddrWrapper() = default;
-	constexpr _MemAddrWrapper(const _MemAddrWrapper&) = default;
-
-	_MemAddrWrapper(const _MemAddrWrapper<MemType::Mutable>& mut)
-		requires !IsMutable
-		: m_addr(mut.m_addr)
-	{ }
-	explicit _MemAddrWrapper(const void* addr) noexcept
-		requires !IsMutable
-		: m_addr(reinterpret_cast<IntegralType>(addr))
-	{ }
-	explicit _MemAddrWrapper(void* addr) noexcept
-		requires IsMutable
-		: m_addr(reinterpret_cast<IntegralType>(addr))
-	{ }
-
-	constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper&) = default;
-	constexpr _MemAddrWrapper& operator=(_MemAddrWrapper&&) = default;
-
-	// Casting
-	template <class S = void>
-	const S* ConstPtr() const noexcept
-	{
-		return reinterpret_cast<const S*>(m_addr);
-	}
-	template <class S = void>
-		requires IsMutable
-	S* Ptr() const noexcept
-	{
-		return reinterpret_cast<S*>(m_addr);
-	}
-	_MemAddrWrapper<MemType::Mutable> ConstCast() const noexcept  // ConstMemAddr -> MemAddr; use with caution
-		requires !IsMutable
-	{
-		return _MemAddrWrapper<MemType::Mutable>{ reinterpret_cast<void*>(m_addr) };
-	}
-
-	// Dereferencing
-	template <class S>
-	const S& ConstRef() const noexcept
-	{
-		if constexpr (std::is_function_v<S>)  // Keyword "const" for function would be redundant
-			return *reinterpret_cast<S*>(m_addr);
-		else
-			return *reinterpret_cast<const S*>(m_addr);
-	}
-	template <class S>
-		requires IsMutable
-	S& Ref() const noexcept
-	{
-		return *reinterpret_cast<S*>(m_addr);
-	}
-
-	// Validity
-	constexpr explicit operator bool() const noexcept	{ return m_addr; }
-
-	// Comparisons
-	template <class OtherT>
-		requires (requires (OtherT otherT) { {otherT.m_addr} -> std::equality_comparable_with<IntegralType>; })
-	constexpr bool operator==(OtherT other) const noexcept
-	{
-		return m_addr == other.m_addr;
-	}
-	template <class OtherT>
-		requires (requires (OtherT otherT) { {otherT.m_addr} -> std::three_way_comparable_with<IntegralType>; })
-	constexpr std::strong_ordering operator<=>(OtherT other) const noexcept
-	{
-		return m_addr <=> other.m_addr;
-	}
-
-	// Bitwise binary
-	_MemAddrWrapper operator&(IntegralType mask) const noexcept { return _MemAddrWrapper{ m_addr & mask }; }
-
-	// Arithmetics
-	constexpr _MemAddrWrapper Offset(intptr_t offset) const noexcept		{ return _MemAddrWrapper{ m_addr + offset }; }
-	constexpr ptrdiff_t operator-(_MemAddrWrapper other) const noexcept	{ return m_addr - other.m_addr; }
-	_MemAddrWrapper& operator++() noexcept
-	{
-		++m_addr;
-		return *this;
-	}
-
-private:
-	constexpr explicit _MemAddrWrapper(IntegralType addr) noexcept
-		: m_addr(addr) { }
-
-	IntegralType m_addr;
-};
-static_assert(sizeof(internal::_MemAddrWrapper<MemType::Mutable>) == sizeof(size_t));
+static_assert(sizeof(MemAddr) == sizeof(MemAddr::IntegralType));
+static_assert(sizeof(ConstMemAddr) == sizeof(ConstMemAddr::IntegralType));
 
 
 // Only closed at the lower endpoint, i.e., [min, max)
@@ -191,7 +204,7 @@ enum class Arch : uint8_t { IA32, Amd64 };
 consteval bool Is64() noexcept { return sizeof(MemAddr) == 8; }
 consteval Arch BuildArch() noexcept { return Is64() ? Arch::Amd64 : Arch::IA32; }
 
-consteval bool UseStdFormat() noexcept { return false; }  // Whether to enable the use of std::format which can boast executable size
+consteval bool UseStdFormat() noexcept { return false; }  // Whether to enable usage of std::format which can boast executable size
 
 
 // Generalized concept to cover pointers of:
