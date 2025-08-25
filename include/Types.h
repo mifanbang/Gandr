@@ -44,6 +44,9 @@ using ConstMemAddr = internal::_MemAddrWrapper<MemType::Immutable>;
 template <MemType Mutability>
 class internal::_MemAddrWrapper
 {
+	friend class _MemAddrWrapper<MemType::Mutable>;
+	friend class _MemAddrWrapper<MemType::Immutable>;
+
 	constexpr static bool IsImmutable = Mutability == MemType::Immutable;
 
 public:
@@ -98,7 +101,7 @@ public:
 	}
 
 	// Validity
-	constexpr operator bool() const noexcept	{ return m_addr; }
+	constexpr explicit operator bool() const noexcept	{ return m_addr; }
 
 	// Comparisons
 	template <class OtherT>

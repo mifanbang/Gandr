@@ -32,18 +32,29 @@ DEFINE_TESTSUITE_START(Memory)
 	{
 		const auto currProcId = GetCurrentProcessId();
 
-		auto memoryResionList1 = gan::MemoryRegionEnumerator::Enumerate(currProcId);
-		ASSERT(memoryResionList1);
-		EXPECT(!memoryResionList1->empty());
+		auto memoryRegionList1 = gan::MemoryRegionEnumerator::Enumerate(currProcId);
+		ASSERT(memoryRegionList1);
+		EXPECT(!memoryRegionList1->empty());
 
 		gan::ConstMemAddr maxAddr{ reinterpret_cast<const void*>(-1) };
-		auto memoryResionList2 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ }, maxAddr } );
-		ASSERT(memoryResionList2);
-		EXPECT(*memoryResionList2 == *memoryResionList1);
 
-		auto memoryResionList3 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { maxAddr, gan::ConstMemAddr{ } });
-		ASSERT(!memoryResionList3);
-		EXPECT(memoryResionList3.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
+		// Custom memory range
+		{
+			gan::MemAddr newPage{ VirtualAlloc(nullptr, 0x1'0000, MEM_RESERVE | MEM_PHYSICAL, PAGE_READWRITE) };
+			EXPECT(newPage);
+
+			auto memoryRegionList2 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ }, maxAddr });
+			ASSERT(memoryRegionList2);
+			EXPECT(std::ranges::none_of(*memoryRegionList1, [newPage](const auto& region) { return region.base == newPage; }));
+			EXPECT(std::ranges::any_of(*memoryRegionList2, [newPage](const auto& region) { return region.base == newPage; }));
+		}
+
+		// Invalid memory address range (min > max)
+		{
+			auto memoryRegionList3 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { maxAddr, gan::ConstMemAddr{ } });
+			ASSERT(!memoryRegionList3);
+			EXPECT(memoryRegionList3.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
+		}
 	}
 	DEFINE_TEST_END
 
