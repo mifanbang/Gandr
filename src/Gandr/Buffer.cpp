@@ -88,7 +88,10 @@ Buffer::~Buffer()
 bool Buffer::Resize(size_t newSize) noexcept
 {
 	if (newSize < m_capacity)
+	{
+		m_size = newSize;
 		return true;
+	}
 
 	const auto newCapacity = DetermineCapacity(newSize);
 	assert(newCapacity >= newSize);
