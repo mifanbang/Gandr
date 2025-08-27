@@ -29,13 +29,17 @@ namespace gan
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(uint32_t pid, ConstMemRange addrRange)
 {
+	return Enumerate(::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid), addrRange);
+}
+
+std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(WinHandle process, ConstMemRange addrRange)
+{
 	MemoryRegionList regions;
 
 	if (addrRange.min > addrRange.max)
 		return std::unexpected{ Error::InvalidAddressRange };
 
-	if (AutoWinHandle process{ ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid) };
-		process)
+	if (AutoWinHandle processDup{ gan::HandleHelper::Duplicate(process) })
 	{
 		constexpr auto k_initListSize = 64zu;  // Every process likely has >= 32 memory regions
 		regions.reserve(k_initListSize);
@@ -45,7 +49,7 @@ std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnume
 			addr < addrRange.max;
 			addr = addr.Offset(ConstMemAddr{ memInfo.BaseAddress } - addr + memInfo.RegionSize))
 		{
-			if (const auto queryResult = ::VirtualQueryEx(*process, addr.ConstPtr(), &memInfo, sizeof(memInfo));
+			if (const auto queryResult = ::VirtualQueryEx(*processDup, addr.ConstPtr(), &memInfo, sizeof(memInfo));
 				queryResult == 0)
 			{
 				if (::GetLastError() == ERROR_INVALID_PARAMETER)  // Highest memory address accessible hit
@@ -58,16 +62,19 @@ std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnume
 			{
 				regions.emplace_back(MemoryRegion{
 					.base{ memInfo.BaseAddress },
+					.allocBase{ memInfo.AllocationBase },
 					.size{ memInfo.RegionSize },
 					.state{ memInfo.State },
 					.protect{ memInfo.Protect },
 					.type{ memInfo.Type }
-				});
+					});
 			}
 		}
 	}
 	else
-		return std::unexpected{ Error::OpenProcessFailed };
+	{
+		return std::unexpected{ Error::InaccessibleProcess };
+	}
 
 	return regions;
 }

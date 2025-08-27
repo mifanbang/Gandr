@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <Handle.h>
 #include <Types.h>
 
 #include <expected>
@@ -68,6 +69,7 @@ using MemoryTypeFlags = Flags<MemoryType, WinDword>;
 struct MemoryRegion
 {
 	ConstMemAddr base;
+	ConstMemAddr allocBase;
 	size_t size;
 	MemoryStateFlags state;
 	MemoryProtectFlags protect;
@@ -83,19 +85,16 @@ class MemoryRegionEnumerator
 public:
 	enum class Error
 	{
-		OpenProcessFailed,
+		InaccessibleProcess,
 		MemQueryFailed,
 		InvalidAddressRange
 	};
 
-	static auto Enumerate(uint32_t pid)
-	{
-		constexpr ConstMemRange k_maxRange{ ConstMemAddr{ }, ConstMemAddr{ }.Offset(-1) };
-		return Enumerate(pid, k_maxRange);
-	}
+	static constexpr ConstMemRange k_maxRange{ ConstMemAddr{ }, ConstMemAddr{ }.Offset(-1) };
 
 	// All regions containing the range [start, end-1]
-	static std::expected<MemoryRegionList, Error> Enumerate(uint32_t pid, ConstMemRange addrRange);
+	static std::expected<MemoryRegionList, Error> Enumerate(uint32_t pid, ConstMemRange addrRange = k_maxRange);
+	static std::expected<MemoryRegionList, Error> Enumerate(WinHandle process, ConstMemRange addrRange = k_maxRange);
 };
 
 

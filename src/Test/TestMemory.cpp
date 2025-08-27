@@ -28,7 +28,7 @@
 
 DEFINE_TESTSUITE_START(Memory)
 
-	DEFINE_TEST_START(MemoryRegionEnumerator)
+	DEFINE_TEST_START(EnumMemory)
 	{
 		const auto currProcId = GetCurrentProcessId();
 
@@ -40,13 +40,20 @@ DEFINE_TESTSUITE_START(Memory)
 
 		// Custom memory range
 		{
-			gan::MemAddr newPage{ VirtualAlloc(nullptr, 0x1'0000, MEM_RESERVE | MEM_PHYSICAL, PAGE_READWRITE) };
+			constexpr gan::MemoryStateFlags k_state{ gan::MemoryState::Reserve };
+			constexpr gan::MemoryProtectFlags k_protect{ gan::MemoryProtect::ReadWrite };
+			gan::MemAddr newPage{ VirtualAlloc(nullptr, 0x1'0000, k_state, k_protect) };
 			EXPECT(newPage);
 
 			auto memoryRegionList2 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ }, maxAddr });
 			ASSERT(memoryRegionList2);
-			EXPECT(std::ranges::none_of(*memoryRegionList1, [newPage](const auto& region) { return region.base == newPage; }));
-			EXPECT(std::ranges::any_of(*memoryRegionList2, [newPage](const auto& region) { return region.base == newPage; }));
+			const auto lookForNewPage = [newPage](const auto& region) {
+				return region.allocBase == newPage
+					&& region.allocBase == region.base
+					&& region.state == k_state;
+			};
+			EXPECT(std::ranges::none_of(*memoryRegionList1, lookForNewPage));
+			EXPECT(std::ranges::any_of(*memoryRegionList2, lookForNewPage));
 		}
 
 		// Invalid memory address range (min > max)
@@ -55,6 +62,16 @@ DEFINE_TESTSUITE_START(Memory)
 			ASSERT(!memoryRegionList3);
 			EXPECT(memoryRegionList3.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
 		}
+	}
+	DEFINE_TEST_END
+
+	DEFINE_TEST_START(EnumMemoryInvalidProcess)
+	{
+		auto memoryRegionList1 = gan::MemoryRegionEnumerator::Enumerate(nullptr);
+		EXPECT(!memoryRegionList1);
+
+		auto memoryRegionList2 = gan::MemoryRegionEnumerator::Enumerate(1);
+		EXPECT(!memoryRegionList2);
 	}
 	DEFINE_TEST_END
 

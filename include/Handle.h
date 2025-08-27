@@ -78,7 +78,7 @@ public:
 		return *this;
 	}
 
-	constexpr operator bool() const
+	constexpr explicit operator bool() const
 	{
 		return m_handle != (ImplType::RawHandle)(0)
 			&& m_handle != (ImplType::RawHandle)(-1);  // INVALID_HANDLE_VALUE := -1
@@ -97,10 +97,6 @@ public:
 			m_handle = reinterpret_cast<ImplType::RawHandle>(nullptr);
 		}
 	}
-
-	// Support of duplication is optional
-	template <class Self>
-	auto Duplicate(this Self&& self) { return Self{ HandleHelper::Duplicate<ImplType>(self.m_handle) }; }
 
 private:
 	ImplType::RawHandle m_handle;
