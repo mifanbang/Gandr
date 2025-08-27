@@ -306,6 +306,10 @@ public:
 	{
 		return Flags{ m_data & ~Flags{ e }.m_data };
 	}
+	constexpr bool Has(Enum e) const
+	{
+		return m_data & Flags{ e }.m_data;
+	}
 
 private:
 	Storage m_data;
