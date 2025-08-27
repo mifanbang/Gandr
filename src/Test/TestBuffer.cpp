@@ -84,7 +84,7 @@ DEFINE_TESTSUITE_START(Buffer)
 	}
 	DEFINE_TEST_END
 
-	DEFINE_TEST_START(Resizing)
+	DEFINE_TEST_START(UpResizing)
 	{
 		constexpr uint64_t k_magicNumber = 0x81778187'07758981ull;
 		const auto buffer = gan::Buffer::Allocate(1 << 20);  // 1 MB
@@ -101,6 +101,21 @@ DEFINE_TESTSUITE_START(Buffer)
 		gan::MemAddr bufferDataNew{ buffer->GetData() };
 		EXPECT(bufferData != bufferDataNew);
 		EXPECT(bufferDataNew.Ref<uint64_t>() == k_magicNumber);
+	}
+	DEFINE_TEST_END
+
+	DEFINE_TEST_START(DownResizing)
+	{
+		const auto buffer = gan::Buffer::Allocate(1 << 20);
+		ASSERT(buffer);
+		EXPECT(buffer->GetCapacity() == 1 << 21);
+		EXPECT(buffer->GetSize() == 1 << 20);
+
+		const auto resizeResult = buffer->Resize(1 << 10);
+		EXPECT(resizeResult);
+		EXPECT(buffer->GetCapacity() == 1 << 21);
+		EXPECT(buffer->GetSize() == 1 << 10);
+
 	}
 	DEFINE_TEST_END
 
