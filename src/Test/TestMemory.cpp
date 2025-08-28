@@ -56,11 +56,18 @@ DEFINE_TESTSUITE_START(Memory)
 			EXPECT(std::ranges::any_of(*memoryRegionList2, lookForNewPage));
 		}
 
+		// Custom memory range (0x0000'0000 - 0x0000'0001)
+		{
+			auto memoryRegionList3 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ nullptr }, gan::ConstMemAddr{ nullptr }.Offset(1) });
+			ASSERT(memoryRegionList3);
+			EXPECT(memoryRegionList3->empty());
+		}
+
 		// Invalid memory address range (min > max)
 		{
-			auto memoryRegionList3 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { maxAddr, gan::ConstMemAddr{ } });
-			ASSERT(!memoryRegionList3);
-			EXPECT(memoryRegionList3.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
+			auto memoryRegionList4 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { maxAddr, gan::ConstMemAddr{ } });
+			ASSERT(!memoryRegionList4);
+			EXPECT(memoryRegionList4.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
 		}
 	}
 	DEFINE_TEST_END

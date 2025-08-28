@@ -29,7 +29,8 @@ namespace gan
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(uint32_t pid, ConstMemRange addrRange)
 {
-	return Enumerate(::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid), addrRange);
+	WinHandle process{ ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid) };
+	return Enumerate(process, addrRange);
 }
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::Enumerate(WinHandle process, ConstMemRange addrRange)
