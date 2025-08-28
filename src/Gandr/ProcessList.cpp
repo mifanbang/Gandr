@@ -24,85 +24,91 @@
 #include <tlhelp32.h>  // must be included after windows.h, which sucks
 
 
+namespace
+{
+
+
+constexpr gan::ProcessInfo MakeProcessInfo(const PROCESSENTRY32W& procEntry)
+{
+	ABOVE_NORMAL_PRIORITY_CLASS;
+	return {
+		.pid{ procEntry.th32ProcessID },
+		.nThread{ procEntry.cntThreads },
+		.pidParent{ procEntry.th32ParentProcessID },
+		.basePriority{ static_cast<uint32_t>(procEntry.pcPriClassBase) },  // Base priority defined in [0, 31], REF: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
+		.imageName{ procEntry.szExeFile }
+	};
+}
+
+constexpr gan::ThreadInfo MakeThreadInfo(const THREADENTRY32& threadEntry)
+{
+	return {
+		.tid{ threadEntry.th32ThreadID },
+		.pidParent{ threadEntry.th32OwnerProcessID },
+		.basePriority{ static_cast<uint32_t>(threadEntry.tpBasePri) }  // Base priority defined in [0, 31], REF: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
+	};
+}
+
+
+}  // unnamed namespace
+
+
 namespace gan
 {
 
 
-ProcessInfo::ProcessInfo(const PROCESSENTRY32W& procEntry)
-	: pid(procEntry.th32ProcessID)
-	, nThread(procEntry.cntThreads)
-	, pidParent(procEntry.th32ParentProcessID)
-	, basePriority(procEntry.pcPriClassBase)
-	, imageName(procEntry.szExeFile)
-{
-}
-
-
-ThreadInfo::ThreadInfo(const THREADENTRY32& threadEntry) noexcept
-	: tid(threadEntry.th32ThreadID)
-	, pidParent(threadEntry.th32OwnerProcessID)
-	, basePriority(threadEntry.tpBasePri)
-{
-}
-
-
-ProcessEnumerator::Result ProcessEnumerator::Enumerate(ProcessList& out)
+std::expected<ProcessList, ProcessEnumerator::Error> ProcessEnumerator::Enumerate()
 {
 	constexpr uint32_t k_ignoredParam = 0;
 
 	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, k_ignoredParam) };
 	if (!hSnap)
-		return Result::SnapshotFailed;
+		return std::unexpected{ Error::SnapshotFailed };
 
-	ProcessList newProcList;
+	ProcessList procList;
 	PROCESSENTRY32W procEntry{ .dwSize = sizeof(procEntry) };
 
-	BOOL proc32Result = ::Process32FirstW(*hSnap, &procEntry);
-	while (proc32Result == TRUE)
+	for (BOOL proc32Result{ ::Process32FirstW(*hSnap, &procEntry) };
+		proc32Result;
+		proc32Result = ::Process32NextW(*hSnap, &procEntry))
 	{
-		newProcList.emplace_back(procEntry);
-		proc32Result = ::Process32NextW(*hSnap, &procEntry);
+		procList.emplace_back(MakeProcessInfo(procEntry));
 	}
 
-	// Process32Next() ends with returning FALSE and setting error code to ERROR_NO_MORE_FILES
-	if (proc32Result == FALSE && ::GetLastError() != ERROR_NO_MORE_FILES)
-		return Result::Process32Failed;
+	// In a success, Process32Next() would end with returning FALSE and setting error code to ERROR_NO_MORE_FILES
+	if (procList.empty() || ::GetLastError() != ERROR_NO_MORE_FILES)
+		return std::unexpected{ Error::Process32Failed };
 
-	out = std::move(newProcList);
-	return Result::Success;
+	return procList;
 }
 
-
-ThreadEnumerator::Result ThreadEnumerator::Enumerate(ThreadList& out)
+std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::Enumerate()
 {
-	return Enumerate(std::nullopt, out);
+	constexpr uint32_t k_allProcesses = 0;
+	return Enumerate(k_allProcesses);
 }
 
-ThreadEnumerator::Result ThreadEnumerator::Enumerate(std::optional<uint32_t> pid, ThreadList& out)
+std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::Enumerate(uint32_t pid)
 {
-	constexpr uint32_t k_ignoredParam = 0;
-
-	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, k_ignoredParam) };
+	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, pid) };
 	if (!hSnap)
-		return Result::SnapshotFailed;
+		return std::unexpected{ Error::SnapshotFailed };
 
-	ThreadList resultThreadList;
+	ThreadList threadList;
 	THREADENTRY32 threadEntry{ .dwSize = sizeof(threadEntry) };
 
-	BOOL thread32Result = ::Thread32First(*hSnap, &threadEntry);
-	while (thread32Result == TRUE)
+	for (BOOL thread32Result{ ::Thread32First(*hSnap, &threadEntry) };
+		thread32Result;
+		thread32Result = ::Thread32Next(*hSnap, &threadEntry))
 	{
-		if (!pid || *pid == threadEntry.th32OwnerProcessID)
-			resultThreadList.emplace_back(threadEntry);
-		thread32Result = ::Thread32Next(*hSnap, &threadEntry);
+		threadList.emplace_back(MakeThreadInfo(threadEntry));
 	}
 
-	// Process32Next() ends with returning FALSE and setting error code to ERROR_NO_MORE_FILES
-	if (thread32Result == FALSE && ::GetLastError() != ERROR_NO_MORE_FILES)
-		return Result::Thread32Failed;
+	// In a success, Process32Next() would end with returning FALSE and setting error code to ERROR_NO_MORE_FILES
+	if (threadList.empty() || ::GetLastError() != ERROR_NO_MORE_FILES)
+		return std::unexpected{ Error::Thread32Failed };
 
-	out = std::move(resultThreadList);
-	return Result::Success;
+	return threadList;
 }
 
 

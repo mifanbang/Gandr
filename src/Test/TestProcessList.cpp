@@ -29,13 +29,15 @@ DEFINE_TESTSUITE_START(ProcessList)
 
 	DEFINE_TEST_START(FindSelfInProcList)
 	{
-		gan::ProcessList procList;
-		ASSERT(gan::ProcessEnumerator::Enumerate(procList) == gan::ProcessEnumerator::Result::Success);
+		const auto procId = GetCurrentProcessId();
 
-		const auto funcMatchSelf = [](const auto& procInfo) {
-			return StrStrIW(procInfo.imageName.c_str(), L"Test.exe") != nullptr;
+		const auto funcMatchSelf = [procId](const auto& procInfo) {
+			return procInfo.pid == procId;
 		};
-		ASSERT(std::ranges::find_if(procList, funcMatchSelf) != procList.end());
+
+		auto procList = gan::ProcessEnumerator::Enumerate();
+		ASSERT(procList);
+		EXPECT(std::ranges::any_of(procList.value(), funcMatchSelf));
 	}
 	DEFINE_TEST_END
 
@@ -45,13 +47,23 @@ DEFINE_TESTSUITE_START(ProcessList)
 		const auto procId = GetCurrentProcessId();
 		const auto threadId = GetCurrentThreadId();
 
-		gan::ThreadList threadList;
-		ASSERT(gan::ThreadEnumerator::Enumerate(procId, threadList) == gan::ThreadEnumerator::Result::Success);
-
-		const auto funcMatchSelf = [threadId](const auto& threadInfo) {
-			return threadInfo.tid == threadId;
+		const auto funcMatchSelf = [procId, threadId](const auto& threadInfo) {
+			return threadInfo.pidParent == procId && threadInfo.tid == threadId;
 		};
-		ASSERT(std::ranges::find_if(threadList, funcMatchSelf) != threadList.end());
+
+		// Process-wide enumeration
+		{
+			auto threadListCurrProc = gan::ThreadEnumerator::Enumerate(procId);
+			ASSERT(threadListCurrProc);
+			EXPECT(std::ranges::any_of(threadListCurrProc.value(), funcMatchSelf));
+		}
+
+		// System-wide enumeration
+		{
+			auto threadListSystem = gan::ThreadEnumerator::Enumerate();
+			ASSERT(threadListSystem);
+			EXPECT(std::ranges::any_of(threadListSystem.value(), funcMatchSelf));
+		}
 	}
 	DEFINE_TEST_END
 

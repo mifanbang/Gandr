@@ -18,14 +18,10 @@
 
 #pragma once
 
+#include <expected>
 #include <optional>
 #include <string>
 #include <vector>
-
-
-// forward declaration
-struct tagPROCESSENTRY32W;  // in tlhelp32.h
-struct tagTHREADENTRY32;  // in tlhelp32.h
 
 
 namespace gan
@@ -39,8 +35,6 @@ struct ProcessInfo
 	uint32_t pidParent;
 	uint32_t basePriority;
 	std::wstring imageName;  // incl. file extension
-
-	explicit ProcessInfo(const tagPROCESSENTRY32W& procEntry);
 };
 using ProcessList = std::vector<ProcessInfo>;
 
@@ -50,8 +44,6 @@ struct ThreadInfo
 	uint32_t tid;
 	uint32_t pidParent;
 	uint32_t basePriority;
-
-	explicit ThreadInfo(const tagTHREADENTRY32& threadEntry) noexcept;
 };
 using ThreadList = std::vector<ThreadInfo>;
 
@@ -63,14 +55,13 @@ using ThreadList = std::vector<ThreadInfo>;
 class ProcessEnumerator
 {
 public:
-	enum class Result : uint8_t
+	enum class Error
 	{
-		Success,
 		SnapshotFailed,  // CreateToolhelp32Snapshot() failed
 		Process32Failed,  // A Process32*() function failed
 	};
 
-	static Result Enumerate(ProcessList& out);
+	static std::expected<ProcessList, Error> Enumerate();
 };
 
 
@@ -81,15 +72,14 @@ public:
 class ThreadEnumerator
 {
 public:
-	enum class Result : uint8_t
+	enum class Error
 	{
-		Success,
 		SnapshotFailed,  // CreateToolhelp32Snapshot() failed
 		Thread32Failed,  // A Thread32*() function failed
 	};
 
-	static Result Enumerate(ThreadList& out);
-	static Result Enumerate(std::optional<uint32_t> pid, ThreadList& out);
+	static std::expected<ThreadList, Error> Enumerate();
+	static std::expected<ThreadList, Error> Enumerate(uint32_t pid);
 };
 
 
