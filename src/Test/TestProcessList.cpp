@@ -35,7 +35,7 @@ DEFINE_TESTSUITE_START(ProcessList)
 			return procInfo.pid == procId;
 		};
 
-		auto procList = gan::ProcessEnumerator::Enumerate();
+		auto procList = gan::ProcessEnumerator{}();
 		ASSERT(procList);
 		EXPECT(std::ranges::any_of(procList.value(), funcMatchSelf));
 	}
@@ -53,14 +53,14 @@ DEFINE_TESTSUITE_START(ProcessList)
 
 		// Process-wide enumeration
 		{
-			auto threadListCurrProc = gan::ThreadEnumerator::Enumerate(procId);
+			auto threadListCurrProc = gan::ThreadEnumerator{}(procId);
 			ASSERT(threadListCurrProc);
 			EXPECT(std::ranges::any_of(threadListCurrProc.value(), funcMatchSelf));
 		}
 
 		// System-wide enumeration
 		{
-			auto threadListSystem = gan::ThreadEnumerator::Enumerate();
+			auto threadListSystem = gan::ThreadEnumerator{}();
 			ASSERT(threadListSystem);
 			EXPECT(std::ranges::any_of(threadListSystem.value(), funcMatchSelf));
 		}

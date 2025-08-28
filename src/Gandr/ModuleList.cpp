@@ -61,7 +61,7 @@ namespace gan
 {
 
 
-std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::Enumerate(uint32_t processId)
+std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::operator()(uint32_t processId)
 {
 	AutoWinHandle hSnap{ GetModuleListSnapshop(processId) };
 	if (!hSnap)
@@ -84,9 +84,9 @@ std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::Enumerate(u
 	return moduleList;
 }
 
-std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::Enumerate(WinHandle process)
+std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::operator()(WinHandle process)
 {
-	return Enumerate(::GetProcessId(process));
+	return (*this)(::GetProcessId(process));
 }
 
 

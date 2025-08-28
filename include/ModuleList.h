@@ -55,8 +55,8 @@ public:
 		Module32Failed,  // A Module32*() function failed
 	};
 
-	static std::expected<ModuleList, Error> Enumerate(uint32_t processId);
-	static std::expected<ModuleList, Error> Enumerate(WinHandle process);
+	std::expected<ModuleList, Error> operator()(uint32_t processId);
+	std::expected<ModuleList, Error> operator()(WinHandle process);
 };
 
 

@@ -61,7 +61,7 @@ public:
 		Process32Failed,  // A Process32*() function failed
 	};
 
-	static std::expected<ProcessList, Error> Enumerate();
+	std::expected<ProcessList, Error> operator()();
 };
 
 
@@ -78,8 +78,8 @@ public:
 		Thread32Failed,  // A Thread32*() function failed
 	};
 
-	static std::expected<ThreadList, Error> Enumerate();
-	static std::expected<ThreadList, Error> Enumerate(uint32_t pid);
+	std::expected<ThreadList, Error> operator()();
+	std::expected<ThreadList, Error> operator()(uint32_t pid);
 };
 
 

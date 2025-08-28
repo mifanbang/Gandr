@@ -67,7 +67,7 @@ DEFINE_TESTSUITE_START(Debugger)
 		}
 
 		// Iterate through loaded module paths
-		auto moduleList = gan::ModuleEnumerator::Enumerate(pid);
+		auto moduleList = gan::ModuleEnumerator{}(pid);
 		EXPECT(moduleList);
 		const bool loadedInTargetProcess = std::ranges::any_of(
 			moduleList.value(),

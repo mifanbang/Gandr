@@ -32,7 +32,7 @@ DEFINE_TESTSUITE_START(Memory)
 	{
 		const auto currProcId = GetCurrentProcessId();
 
-		auto memoryRegionList1 = gan::MemoryRegionEnumerator::Enumerate(currProcId);
+		auto memoryRegionList1 = gan::MemoryRegionEnumerator{}(currProcId);
 		ASSERT(memoryRegionList1);
 		EXPECT(!memoryRegionList1->empty());
 
@@ -45,7 +45,7 @@ DEFINE_TESTSUITE_START(Memory)
 			gan::MemAddr newPage{ VirtualAlloc(nullptr, 0x1'0000, k_state, k_protect) };
 			EXPECT(newPage);
 
-			auto memoryRegionList2 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ }, maxAddr });
+			auto memoryRegionList2 = gan::MemoryRegionEnumerator{}(currProcId, { gan::ConstMemAddr{ }, maxAddr });
 			ASSERT(memoryRegionList2);
 			const auto lookForNewPage = [newPage](const auto& region) {
 				return region.allocBase == newPage
@@ -58,14 +58,14 @@ DEFINE_TESTSUITE_START(Memory)
 
 		// Custom memory range (0x0000'0000 - 0x0000'0001)
 		{
-			auto memoryRegionList3 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { gan::ConstMemAddr{ nullptr }, gan::ConstMemAddr{ nullptr }.Offset(1) });
+			auto memoryRegionList3 = gan::MemoryRegionEnumerator{}(currProcId, { gan::ConstMemAddr{ nullptr }, gan::ConstMemAddr{ nullptr }.Offset(1) });
 			ASSERT(memoryRegionList3);
 			EXPECT(memoryRegionList3->empty());
 		}
 
 		// Invalid memory address range (min > max)
 		{
-			auto memoryRegionList4 = gan::MemoryRegionEnumerator::Enumerate(currProcId, { maxAddr, gan::ConstMemAddr{ } });
+			auto memoryRegionList4 = gan::MemoryRegionEnumerator{}(currProcId, { maxAddr, gan::ConstMemAddr{ } });
 			ASSERT(!memoryRegionList4);
 			EXPECT(memoryRegionList4.error() == gan::MemoryRegionEnumerator::Error::InvalidAddressRange);
 		}
@@ -74,10 +74,10 @@ DEFINE_TESTSUITE_START(Memory)
 
 	DEFINE_TEST_START(EnumMemoryInvalidProcess)
 	{
-		auto memoryRegionList1 = gan::MemoryRegionEnumerator::Enumerate(nullptr);
+		auto memoryRegionList1 = gan::MemoryRegionEnumerator{}(nullptr);
 		EXPECT(!memoryRegionList1);
 
-		auto memoryRegionList2 = gan::MemoryRegionEnumerator::Enumerate(1);
+		auto memoryRegionList2 = gan::MemoryRegionEnumerator{}(1);
 		EXPECT(!memoryRegionList2);
 	}
 	DEFINE_TEST_END

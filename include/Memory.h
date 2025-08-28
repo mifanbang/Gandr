@@ -93,8 +93,8 @@ public:
 	static constexpr ConstMemRange k_maxRange{ ConstMemAddr{ }, ConstMemAddr{ }.Offset(-1) };
 
 	// All regions containing the range [start, end-1]
-	static std::expected<MemoryRegionList, Error> Enumerate(uint32_t pid, ConstMemRange addrRange = k_maxRange);
-	static std::expected<MemoryRegionList, Error> Enumerate(WinHandle process, ConstMemRange addrRange = k_maxRange);
+	std::expected<MemoryRegionList, Error> operator()(uint32_t pid, ConstMemRange addrRange = k_maxRange);
+	std::expected<MemoryRegionList, Error> operator()(WinHandle process, ConstMemRange addrRange = k_maxRange);
 };
 
 

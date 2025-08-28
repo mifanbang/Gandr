@@ -42,7 +42,7 @@ DEFINE_TESTSUITE_START(ModuleList)
 
 	DEFINE_TEST_START(CheckModulesOfCurrentProcess)
 	{
-		auto moduleList = gan::ModuleEnumerator::Enumerate(GetCurrentProcessId());
+		auto moduleList = gan::ModuleEnumerator{}(GetCurrentProcessId());
 		ASSERT(moduleList);
 
 		EXPECT(SearchModInList(moduleList.value(), L"Test.exe"));

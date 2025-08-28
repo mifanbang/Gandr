@@ -57,7 +57,7 @@ namespace gan
 {
 
 
-std::expected<ProcessList, ProcessEnumerator::Error> ProcessEnumerator::Enumerate()
+std::expected<ProcessList, ProcessEnumerator::Error> ProcessEnumerator::operator()()
 {
 	constexpr uint32_t k_ignoredParam = 0;
 
@@ -82,13 +82,13 @@ std::expected<ProcessList, ProcessEnumerator::Error> ProcessEnumerator::Enumerat
 	return procList;
 }
 
-std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::Enumerate()
+std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()()
 {
 	constexpr uint32_t k_allProcesses = 0;
-	return Enumerate(k_allProcesses);
+	return (*this)(k_allProcesses);
 }
 
-std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::Enumerate(uint32_t pid)
+std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()(uint32_t pid)
 {
 	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, pid) };
 	if (!hSnap)
