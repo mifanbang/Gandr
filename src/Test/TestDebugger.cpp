@@ -67,10 +67,10 @@ DEFINE_TESTSUITE_START(Debugger)
 		}
 
 		// Iterate through loaded module paths
-		gan::ModuleList moduleList;
-		EXPECT(gan::ModuleEnumerator::Enumerate(pid, moduleList) == gan::ModuleEnumerator::Result::Success);
+		auto moduleList = gan::ModuleEnumerator::Enumerate(pid);
+		EXPECT(moduleList);
 		const bool loadedInTargetProcess = std::ranges::any_of(
-			moduleList,
+			moduleList.value(),
 			[](gan::ModuleInfo& modInfo) { return StrStrIW(modInfo.imageName.c_str(), k_loadedModule) != nullptr; }
 		);
 		EXPECT(loadedInTargetProcess);

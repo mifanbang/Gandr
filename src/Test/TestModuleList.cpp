@@ -42,11 +42,11 @@ DEFINE_TESTSUITE_START(ModuleList)
 
 	DEFINE_TEST_START(CheckModulesOfCurrentProcess)
 	{
-		gan::ModuleList moduleList;
-		ASSERT(gan::ModuleEnumerator::Enumerate(GetCurrentProcessId(), moduleList) == gan::ModuleEnumerator::Result::Success);
+		auto moduleList = gan::ModuleEnumerator::Enumerate(GetCurrentProcessId());
+		ASSERT(moduleList);
 
-		EXPECT(SearchModInList(moduleList, L"Test.exe"));
-		EXPECT(SearchModInList(moduleList, L"kernel32.dll"));
+		EXPECT(SearchModInList(moduleList.value(), L"Test.exe"));
+		EXPECT(SearchModInList(moduleList.value(), L"kernel32.dll"));
 	}
 	DEFINE_TEST_END
 

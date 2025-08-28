@@ -42,6 +42,17 @@ HANDLE GetModuleListSnapshop(uint32_t processId) noexcept
 	return snap;
 }
 
+gan::ModuleInfo MakeModuleInfo(const MODULEENTRY32W& moduleEntry)
+{
+	return {
+		.base{ gan::ConstMemAddr{ moduleEntry.modBaseAddr } },
+		.size{ moduleEntry.modBaseSize },
+		.imageName{ moduleEntry.szModule },
+		.imagePath{ moduleEntry.szExePath }
+	};
+}
+
+
 
 }  // unnamed namespace
 
@@ -50,37 +61,32 @@ namespace gan
 {
 
 
-ModuleInfo::ModuleInfo(const MODULEENTRY32W& moduleEntry)
-	: baseAddr(ConstMemAddr{ moduleEntry.modBaseAddr })
-	, size(moduleEntry.modBaseSize)
-	, imageName(moduleEntry.szModule)
-	, imagePath(moduleEntry.szExePath)
-{
-}
-
-
-ModuleEnumerator::Result ModuleEnumerator::Enumerate(uint32_t processId, ModuleList& out)
+std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::Enumerate(uint32_t processId)
 {
 	AutoWinHandle hSnap{ GetModuleListSnapshop(processId) };
 	if (!hSnap)
-		return Result::SnapshotFailed;
+		return std::unexpected{ Error::SnapshotFailed };
 
-	ModuleList newModList;
+	ModuleList moduleList;
 	MODULEENTRY32W modEntry{ .dwSize = sizeof(modEntry) };
 
-	BOOL mod32Result = ::Module32FirstW(*hSnap, &modEntry);
-	while (mod32Result == TRUE)
+	for (BOOL mod32Result{ ::Module32FirstW(*hSnap, &modEntry) };
+		mod32Result;
+		mod32Result = ::Module32NextW(*hSnap, &modEntry))
 	{
-		newModList.emplace_back(modEntry);
-		mod32Result = ::Module32NextW(*hSnap, &modEntry);
+		moduleList.emplace_back(MakeModuleInfo(modEntry));
 	}
 
-	// Module32Next() ends with returning FALSE and setting error code to ERROR_NO_MORE_FILES
-	if (mod32Result == FALSE && ::GetLastError() != ERROR_NO_MORE_FILES)
-		return Result::Module32Failed;
+	// In a success, Module32Next() would end with returning FALSE and setting error code to ERROR_NO_MORE_FILES
+	if (moduleList.empty() || ::GetLastError() != ERROR_NO_MORE_FILES)
+		return std::unexpected{ Error::Module32Failed };
 
-	out = std::move(newModList);
-	return Result::Success;
+	return moduleList;
+}
+
+std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::Enumerate(WinHandle process)
+{
+	return Enumerate(::GetProcessId(process));
 }
 
 

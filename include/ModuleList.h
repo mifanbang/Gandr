@@ -18,14 +18,12 @@
 
 #pragma once
 
+#include <Handle.h>
 #include <Types.h>
 
+#include <expected>
 #include <string>
 #include <vector>
-
-
-// forward declaration
-struct tagMODULEENTRY32W;  // in tlhelp32.h
 
 
 namespace gan
@@ -34,15 +32,13 @@ namespace gan
 
 struct ModuleInfo
 {
-	ConstMemAddr baseAddr;
+	ConstMemAddr base;
 	size_t size;
 	std::wstring imageName;  // incl. file extension
 	std::wstring imagePath;
 
-	explicit ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry);
+//	explicit ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry);
 };
-
-
 using ModuleList = std::vector<ModuleInfo>;
 
 
@@ -53,14 +49,14 @@ using ModuleList = std::vector<ModuleInfo>;
 class ModuleEnumerator
 {
 public:
-	enum class Result : uint8_t
+	enum class Error
 	{
-		Success,
 		SnapshotFailed,  // CreateToolhelp32Snapshot() failed
 		Module32Failed,  // A Module32*() function failed
 	};
 
-	static Result Enumerate(uint32_t processId, ModuleList& out);
+	static std::expected<ModuleList, Error> Enumerate(uint32_t processId);
+	static std::expected<ModuleList, Error> Enumerate(WinHandle process);
 };
 
 
