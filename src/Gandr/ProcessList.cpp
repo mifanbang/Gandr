@@ -60,7 +60,6 @@ namespace gan
 std::expected<ProcessList, ProcessEnumerator::Error> ProcessEnumerator::operator()()
 {
 	constexpr uint32_t k_ignoredParam = 0;
-
 	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, k_ignoredParam) };
 	if (!hSnap)
 		return std::unexpected{ Error::SnapshotFailed };
@@ -90,7 +89,8 @@ std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()(
 
 std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()(uint32_t pid)
 {
-	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, pid) };
+	constexpr uint32_t k_ignoredParam = 0;
+	AutoWinHandle hSnap{ ::CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, k_ignoredParam) };
 	if (!hSnap)
 		return std::unexpected{ Error::SnapshotFailed };
 
@@ -101,7 +101,8 @@ std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()(
 		thread32Result;
 		thread32Result = ::Thread32Next(*hSnap, &threadEntry))
 	{
-		threadList.emplace_back(MakeThreadInfo(threadEntry));
+		if (pid == 0 || pid == threadEntry.th32OwnerProcessID)
+			threadList.emplace_back(MakeThreadInfo(threadEntry));
 	}
 
 	// In a success, Process32Next() would end with returning FALSE and setting error code to ERROR_NO_MORE_FILES
