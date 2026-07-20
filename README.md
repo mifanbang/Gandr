@@ -23,7 +23,7 @@ This is a non-exhaustive list of main features of Gandr:
 
 ## Build Instructions
 
-Visual Studio 2022 is used in the development of Gandr. The solution consists of two parts: a static library, and unit tests.
+Visual Studio 2026 is used in the development of Gandr. The solution consists of two parts: a static library, and unit tests.
 
 There is no external dependency required by the solution, so all you need to do is hitting the "Build Solution" button. Compiled and linked binary files can then be found in the folder `bin\[project name]\[platform]\[build configuration]\`.
 
