@@ -172,7 +172,7 @@
     <ClCompile Include="src\Test\TestBuffer.cpp" />
     <ClCompile Include="src\Test\TestDebugger.cpp" />
     <ClCompile Include="src\Test\TestDllInjector.cpp" />
-    <ClCompile Include="src\Test\TestDynamicCall.cpp" />
+    <ClCompile Include="src\Test\TestDllLookup.cpp" />
     <ClCompile Include="src\Test\TestHandle.cpp" />
     <ClCompile Include="src\Test\TestHash.cpp" />
     <ClCompile Include="src\Test\TestHook.cpp" />

@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <DynamicCall.h>
+#include <DllLookup.h>
 
 #include <Mutex.h>
 #include <Types.h>

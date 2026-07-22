@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <DynamicCall.h>
+#include <DllLookup.h>
 
 #include <windows.h>
 

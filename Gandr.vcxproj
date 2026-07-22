@@ -191,7 +191,7 @@
     <ClInclude Include="include\DebugSession.h" />
     <ClInclude Include="include\DllInjector.h" />
     <ClInclude Include="include\DllPreloadDebugSession.h" />
-    <ClInclude Include="include\DynamicCall.h" />
+    <ClInclude Include="include\DllLookup.h" />
     <ClInclude Include="include\Handle.h" />
     <ClInclude Include="include\Hash.h" />
     <ClInclude Include="include\Hook.h" />
@@ -210,7 +210,7 @@
     <ClCompile Include="src\Gandr\DebugSession.cpp" />
     <ClCompile Include="src\Gandr\DllInjector.cpp" />
     <ClCompile Include="src\Gandr\DllPreloadDebugSession.cpp" />
-    <ClCompile Include="src\Gandr\DynamicCall.cpp" />
+    <ClCompile Include="src\Gandr\DllLookup.cpp" />
     <ClCompile Include="src\Gandr\Handle.cpp" />
     <ClCompile Include="src\Gandr\Hash.cpp" />
     <ClCompile Include="src\Gandr\Hook.cpp" />

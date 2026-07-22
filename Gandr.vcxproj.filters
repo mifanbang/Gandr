@@ -29,7 +29,7 @@
     <ClInclude Include="include\DllPreloadDebugSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\DynamicCall.h">
+    <ClInclude Include="include\DllLookup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Handle.h">
@@ -85,7 +85,7 @@
     <ClCompile Include="src\Gandr\DllPreloadDebugSession.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Gandr\DynamicCall.cpp">
+    <ClCompile Include="src\Gandr\DllLookup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Hash.cpp">

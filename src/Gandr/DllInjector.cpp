@@ -19,7 +19,7 @@
 #include <DllInjector.h>
 
 #include <Buffer.h>
-#include <DynamicCall.h>
+#include <DllLookup.h>
 
 #include <cassert>
 #include <functional>
