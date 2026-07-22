@@ -64,7 +64,7 @@ public:
 			uint32_t freeType;
 		};
 
-		auto funcVirtualFree = gan::DynamicCall::Get<decltype(&::VirtualFree)>(L"kernel32"sv, "VirtualFree"sv);
+		auto funcVirtualFree = gan::DllLookup::Get<decltype(&::VirtualFree)>(L"kernel32"sv, "VirtualFree"sv);
 		assert(funcVirtualFree);
 
 		auto output = gan::Buffer::Allocate(sizeof(StackFrameForLoadLibraryW32));
@@ -123,7 +123,7 @@ public:
 private:
 	static void SetIPToLoadLibraryW(CONTEXT& context)
 	{
-		auto funcLoadLibraryW = gan::DynamicCall::Get<decltype(&::LoadLibraryW)>(L"kernel32"sv, "LoadLibraryW"sv);
+		auto funcLoadLibraryW = gan::DllLookup::Get<decltype(&::LoadLibraryW)>(L"kernel32"sv, "LoadLibraryW"sv);
 		assert(funcLoadLibraryW);
 
 		GET_CONTEXT_REG(context, ip) = reinterpret_cast<size_t>(funcLoadLibraryW);

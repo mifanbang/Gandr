@@ -23,21 +23,25 @@
 #include <windows.h>
 
 
+#pragma comment(lib, "ntdll.lib")
+extern "C" __declspec(dllimport) uint16_t NlsAnsiCodePage;
+
+
 using namespace std::literals;
 
 
-DEFINE_TESTSUITE_START(DynamicCall)
+DEFINE_TESTSUITE_START(DllLookup)
 
 	DEFINE_TEST_START(LoadDllAndFunctions)
 	{
-		constexpr static std::wstring_view k_glu32 = L"glu32.dll"sv;  // A DLL not in the Import Address Table of Test.exe
+		constexpr std::wstring_view k_glu32 = L"glu32.dll"sv;  // A DLL not in the Import Address Table of Test.exe
 
 		ASSERT(GetModuleHandleW(k_glu32.data()) == nullptr);
 
-		auto funcGluGetString = gan::DynamicCall::Get<uint8_t*(__stdcall*)(uint32_t)>(k_glu32, "gluGetString"sv);
+		auto funcGluGetString = gan::DllLookup::Get<uint8_t*(__stdcall*)(uint32_t)>(k_glu32, "gluGetString"sv);
 		EXPECT(funcGluGetString);
 
-		auto funcNotExist = gan::DynamicCall::Get<void(*)()>(k_glu32, "gluNotAnyOfYourFunctions"sv);
+		auto funcNotExist = gan::DllLookup::Get<void(*)()>(k_glu32, "gluNotAnyOfYourFunctions"sv);
 		EXPECT(!funcNotExist);
 
 		const auto hModGlu32 = GetModuleHandleW(k_glu32.data());
@@ -48,17 +52,35 @@ DEFINE_TESTSUITE_START(DynamicCall)
 
 	DEFINE_TEST_START(CallFunctions)
 	{
-		constexpr static std::wstring_view k_kernel32 = L"kernel32.dll"sv;
+		constexpr std::wstring_view k_kernel32 = L"kernel32.dll"sv;
 
 		// Void return type
-		auto funcOutputDebugStringW = gan::DynamicCall::Get<void(__stdcall*)(const wchar_t*)>(k_kernel32, "OutputDebugStringW"sv);
+		auto funcOutputDebugStringW = gan::DllLookup::Get<void(__stdcall*)(const wchar_t*)>(k_kernel32, "OutputDebugStringW"sv);
 		ASSERT(funcOutputDebugStringW);
 		funcOutputDebugStringW(L"Hi there debugger\n");
 
 		// Non-void return type
-		auto funcGetCurrentProcess = gan::DynamicCall::Get<HANDLE(__stdcall*)()>(k_kernel32, "GetCurrentProcess"sv);
+		auto funcGetCurrentProcess = gan::DllLookup::Get<HANDLE(__stdcall*)()>(k_kernel32, "GetCurrentProcess"sv);
 		ASSERT(funcGetCurrentProcess);
 		ASSERT(funcGetCurrentProcess() == HANDLE(-1));  // GetCurrentProcess() returns a pseudo handle which has the value -1
+	}
+	DEFINE_TEST_END
+
+	DEFINE_TEST_START(AccessVariables)
+	{
+		constexpr std::wstring_view k_ntdll = L"ntdll.dll"sv;
+
+		auto pNlsAnsiCodePage = gan::DllLookup::Get<uint16_t*>(k_ntdll, "NlsAnsiCodePage"sv);
+		ASSERT(pNlsAnsiCodePage);
+
+		const auto oldPage = *pNlsAnsiCodePage;
+		{
+			constexpr uint16_t k_codePageBig5 = 950;
+			*pNlsAnsiCodePage = k_codePageBig5;
+			EXPECT(NlsAnsiCodePage == k_codePageBig5);
+		}
+		*pNlsAnsiCodePage = oldPage;
+		EXPECT(NlsAnsiCodePage == oldPage);
 	}
 	DEFINE_TEST_END
 
