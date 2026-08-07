@@ -36,7 +36,6 @@ struct PrefixREX
 	bool w : 1;
 };
 
-
 struct ModRegRM
 {
 	uint8_t rm : 3;
@@ -44,14 +43,12 @@ struct ModRegRM
 	uint8_t mod : 2;
 };
 
-
 struct SIB
 {
 	uint8_t base : 3;
 	uint8_t index : 3;
 	uint8_t scale : 2;
 };
-
 
 struct Opcode
 {
@@ -83,7 +80,6 @@ struct Opcode
 	}
 };
 
-
 // Looks ahead and decodes the length of opcode
 struct OpcodeLookAhead
 {
@@ -112,7 +108,6 @@ enum class RegField : uint8_t
 	R0, R1, R2, R3, R4, R5, R6, R7, Unused
 };
 
-
 enum class Operand : uint8_t
 {
 	Imm8		= 1,
@@ -123,7 +118,6 @@ enum class Operand : uint8_t
 	Moffs		= 1 << 5,  // Memory offsets; only used in MOV
 	InOpcode	= 1 << 6,  // Operand encoded in the lowest 3 bits of opcode
 };
-
 
 enum class MiscFlags : uint8_t
 {
@@ -426,9 +420,9 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 		}
 		else if (arch == gan::Arch::Amd64 && (byte & 0xF0) == 0x40)
 		{
-			// REX must be the last prefix before opcode, so fallthrough to break.
 			result.prefixRex = true;
 			++addr;
+			// REX must be the last prefix before opcode, so fall through to break.
 		}
 		break;
 	}

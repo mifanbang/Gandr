@@ -34,13 +34,12 @@ struct Hash
 	uint8_t data[k_numOfBytes];
 };
 
-
 class Hasher
 {
 public:
-	// generate the SHA256 hash for a given buffer.
-	// returns a Windows error code indicating the result of the last internal system call.
-	static WinErrorCode GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out);
+	// Generate the SHA256 hash for a given buffer.
+	// Weturns a Windows error code indicating the result of the last internal system call.
+	static WinErrorCode GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out); // TODO: std::expected
 };
 
 

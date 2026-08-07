@@ -32,7 +32,7 @@ enum class HWBreakpointSlot : uint8_t
 
 
 // ---------------------------------------------------------------------------
-// Class HWBreakpoint - Hardware breakpoint on execution
+// Class HWBreakpoint - Hardware breakpoint (break on execution)
 // ---------------------------------------------------------------------------
 
 class HWBreakpoint

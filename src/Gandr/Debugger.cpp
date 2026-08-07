@@ -114,8 +114,9 @@ Debugger::EventLoopResult Debugger::EnterEventLoop()
 			return EventLoopResult::ErrorOccurred;
 
 		const auto itr = m_sessions.find(dbgEvent.dwProcessId);
+		assert(itr != m_sessions.end());
 		if (itr == m_sessions.end())
-			continue;  // this shouldn't happen though
+			continue;  // This shouldn't happen though
 		auto pSession = itr->second;
 
 		pSession->OnPreEvent({

@@ -28,7 +28,7 @@ namespace
 {
 
 
-HANDLE GetModuleListSnapshop(uint32_t processId) noexcept
+gan::AutoWinHandle GetModuleListSnapshop(uint32_t processId) noexcept
 {
 	constexpr uint32_t k_list32And64Modules = TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32;
 
@@ -39,7 +39,7 @@ HANDLE GetModuleListSnapshop(uint32_t processId) noexcept
 		if (::GetLastError() != ERROR_BAD_LENGTH)
 			break;
 	}
-	return snap;
+	return gan::AutoWinHandle{ snap };
 }
 
 gan::ModuleInfo MakeModuleInfo(const MODULEENTRY32W& moduleEntry)
@@ -53,7 +53,6 @@ gan::ModuleInfo MakeModuleInfo(const MODULEENTRY32W& moduleEntry)
 }
 
 
-
 }  // unnamed namespace
 
 
@@ -63,7 +62,7 @@ namespace gan
 
 std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::operator()(uint32_t processId)
 {
-	AutoWinHandle hSnap{ GetModuleListSnapshop(processId) };
+	auto hSnap = GetModuleListSnapshop(processId);
 	if (!hSnap)
 		return std::unexpected{ Error::SnapshotFailed };
 

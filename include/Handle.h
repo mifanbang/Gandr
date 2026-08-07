@@ -37,6 +37,7 @@ public:
 
 template <typename ImplType>
 	requires (
+		// Contract of being AutoHandle-capable
 		requires (ImplType) {
 			typename ImplType::RawHandle;
 			{ ImplType::Close((ImplType::RawHandle)(0)) };

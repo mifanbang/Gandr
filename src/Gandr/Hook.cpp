@@ -31,7 +31,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 #include <intrin.h>
 #include <windows.h>
 
@@ -69,7 +68,6 @@ struct PrologStrategy
 	uint8_t imm8 { };  // optional; only valid when type=RelShortJmpToAux
 };
 
-
 struct Prolog
 {
 	constexpr static uint32_t k_maxSize = 0x18;
@@ -78,7 +76,6 @@ struct Prolog
 	uint8_t length { 0 };
 };
 
-
 struct Displacement32
 {
 	uint8_t offsetData;  // offset in prolog where a disp32 locates
@@ -86,13 +83,11 @@ struct Displacement32
 	gan::ConstMemAddr targetAddr;  // absolute address to target memory address
 };
 
-
 struct PrologWithDisp
 {
 	Prolog prolog;
 	std::vector<Displacement32> displacements;  // disp32 is the only supported displacement type
 };
-
 
 struct Trampoline
 {
@@ -204,7 +199,7 @@ public:
 			.value();
 		assert(m_freeLists[pageIndex].size() > 0);
 
-		// get a free slot
+		// Get a free slot
 		const FreeSlot slot = m_freeLists[pageIndex].back();
 		m_freeLists[pageIndex].pop_back();
 
@@ -226,7 +221,7 @@ public:
 			return;
 
 		const auto pageIndex = itr->second;
-		const auto offset = static_cast<uint32_t>(addr - m_pages[pageIndex]);  // negative offset will be treated as a big, positve offset
+		const auto offset = static_cast<uint32_t>(addr - m_pages[pageIndex]);  // Negative offset will be treated as a big, positve offset
 		assert(offset <= m_allocGranularity - k_trampolineSize);
 		m_freeLists[pageIndex].emplace_back(offset);
 		m_records.erase(itr);
@@ -268,16 +263,11 @@ private:
 					addr = addr.Offset(allocGranularity);
 					continue;
 				}
-
 				if (memInfo.State == MEM_FREE)
-				{
 					return addr;
-				}
-				else
-				{
-					const auto offset = AlignMemAddrWithGranularity(memInfo.RegionSize, allocGranularity);
-					addr = gan::MemAddr{ memInfo.BaseAddress }.Offset(offset);
-				}
+
+				const auto offset = AlignMemAddrWithGranularity(memInfo.RegionSize, allocGranularity);
+				addr = gan::MemAddr{ memInfo.BaseAddress }.Offset(offset);
 			}
 			return gan::MemAddr{ nullptr };  // Not found
 		}
@@ -332,7 +322,8 @@ private:
 		gan::MemAddr newPageAddr{ ::VirtualAlloc(
 			desiredAddress.Ptr<uint8_t>(),
 			m_allocGranularity,
-			MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE
+			MEM_COMMIT | MEM_RESERVE,
+			PAGE_EXECUTE_READWRITE
 		) };
 		assert(newPageAddr);
 
@@ -348,7 +339,6 @@ private:
 
 		return m_pages.size() - 1uz;
 	}
-
 
 	struct FreeSlot
 	{
@@ -527,7 +517,6 @@ PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 		return k_RelNearJmp32;
 }
 
-
 Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologStrategy strategy) noexcept
 {
 	Prolog result;
@@ -549,18 +538,15 @@ Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologSt
 	return result;
 }
 
-
 bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data) noexcept
 {
 	auto rawPtr = address.Ptr<uint8_t>();
 
 	DWORD oldAttr{ };
+	DWORD dontCare{ };
 	::VirtualProtect(rawPtr, data.size(), PAGE_EXECUTE_READWRITE, &oldAttr);
-
 	memcpy(rawPtr, data.data(), data.size());
-
-	DWORD dummy{ };
-	::VirtualProtect(rawPtr, data.size(), oldAttr, &dummy);
+	::VirtualProtect(rawPtr, data.size(), oldAttr, &dontCare);
 
 	return true;
 }
@@ -668,7 +654,6 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 	return copiedProlog;
 }
 
-
 gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displacement32>& displacements)
 {
 	if constexpr (gan::Is64())
@@ -692,7 +677,7 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 
 		// min and max must be within the range addressable by disp32, and since
 		// the MSB in disp32 is a sign bit, their distance can't go beyond 0x7FFF'FFFF.
-		const gan::MemRange addrRange{
+		gan::MemRange addrRange{
 			.min = itrMax->Offset(-0x7FFF'0000ll),  // min must be addressable by disp32 from itrMax,
 			.max = itrMin->Offset(0x7FFF'0000ll)    // and the same for max.
 		};
@@ -703,12 +688,11 @@ gan::MemRange GetAddressableRange(gan::MemAddr tramAddr, const std::vector<Displ
 	{
 		// Easy enough for 32-bit systems.
 		return {
-			gan::MemAddr{ reinterpret_cast<void*>(0x1'0000u) },
-			gan::MemAddr{ reinterpret_cast<void*>(0x7FFF'0000u) }
+			.min = gan::MemAddr{ reinterpret_cast<void*>(0x1'0000u) },
+			.max = gan::MemAddr{ reinterpret_cast<void*>(0x7FFF'0000u) }
 		};
 	}
 }
-
 
 void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacement32>& displacements) noexcept
 {
@@ -720,7 +704,6 @@ void FixupDisplacements(gan::MemAddr trampolineAddr, const std::vector<Displacem
 		trampolineAddr.Offset(disp.offsetData).Ref<uint32_t>() = newDisplacement;
 	}
 }
-
 
 Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog) noexcept
 {
@@ -747,7 +730,6 @@ Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog) n
 
 
 }  // unnamed namespace
-
 
 
 namespace gan
@@ -820,7 +802,6 @@ Hook::OpResult Hook::Install()
 	return OpResult::AccessDenied;
 }
 
-
 Hook::OpResult Hook::Uninstall()
 {
 	if (!m_hooked)
@@ -852,7 +833,9 @@ Hook::OpResult Hook::Uninstall()
 		}
 
 		if (AuxiliaryPrologHelper::ShouldUseAuxProlog(record->strategy.type))
+		{
 			AuxiliaryPrologHelper::Delete(m_funcOrig, record->strategy.imm8);
+		}
 
 		m_hooked = false;
 		return OpResult::Unhooked;
@@ -862,14 +845,12 @@ Hook::OpResult Hook::Uninstall()
 	return OpResult::NotHooked;
 }
 
-
 void Hook::AssertCtorArgs([[maybe_unused]] MemAddr origFunc, [[maybe_unused]] MemAddr hookFunc) noexcept
 {
 	assert(origFunc);
 	assert(hookFunc);
 	assert(origFunc != hookFunc);
 }
-
 
 ConstMemAddr Hook::GetTrampolineAddr(ConstMemAddr origFunc)
 {

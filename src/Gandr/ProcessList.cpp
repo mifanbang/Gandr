@@ -30,7 +30,6 @@ namespace
 
 constexpr gan::ProcessInfo MakeProcessInfo(const PROCESSENTRY32W& procEntry)
 {
-	ABOVE_NORMAL_PRIORITY_CLASS;
 	return {
 		.pid{ procEntry.th32ProcessID },
 		.nThread{ procEntry.cntThreads },
@@ -95,14 +94,16 @@ std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()(
 		return std::unexpected{ Error::SnapshotFailed };
 
 	ThreadList threadList;
-	THREADENTRY32 threadEntry{ .dwSize = sizeof(threadEntry) };
-
-	for (BOOL thread32Result{ ::Thread32First(*hSnap, &threadEntry) };
-		thread32Result;
-		thread32Result = ::Thread32Next(*hSnap, &threadEntry))
 	{
-		if (pid == 0 || pid == threadEntry.th32OwnerProcessID)
-			threadList.emplace_back(MakeThreadInfo(threadEntry));
+		THREADENTRY32 threadEntry{ .dwSize = sizeof(threadEntry) };
+
+		for (BOOL thread32Result{ ::Thread32First(*hSnap, &threadEntry) };
+			thread32Result;
+			thread32Result = ::Thread32Next(*hSnap, &threadEntry))
+		{
+			if (pid == 0 || pid == threadEntry.th32OwnerProcessID)
+				threadList.emplace_back(MakeThreadInfo(threadEntry));
+		}
 	}
 
 	// In a success, Process32Next() would end with returning FALSE and setting error code to ERROR_NO_MORE_FILES

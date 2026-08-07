@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <Handle.h>
 #include <Types.h>
 
 #include <expected>
@@ -34,10 +33,8 @@ struct ModuleInfo
 {
 	ConstMemAddr base;
 	size_t size;
-	std::wstring imageName;  // incl. file extension
+	std::wstring imageName;  // Incl. file extension
 	std::wstring imagePath;
-
-//	explicit ModuleInfo(const ::tagMODULEENTRY32W& moduleEntry);
 };
 using ModuleList = std::vector<ModuleInfo>;
 

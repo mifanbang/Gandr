@@ -29,52 +29,49 @@ namespace gan
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::operator()(uint32_t pid, ConstMemRange addrRange)
 {
+	// TODO: handle leaks
 	WinHandle process{ ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid) };
 	return (*this)(process, addrRange);
 }
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::operator()(WinHandle process, ConstMemRange addrRange)
 {
-	MemoryRegionList regions;
-
 	if (addrRange.min > addrRange.max)
 		return std::unexpected{ Error::InvalidAddressRange };
 
-	if (AutoWinHandle processDup{ gan::HandleHelper::Duplicate(process) })
-	{
-		constexpr auto k_initListSize = 64zu;  // Every process likely has >= 32 memory regions
-		regions.reserve(k_initListSize);
-
-		::MEMORY_BASIC_INFORMATION memInfo{ };
-		for (auto addr = addrRange.min;
-			addr < addrRange.max;
-			addr = addr.Offset(ConstMemAddr{ memInfo.BaseAddress } - addr + memInfo.RegionSize))
-		{
-			if (const auto queryResult = ::VirtualQueryEx(*processDup, addr.ConstPtr(), &memInfo, sizeof(memInfo));
-				queryResult == 0)
-			{
-				if (::GetLastError() == ERROR_INVALID_PARAMETER)  // Highest memory address accessible hit
-					break;
-				else
-					return std::unexpected{ Error::MemQueryFailed };
-			}
-
-			if (memInfo.State != MEM_FREE)
-			{
-				regions.emplace_back(MemoryRegion{
-					.base{ memInfo.BaseAddress },
-					.allocBase{ memInfo.AllocationBase },
-					.size{ memInfo.RegionSize },
-					.state{ memInfo.State },
-					.protect{ memInfo.Protect },
-					.type{ memInfo.Type }
-					});
-			}
-		}
-	}
-	else
-	{
+	// TODO: remove dup
+	AutoWinHandle processDup{ gan::HandleHelper::Duplicate(process) };
+	if (!processDup)
 		return std::unexpected{ Error::InaccessibleProcess };
+
+	constexpr auto k_initListSize = 64zu;  // Every process likely has >= 32 memory regions
+	MemoryRegionList regions;
+	regions.reserve(k_initListSize);
+
+	::MEMORY_BASIC_INFORMATION memInfo{ };
+	for (auto addr = addrRange.min;
+		addr < addrRange.max;
+		addr = addr.Offset(ConstMemAddr{ memInfo.BaseAddress } - addr + memInfo.RegionSize))
+	{
+		if (::VirtualQueryEx(*processDup, addr.ConstPtr(), &memInfo, sizeof(memInfo)) == 0)
+		{
+			if (::GetLastError() == ERROR_INVALID_PARAMETER)  // Highest accessible memory address hit
+				break;
+			else
+				return std::unexpected{ Error::MemQueryFailed };
+		}
+
+		if (memInfo.State != MEM_FREE)
+		{
+			regions.emplace_back(MemoryRegion{
+				.base{ memInfo.BaseAddress },
+				.allocBase{ memInfo.AllocationBase },
+				.size{ memInfo.RegionSize },
+				.state{ memInfo.State },
+				.protect{ memInfo.Protect },
+				.type{ memInfo.Type }
+			});
+		}
 	}
 
 	return regions;

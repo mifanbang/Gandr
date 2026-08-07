@@ -58,7 +58,6 @@ struct ImageNtHeaders
 #undef DEFINE_GETTER
 };
 
-
 // REF: https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#the-edata-section-image-only
 struct ImageExportData
 {
@@ -75,11 +74,9 @@ struct ImageExportData
 	ExportedFunctionList functions;
 };
 
-
 // Aliases of Windows SDK types. Just to make PeHeaders easier to read.
 using ImageDosHeader = IMAGE_DOS_HEADER;
 using ImageSectionHeaderList = std::vector<IMAGE_SECTION_HEADER>;
-
 
 struct PeHeaders
 {
@@ -96,12 +93,10 @@ struct PeHeaders
 	std::optional<uint32_t> FindSectionByName(uint32_t start, std::u8string_view name) const noexcept;
 };
 
-
 class PeImageHelper
 {
 public:
 	static std::optional<PeHeaders> GetLoadedHeaders(ConstMemAddr addr);
-
 };
 
 

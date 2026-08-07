@@ -230,7 +230,7 @@ namespace internal
 
 // ---------------------------------------------------------------------------
 // Function ToMemFn & FromMemFn:
-//     Low-level and therefore unsafe casting between a void* raw pointer and
+//     Low-level and therefore unsafe castings between a void* raw pointer and
 //     a non-static member function pointer.
 // ---------------------------------------------------------------------------
 

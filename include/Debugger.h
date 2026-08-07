@@ -44,7 +44,6 @@ public:
 
 	using IdList = std::vector<DebugSession::Identifier>;
 
-
 	Debugger();
 	~Debugger();
 
@@ -66,7 +65,6 @@ public:
 	void RemoveAllSessions(DebugSession::EndOption option) noexcept;
 	void GetSessionList(IdList& output) const;
 
-
 private:
 	void RequestEventLoopExit() noexcept
 	{
@@ -74,7 +72,6 @@ private:
 	}
 
 	bool AddSessionInstance(const std::shared_ptr<DebugSession>& pSession);
-
 
 	using SessionMap = std::unordered_map<DebugSession::Identifier, std::shared_ptr<DebugSession>>;
 	SessionMap m_sessions;

@@ -69,7 +69,7 @@ public:
 
 private:
 	T m_resInst;
-	CRITICAL_SECTION m_lock;
+	CRITICAL_SECTION m_lock;  // TODO: mutex
 };
 
 

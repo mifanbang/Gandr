@@ -45,7 +45,6 @@ void SetUpSectionHeaders(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 	}
 }
 
-
 // Fill in data in PeHeaders::exportData
 void SetUpExportDirectory(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 {
@@ -131,7 +130,6 @@ std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t startIndex, std::u
 	}
 	return std::optional<uint32_t>{ std::nullopt };
 }
-
 
 std::optional<PeHeaders> PeImageHelper::GetLoadedHeaders(ConstMemAddr addr)
 {

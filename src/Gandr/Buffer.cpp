@@ -32,7 +32,8 @@ namespace
 
 size_t DetermineCapacity(size_t requestedSize) noexcept
 {
-	constexpr size_t maxSizeForReservation = 1 << 26;  // Not to reserve memory if requestedSize >= 64 MB
+	// Not to reserve memory if requestedSize >= 64 MB
+	constexpr size_t maxSizeForReservation = 1 << 26;
 
 	if (requestedSize < gan::Buffer::k_minSize)
 		return gan::Buffer::k_minSize;
@@ -67,7 +68,6 @@ std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 	return nullptr;
 }
 
-
 Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr, Private) noexcept
 	: m_capacity(capacity)
 	, m_size(size)
@@ -78,12 +78,12 @@ Buffer::Buffer(size_t capacity, size_t size, uint8_t* addr, Private) noexcept
 	assert(addr != nullptr);
 }
 
-
 Buffer::~Buffer()
 {
-	::HeapFree(::GetProcessHeap(), 0, m_data);
+	assert(m_data);
+	if (m_data)
+		::HeapFree(::GetProcessHeap(), 0, m_data);
 }
-
 
 bool Buffer::Resize(size_t newSize) noexcept
 {
@@ -98,7 +98,8 @@ bool Buffer::Resize(size_t newSize) noexcept
 	if (newCapacity < newSize)
 		return false;
 
-	if (const MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), 0, m_data, newCapacity) })
+	constexpr WinDword k_defaultOption = 0;
+	if (const MemAddr newAddr{ ::HeapReAlloc(::GetProcessHeap(), k_defaultOption, m_data, newCapacity) })
 	{
 		m_capacity = newCapacity;
 		m_size = newSize;

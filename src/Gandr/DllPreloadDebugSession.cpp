@@ -56,7 +56,8 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 {
 	switch (exceptionInfo.ExceptionRecord.ExceptionCode)
 	{
-		case EXCEPTION_SINGLE_STEP:  // Hardware breakpoint triggered
+		// Hardware breakpoint triggered
+		case EXCEPTION_SINGLE_STEP:
 		{
 			// Uninstall the hardware breakpoint at entry point
 			HWBreakpoint::Disable(m_hMainThread, HWBreakpointSlot::DR0);
@@ -68,16 +69,15 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 				ContinueStatus::CloseSession :
 				ContinueStatus::ContinueThread;
 		}
-
-		case EXCEPTION_BREAKPOINT:  // Expecting this breakpoint triggered by Windows Debug API upon attaching to the process
+		// Expecting this breakpoint triggered by Windows Debug API upon attachment to the process
+		case EXCEPTION_BREAKPOINT:
 		{
-			// Do nothing
-			break;
+			break;  // Do nothing
 		}
-
+		// Forward any other exceptions
 		default:
 		{
-			return ContinueStatus::NotHandled;  // Forward if exception is other than a breakpoint
+			return ContinueStatus::NotHandled;
 		}
 	}
 

@@ -28,26 +28,21 @@ namespace gan
 
 
 // ---------------------------------------------------------------------------
-// Class DllLookup - Load a dynamic lib and resolve a symbol
+// Class DllLookup - Resolve a symbol with the specified dynamic lib.
+//					 Loead the library when needed.
 // ---------------------------------------------------------------------------
 
 class DllLookup
 {
 public:
-	template <class F>
-		requires IsAnyFuncPtr<F>
+	template <class T>
 	static auto Get(std::wstring_view lib, std::string_view name)
 	{
-		return ToAnyFn<F>(LoadLibAndGetSymbol(lib, name));
+		if constexpr (IsAnyFuncPtr<T>)
+			return ToAnyFn<T>(LoadLibAndGetSymbol(lib, name));
+		else
+			return reinterpret_cast<T>(LoadLibAndGetSymbol(lib, name));
 	}
-
-	template <class P>
-		requires (!IsAnyFuncPtr<P>)
-	static auto Get(std::wstring_view lib, std::string_view name)
-	{
-		return reinterpret_cast<P>(LoadLibAndGetSymbol(lib, name));
-	}
-
 
 private:
 	static void* LoadLibAndGetSymbol(std::wstring_view lib, std::string_view name);

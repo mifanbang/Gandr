@@ -31,27 +31,27 @@ enum class Dr7UpdateOp : uint8_t
 	Disable
 };
 
-
 constexpr size_t GetMaskFromSlot(gan::HWBreakpointSlot slot) noexcept
 {
 	// Using local mode (L0-L3), one-byte length (LEN=0), breaking on execution only
 	return size_t{ 1 } << (static_cast<uint8_t>(slot) << 1);
 }
 
-
 bool UpdateDebugRegisters(gan::WinHandle hThread, gan::ConstMemAddr address, gan::HWBreakpointSlot slot, Dr7UpdateOp opDr7) noexcept
 {
-	CONTEXT ctx{
-		.ContextFlags = CONTEXT_DEBUG_REGISTERS
-	};
+	CONTEXT ctx{ .ContextFlags = CONTEXT_DEBUG_REGISTERS };
 	if (::GetThreadContext(hThread, &ctx) == 0)
 		return false;
 
 	// Write to the corresponding register field in "ctx".
-	const auto ptrRegInCtx =
-		gan::MemAddr{ &ctx.Dr0 }
-		.Offset(sizeof(gan::MemAddr) * static_cast<uint8_t>(slot));
-	ptrRegInCtx.Ref<gan::ConstMemAddr>() = address;
+	{
+		const auto ptrRegInCtx =
+			gan::MemAddr{ &ctx.Dr0 }
+			.Offset(
+				sizeof(gan::MemAddr) * static_cast<uint8_t>(slot)
+			);
+		ptrRegInCtx.Ref<gan::ConstMemAddr>() = address;
+	}
 
 	// Setup control register
 	if (opDr7 == Dr7UpdateOp::Enable)
@@ -75,7 +75,6 @@ bool HWBreakpoint::Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot 
 {
 	return UpdateDebugRegisters(thread, addr, slot, Dr7UpdateOp::Enable);
 }
-
 
 bool HWBreakpoint::Disable(WinHandle thread, HWBreakpointSlot slot) noexcept
 {

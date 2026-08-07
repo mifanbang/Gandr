@@ -83,5 +83,4 @@ public:
 };
 
 
-
 }  // namespace gan

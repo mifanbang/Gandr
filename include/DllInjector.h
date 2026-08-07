@@ -45,7 +45,6 @@ public:
 		SetContextFailed
 	};
 
-
 	DllInjectorByContext(WinHandle hProcess, WinHandle hThread);
 
 	// m_hProcess and m_hThread will be closed in destructor
@@ -53,7 +52,6 @@ public:
 	DllInjectorByContext& operator=(const DllInjectorByContext&) = delete;
 
 	Result Inject(std::wstring_view dllPath);
-
 
 private:
 	AutoWinHandle m_hProcess;

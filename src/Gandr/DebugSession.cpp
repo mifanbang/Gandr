@@ -124,4 +124,45 @@ void DebugSession::End(EndOption option) noexcept
 }
 
 
+void DebugSession::OnPreEvent(PreEvent)
+{
+}
+DebugSession::ContinueStatus DebugSession::OnExceptionTriggered(const EXCEPTION_DEBUG_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnThreadCreated(const CREATE_THREAD_DEBUG_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnThreadExited(const EXIT_THREAD_DEBUG_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnProcessExited(const EXIT_PROCESS_DEBUG_INFO&)
+{
+	return ContinueStatus::CloseSession;
+}
+DebugSession::ContinueStatus DebugSession::OnDllLoaded(const LOAD_DLL_DEBUG_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnDllUnloaded(const UNLOAD_DLL_DEBUG_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnStringOutput(const OUTPUT_DEBUG_STRING_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+DebugSession::ContinueStatus DebugSession::OnRipEvent(const RIP_INFO&)
+{
+	return ContinueStatus::ContinueThread;
+}
+
+
 }  // namespace gan
