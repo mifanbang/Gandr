@@ -29,20 +29,18 @@ namespace gan
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::operator()(uint32_t pid, ConstMemRange addrRange)
 {
-	// TODO: handle leaks
-	WinHandle process{ ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid) };
-	return (*this)(process, addrRange);
+	constexpr BOOL k_nonInheritable = FALSE;
+	AutoWinHandle process{ ::OpenProcess(PROCESS_QUERY_INFORMATION, k_nonInheritable, pid) };
+	if (!process)
+		return std::unexpected{ Error::InaccessibleProcess };
+
+	return operator()(*process, addrRange);
 }
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::operator()(WinHandle process, ConstMemRange addrRange)
 {
 	if (addrRange.min > addrRange.max)
 		return std::unexpected{ Error::InvalidAddressRange };
-
-	// TODO: remove dup
-	AutoWinHandle processDup{ gan::HandleHelper::Duplicate(process) };
-	if (!processDup)
-		return std::unexpected{ Error::InaccessibleProcess };
 
 	constexpr auto k_initListSize = 64zu;  // Every process likely has >= 32 memory regions
 	MemoryRegionList regions;
@@ -53,7 +51,7 @@ std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnume
 		addr < addrRange.max;
 		addr = addr.Offset(ConstMemAddr{ memInfo.BaseAddress } - addr + memInfo.RegionSize))
 	{
-		if (::VirtualQueryEx(*processDup, addr.ConstPtr(), &memInfo, sizeof(memInfo)) == 0)
+		if (::VirtualQueryEx(process, addr.ConstPtr(), &memInfo, sizeof(memInfo)) == 0)
 		{
 			if (::GetLastError() == ERROR_INVALID_PARAMETER)  // Highest accessible memory address hit
 				break;
