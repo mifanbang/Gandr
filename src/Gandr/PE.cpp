@@ -26,7 +26,6 @@
 namespace
 {
 
-
 // Fill in data in PeHeaders::sectionHeaderList
 void SetUpSectionHeaders(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 {
@@ -101,13 +100,11 @@ void SetUpExportDirectory(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 	}
 }
 
-
-}
+}  // unnamed namespace
 
 
 namespace gan
 {
-
 
 std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t startIndex, std::u8string_view name) const noexcept
 {
@@ -160,6 +157,5 @@ std::optional<PeHeaders> PeImageHelper::GetLoadedHeaders(ConstMemAddr addr)
 
 	return resultOpt;
 }
-
 
 }  // namespace gan

@@ -228,7 +228,7 @@ public:
 	}
 
 private:
-	TrampolineRegistry()
+	TrampolineRegistry() noexcept
 		: m_records()
 		, m_pages()
 		, m_freeLists()
@@ -385,7 +385,7 @@ public:
 			// mov rax, imm64
 			out[0] = 0x48;  // REX.W
 			out[1] = 0xB8;  // mov
-			gan::MemAddr{ out + 2 }.Ref<gan::MemAddr>() = targetAddr;
+			gan::MemAddr{ &out[2] }.Ref<gan::MemAddr>() = targetAddr;
 
 			// jmp rax
 			out[10] = 0xFF;
@@ -411,14 +411,14 @@ public:
 
 			// push imm32(lower 32 bits of addr)
 			out[0] = 0x68;  // push
-			*reinterpret_cast<uint32_t*>(out + 1) = addrLow;
+			gan::MemAddr{ &out[1] }.Ref<uint32_t>() = addrLow;
 
 			// mov dword ptr [rsp+4], imm32(higher 32 bits of addr)
 			out[5] = 0xC7;  // mov /0
 			out[6] = 0x44;  // mod=01b, reg=0, r/m=100b
 			out[7] = 0x24;  // ss=00b, index=100b, base=100b
 			out[8] = 0x04;  // disp8
-			*reinterpret_cast<uint32_t*>(out + 9) = addrHigh;
+			gan::MemAddr{ &out[9] }.Ref<uint32_t>() = addrHigh;
 
 			out[13] = 0xC3;  // ret
 
@@ -438,7 +438,7 @@ public:
 
 			// push imm32
 			out[0] = 0x68;  // push
-			gan::MemAddr{ out + 1 }.Ref<gan::MemAddr>() = targetAddr;
+			gan::MemAddr{ &out[1] }.Ref<gan::MemAddr>() = targetAddr;
 
 			// ret
 			out[5] = 0xC3;
@@ -457,9 +457,7 @@ public:
 
 			// jmp imm32
 			out[0] = 0xE9;  // near jmp
-			*reinterpret_cast<int32_t*>(out + 1) = static_cast<int32_t>(
-				targetAddr - originAddr - k_length
-			);
+			gan::MemAddr{ &out[1] }.Ref<int32_t>() = static_cast<int32_t>(targetAddr - originAddr - k_length);
 			return k_length;
 		}
 	};
@@ -468,7 +466,7 @@ public:
 	{
 	public:
 		template <size_t N>
-		static uint8_t Make([[maybe_unused]] gan::MemAddr originAddr, int8_t offset, uint8_t(&out)[N]) noexcept
+		static uint8_t Make(gan::MemAddr, int8_t offset, uint8_t(&out)[N]) noexcept
 		{
 			static_assert(N >= k_length);
 

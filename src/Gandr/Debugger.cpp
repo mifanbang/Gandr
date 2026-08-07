@@ -90,7 +90,7 @@ namespace gan
 // class Debugger
 // ---------------------------------------------------------------------------
 
-Debugger::Debugger()
+Debugger::Debugger() noexcept
 	: m_sessions()
 	, m_flagEventLoopExit(false)
 {

@@ -62,7 +62,7 @@ std::expected<Hash<256>, WinErrorCode> Hasher::GetSHA(ConstMemAddr dataAddr, siz
 	AutoBcryptHashHandle hHash{ };
 
 	// Initialization of service provider
-	constexpr wchar_t* k_defaultProvider = nullptr;
+	constexpr const wchar_t* k_defaultProvider = nullptr;
 	ULONG numByteRead{ 0 };
 	uint32_t hashObjSize{ };
 	const bool initSucceeded =

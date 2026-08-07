@@ -26,6 +26,10 @@
 #include <type_traits>
 
 
+// Forward declarations of Windows structures
+struct HINSTANCE__;
+
+
 namespace gan
 {
 
@@ -48,10 +52,11 @@ namespace internal
 	public:
 		using IntegralType = size_t;  // Integral type for memory address
 
-		constexpr _MemAddrWrapper() = default;
-		constexpr _MemAddrWrapper(const _MemAddrWrapper&) = default;
+		constexpr _MemAddrWrapper() noexcept = default;
+		constexpr _MemAddrWrapper(const _MemAddrWrapper&) noexcept = default;
+		constexpr _MemAddrWrapper(_MemAddrWrapper&&) noexcept = default;
 
-		_MemAddrWrapper(const _MemAddrWrapper<MemType::Mutable>& mut)
+		_MemAddrWrapper(const _MemAddrWrapper<MemType::Mutable>& mut) noexcept
 			requires !IsMutable
 		: _MemAddrWrapper(mut.m_addr)
 		{ }
@@ -89,7 +94,7 @@ namespace internal
 		template <class S>
 		const S& ConstRef() const noexcept
 		{
-			if constexpr (std::is_function_v<S>)  // Keyword "const" for function would be redundant
+			if constexpr (std::is_function_v<S>)  // const for functions would be redundant
 				return *reinterpret_cast<S*>(m_addr);
 			else
 				return *reinterpret_cast<const S*>(m_addr);
@@ -165,7 +170,9 @@ struct Range
 	T max;
 
 	template <class OtherT>
-	constexpr bool InRange(OtherT addr) const { return addr >= min && max > addr; }
+	constexpr bool InRange(OtherT addr) const {
+		return addr >= min && max > addr;
+	}
 };
 
 using MemRange = Range<MemAddr>;
@@ -195,8 +202,9 @@ private:
 
 // Windows API types
 using WinHandle = void*;
-using WinErrorCode = unsigned long;
+using WinModule = HINSTANCE__*;
 using WinDword = unsigned long;
+using WinErrorCode = WinDword;
 
 
 enum class Arch : uint8_t { IA32, Amd64 };

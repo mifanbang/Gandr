@@ -25,9 +25,14 @@ namespace gan
 {
 
 
-void internal::AutoWinHandleImpl::Close(WinHandle handle) noexcept
+void internal::_AutoWinHandleImpl::Close(WinHandle handle) noexcept
 {
 	::CloseHandle(handle);
+}
+
+void internal::_AutoWinModuleImpl::Close(RawHandle handle) noexcept
+{
+	::FreeLibrary(handle);
 }
 
 

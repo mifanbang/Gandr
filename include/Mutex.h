@@ -46,14 +46,14 @@ public:
 	// Require the passed in invocable taking T* instead of T& to avoid unintentional copies
 	template <class F>
 		requires std::invocable<F, T*>
-	auto Do(const F& func) noexcept(noexcept(func(&m_resInst)))
+	decltype(auto) Do(const F& func) noexcept(noexcept(func(&m_resInst)))
 	{
 		std::unique_lock lock(m_mutex);
 		return func(&m_resInst);
 	}
 	template <class F>
 		requires std::invocable<F, const T*>
-	auto DoConst(const F& func) const noexcept(noexcept(func(&m_resInst)))
+	decltype(auto) DoConst(const F& func) const noexcept(noexcept(func(&m_resInst)))
 	{
 		std::shared_lock lock(m_mutex);
 		return func(&m_resInst);

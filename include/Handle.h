@@ -106,13 +106,19 @@ private:
 
 namespace internal
 {
-	struct AutoWinHandleImpl
+	struct _AutoWinHandleImpl
 	{
 		using RawHandle = WinHandle;
 		static void Close(RawHandle handle) noexcept;
 	};
+	struct _AutoWinModuleImpl
+	{
+		using RawHandle = WinModule;
+		static void Close(RawHandle handle) noexcept;
+	};
 }
-using AutoWinHandle = AutoHandle<internal::AutoWinHandleImpl>;
+using AutoWinHandle = AutoHandle<internal::_AutoWinHandleImpl>;
+using AutoWinModule = AutoHandle<internal::_AutoWinModuleImpl>;
 
 
 }  // namespace gan

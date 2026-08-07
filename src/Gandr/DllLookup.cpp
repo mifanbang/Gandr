@@ -18,6 +18,7 @@
 
 #include <DllLookup.h>
 
+#include <Handle.h>
 #include <Mutex.h>
 #include <Types.h>
 
@@ -30,7 +31,6 @@
 
 namespace
 {
-
 
 class LibraryManager : public gan::Singleton<LibraryManager>
 {
@@ -46,7 +46,7 @@ public:
 		{
 			// FreeLibrary on destructor
 			m_libUnloadList.Do( [hModule](auto* libs) {
-				return libs->emplace_back(hModule);
+				libs->emplace_back(hModule);
 			} );
 			return hModule;
 		}
@@ -54,26 +54,14 @@ public:
 	}
 
 private:
-	LibraryManager() = default;
-
-	~LibraryManager()
-	{
-		m_libUnloadList.Do( [](auto* libs) noexcept {
-			for (auto item : *libs)
-				::FreeLibrary(item);
-		} );
-	}
-
-	gan::ThreadSafeResource<std::vector<HMODULE>> m_libUnloadList;
+	gan::ThreadSafeResource<std::vector<gan::AutoWinModule>> m_libUnloadList;
 };
-
 
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 void* DllLookup::LoadLibAndGetSymbol(std::wstring_view lib, std::string_view name)
 {
@@ -84,6 +72,5 @@ void* DllLookup::LoadLibAndGetSymbol(std::wstring_view lib, std::string_view nam
 		return ::GetProcAddress(hModule, name.data());
 	return nullptr;
 }
-
 
 }  // namespace gan
