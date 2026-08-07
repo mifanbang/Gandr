@@ -45,9 +45,9 @@ public:
 		if (auto hModule = ::LoadLibraryW(lib.data()))
 		{
 			// FreeLibrary on destructor
-			m_libUnloadList.ApplyOperation(
-				[hModule](auto& libs) { return libs.emplace_back(hModule); }
-			);
+			m_libUnloadList.Do( [hModule](auto* libs) {
+				return libs->emplace_back(hModule);
+			} );
 			return hModule;
 		}
 		return nullptr;
@@ -58,8 +58,8 @@ private:
 
 	~LibraryManager()
 	{
-		m_libUnloadList.ApplyOperation( [](auto& libs) noexcept {
-			for (auto item : libs)
+		m_libUnloadList.Do( [](auto* libs) noexcept {
+			for (auto item : *libs)
 				::FreeLibrary(item);
 		} );
 	}

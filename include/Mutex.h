@@ -20,6 +20,7 @@
 
 #include <windows.h>
 
+#include <shared_mutex>
 #include <type_traits>
 
 
@@ -27,49 +28,40 @@ namespace gan
 {
 
 
-template <typename T>
+template <class T>
 class ThreadSafeResource
 {
 public:
-	template <typename... Arg>
+	template <class... Arg>
 	ThreadSafeResource(Arg&&... arg) noexcept(noexcept(T(std::forward<Arg>(arg)...)))
 		: m_resInst(std::forward<Arg>(arg)...)
-	{
-		::InitializeCriticalSection(&m_lock);
-	}
-
-	~ThreadSafeResource()
-	{
-		::DeleteCriticalSection(&m_lock);
-	}
+	{ }
+	~ThreadSafeResource() = default;
 
 	ThreadSafeResource(const ThreadSafeResource&) = delete;
 	ThreadSafeResource(ThreadSafeResource&&) = delete;
 	ThreadSafeResource& operator=(const ThreadSafeResource&) = delete;
 	ThreadSafeResource& operator=(ThreadSafeResource&&) = delete;
 
-	template <typename F>
-	auto ApplyOperation(const F& func) noexcept(noexcept(func(m_resInst)))
+	// Require the passed in invocable taking T* instead of T& to avoid unintentional copies
+	template <class F>
+		requires std::invocable<F, T*>
+	auto Do(const F& func) noexcept(noexcept(func(&m_resInst)))
 	{
-		constexpr bool HasReturnValue = std::is_same_v<void, decltype(func(m_resInst))>;
-
-		::EnterCriticalSection(&m_lock);
-		if constexpr (HasReturnValue)
-		{
-			func(m_resInst);
-			::LeaveCriticalSection(&m_lock);
-		}
-		else
-		{
-			auto result = func(m_resInst);
-			::LeaveCriticalSection(&m_lock);
-			return result;
-		}
+		std::unique_lock lock(m_mutex);
+		return func(&m_resInst);
+	}
+	template <class F>
+		requires std::invocable<F, const T*>
+	auto DoConst(const F& func) const noexcept(noexcept(func(&m_resInst)))
+	{
+		std::shared_lock lock(m_mutex);
+		return func(&m_resInst);
 	}
 
 private:
 	T m_resInst;
-	CRITICAL_SECTION m_lock;  // TODO: mutex
+	mutable std::shared_mutex m_mutex;
 };
 
 

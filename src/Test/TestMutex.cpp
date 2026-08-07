@@ -34,20 +34,20 @@ DEFINE_TESTSUITE_START(Mutex)
 
 		// New thread: sleeps 65ms and assigns 4096 to "i"
 		std::thread newThread( [&sharedInt, &newThreadStarted]() {
-			sharedInt.ApplyOperation( [&newThreadStarted](int& i) {
+			sharedInt.Do( [&newThreadStarted](int* i) {
 				newThreadStarted = true;
 				std::this_thread::sleep_for(std::chrono::milliseconds(65));
-				return i = 4096;
+				return *i = 4096;
 			} );
 		} );
 
-		// Spin until the new thread has called ApplyOperation()
+		// Spin until the new thread has called Do()
 		while (!newThreadStarted)
 			;
 
 		// ApplyOperation() below should block until newThread finishes and yields the resource
 		const auto startTime = std::chrono::steady_clock::now();
-		const int snapshot = sharedInt.ApplyOperation( [](const int& i) { return i; } );
+		const int snapshot = sharedInt.DoConst( [](const int* i) { return *i; } );
 		const auto endTime = std::chrono::steady_clock::now();
 		const std::chrono::duration<float> deltaTime = endTime - startTime;
 
