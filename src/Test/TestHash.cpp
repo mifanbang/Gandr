@@ -27,22 +27,23 @@ DEFINE_TESTSUITE_START(Hash)
 
 	DEFINE_TEST_START(SHA256)
 	{
-		constexpr static const char k_text[] =
+		constexpr static char k_text[] =
 			"Du gamla, Du fria, Du fjällhöga nord.\n"
 			"Du tysta, Du glädjerika sköna!\n"
 			"Jag hälsar Dig, vänaste land uppå jord,\n"
 			"Din sol, Din himmel, Dina ängder gröna.";
 
-		constexpr static const uint8_t k_digest[] {
-			0x2b,0x52,0x04,0xcf,0x34,0xe9,0x25,0x8b,0x93,0xc6,0x1a,0x96,0x70,0x01,0xf7,0xc9,
-			0xf9,0x31,0x6c,0x09,0x78,0xe1,0xb0,0xde,0x41,0x3a,0x2c,0x50,0x8a,0xf1,0x69,0x84
-		};
+		constexpr static gan::Hash<256> k_digest{ {
+			0x2b, 0x52, 0x04, 0xcf, 0x34, 0xe9, 0x25, 0x8b, 0x93, 0xc6, 0x1a, 0x96, 0x70, 0x01, 0xf7, 0xc9,
+			0xf9, 0x31, 0x6c, 0x09, 0x78, 0xe1, 0xb0, 0xde, 0x41, 0x3a, 0x2c, 0x50, 0x8a, 0xf1, 0x69, 0x84
+		} };
 
-		gan::Hash<256> hash;
-		memset(hash.data, 0, sizeof(hash.data));
-
-		ASSERT(gan::Hasher::GetSHA(gan::ConstMemAddr{ k_text }, sizeof(k_text) - 1, hash) == NO_ERROR);  // Don't hash null char at the end.
-		ASSERT(memcmp(hash.data, k_digest, sizeof(hash.data)) == 0);
+		const auto hashResult = gan::Hasher::GetSHA(
+			gan::ConstMemAddr{ k_text },
+			sizeof(k_text) - 1  // Don't hash the terminating null char.
+		);
+		ASSERT(hashResult);
+		EXPECT(hashResult.value() == k_digest);
 	}
 	DEFINE_TEST_END
 

@@ -20,26 +20,27 @@
 
 #include <Types.h>
 
+#include <array>
+#include <cstddef>
+#include <expected>
+
 
 namespace gan
 {
 
 
-template <unsigned int NumOfBits>
-struct Hash
+template <size_t NumOfBits>
+	requires ((NumOfBits & 7) == 0)  // Must be a multiple of 8
+struct Hash : public std::array<uint8_t, (NumOfBits >> 3)>
 {
-	static_assert((NumOfBits & 7) == 0, "NumOfBits not a multiple of 8");
-	constexpr static size_t k_numOfBytes = NumOfBits >> 3;
-
-	uint8_t data[k_numOfBytes];
 };
 
 class Hasher
 {
 public:
-	// Generate the SHA256 hash for a given buffer.
-	// Weturns a Windows error code indicating the result of the last internal system call.
-	static WinErrorCode GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out); // TODO: std::expected
+	// Generate the SHA256 hash for a given buffer. On error, return a Windows error
+	// code of the last failed operation.
+	static std::expected<Hash<256>, WinErrorCode> GetSHA(ConstMemAddr dataAddr, size_t size);
 };
 
 

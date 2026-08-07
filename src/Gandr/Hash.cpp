@@ -39,7 +39,6 @@ struct AutoBcryptAlgHandleImpl
 };
 using AutoBcryptAlgHandle = gan::AutoHandle<AutoBcryptAlgHandleImpl>;
 
-
 struct AutoBcryptHashHandleImpl
 {
 	using RawHandle = BCRYPT_HASH_HANDLE;
@@ -55,20 +54,23 @@ namespace gan
 {
 
 
-WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
+std::expected<Hash<256>, WinErrorCode> Hasher::GetSHA(ConstMemAddr dataAddr, size_t size)
 {
+	constexpr uint32_t k_emptyFlag = 0;
+
 	AutoBcryptAlgHandle hProv{ };
 	AutoBcryptHashHandle hHash{ };
 
 	// Initialization of service provider
-	ULONG numByteRead = 0;
-	uint32_t hashObjSize = 1;
+	constexpr wchar_t* k_defaultProvider = nullptr;
+	ULONG numByteRead{ 0 };
+	uint32_t hashObjSize{ };
 	const bool initSucceeded =
 		BCRYPT_SUCCESS(::BCryptOpenAlgorithmProvider(
 			&hProv.GetRef(),
 			BCRYPT_SHA256_ALGORITHM,
-			nullptr,
-			0
+			k_defaultProvider,
+			k_emptyFlag
 		))
 		&& BCRYPT_SUCCESS(::BCryptGetProperty(
 			*hProv,
@@ -76,22 +78,25 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 			reinterpret_cast<uint8_t*>(&hashObjSize),
 			sizeof(hashObjSize),
 			&numByteRead,
-			0
+			k_emptyFlag
 		));
+	if (!initSucceeded)
+		return std::unexpected{ ::GetLastError() };
 
 	// Hash calculation
-	auto hashObj = std::make_unique<uint8_t[]>(hashObjSize);
-	Hash<256> hash { { 0 } };
+	constexpr uint8_t* k_noSecret = nullptr;
+	constexpr uint32_t k_zeroSecretSize = 0;
+	auto hashObject = std::make_unique<uint8_t[]>(hashObjSize);
+	Hash<256> hash{ };
 	const bool hashSucceeded =
-		initSucceeded
-		&& BCRYPT_SUCCESS(::BCryptCreateHash(
+		BCRYPT_SUCCESS(::BCryptCreateHash(
 			*hProv,
 			&hHash.GetRef(),
-			hashObj.get(),
+			hashObject.get(),
 			hashObjSize,
-			nullptr,
-			0,
-			0
+			k_noSecret,
+			k_zeroSecretSize,
+			k_emptyFlag
 		))
 		// Win32 API bug: the 2nd param of BCryptHashData should be const as it's pure input
 		// REF: https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcrypthashdata
@@ -99,19 +104,18 @@ WinErrorCode Hasher::GetSHA(ConstMemAddr dataAddr, size_t size, Hash<256>& out)
 			*hHash,
 			dataAddr.ConstCast().Ptr<uint8_t>(),
 			static_cast<ULONG>(size),
-			0
+			k_emptyFlag
 		))
 		&& BCRYPT_SUCCESS(::BCryptFinishHash(
 			*hHash,
-			reinterpret_cast<uint8_t*>(&hash.data),
+			hash.data(),
 			sizeof(hash),
-			0
+			k_emptyFlag
 		));
 	if (!hashSucceeded)
-		return GetLastError();
+		return std::unexpected{ ::GetLastError() };
 
-	out = hash;
-	return NO_ERROR;
+	return hash;
 }
 
 
