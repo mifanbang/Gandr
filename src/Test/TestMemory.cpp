@@ -47,7 +47,7 @@ DEFINE_TESTSUITE_START(Memory)
 
 			auto memoryRegionList2 = gan::MemoryRegionEnumerator{}(currProcId, { gan::ConstMemAddr{ }, maxAddr });
 			ASSERT(memoryRegionList2);
-			const auto lookForNewPage = [newPage](const auto& region) {
+			const auto lookForNewPage = [k_state, newPage](const auto& region) {
 				return region.allocBase == newPage
 					&& region.allocBase == region.base
 					&& region.state == k_state;

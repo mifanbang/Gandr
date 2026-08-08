@@ -35,9 +35,6 @@ DEFINE_TESTSUITE_START(Breakpoint)
 
 	DEFINE_TEST_SHARED_START
 
-		constexpr static DWORD k_indexIsBpHit = TLS_MINIMUM_AVAILABLE;
-		constexpr static DWORD k_indexIsBpCleared = TLS_MINIMUM_AVAILABLE - 1;
-
 		PVOID m_handle { nullptr };
 
 		static LONG __stdcall MyVectoredExceptionHandler(_EXCEPTION_POINTERS* ExceptionInfo)
@@ -63,7 +60,11 @@ DEFINE_TESTSUITE_START(Breakpoint)
 
 	DEFINE_TEST_START(InstallBP)
 	{
-		ASSERT(gan::HWBreakpoint::Enable(GetCurrentThread(), gan::ConstMemAddr{ GetCurrentProcess }, gan::HWBreakpointSlot::DR3));
+		ASSERT(gan::HWBreakpoint::Enable(
+			GetCurrentThread(),
+			gan::ConstMemAddr{ reinterpret_cast<void*>(GetCurrentProcess) },
+			gan::HWBreakpointSlot::DR3
+		));
 		t_isBpHit = false;
 		GetCurrentProcess();
 		EXPECT(t_isBpHit);
@@ -73,7 +74,11 @@ DEFINE_TESTSUITE_START(Breakpoint)
 
 	DEFINE_TEST_START(UninstallBP)
 	{
-		ASSERT(gan::HWBreakpoint::Enable(GetCurrentThread(), gan::ConstMemAddr{ GetCurrentProcess }, gan::HWBreakpointSlot::DR3));
+		ASSERT(gan::HWBreakpoint::Enable(
+			GetCurrentThread(),
+			gan::ConstMemAddr{ reinterpret_cast<void*>(GetCurrentProcess) },
+			gan::HWBreakpointSlot::DR3
+		));
 		ASSERT(gan::HWBreakpoint::Disable(GetCurrentThread(), gan::HWBreakpointSlot::DR3));
 		t_isBpHit = false;
 		GetCurrentProcess();

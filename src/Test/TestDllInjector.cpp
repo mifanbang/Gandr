@@ -19,6 +19,7 @@
 #include "Test.h"
 
 #include <DllInjector.h>
+#include <Types.h>
 
 #include <intrin.h>
 #include <windows.h>
@@ -49,7 +50,7 @@ DEFINE_TESTSUITE_START(DllInjectorByContext)
 			m_thread = CreateThread(
 				nullptr,
 				k_useDefaultStackSize,
-				reinterpret_cast<LPTHREAD_START_ROUTINE>(Test_DllInjector_NewThreadProc),
+				gan::AnyFnToFn<LPTHREAD_START_ROUTINE>(Test_DllInjector_NewThreadProc),
 				const_cast<uint32_t*>(&m_signal),
 				k_runImmediately,
 				nullptr

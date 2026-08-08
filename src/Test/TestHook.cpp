@@ -20,6 +20,7 @@
 
 #include <Hook.h>
 #include <PE.h>
+#include <Types.h>
 
 #include <string_view>
 
@@ -134,7 +135,7 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 		static FARPROC __stdcall _GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 		{
 			if (strcmp(lpProcName, "GetProcAddress") == 0)
-				return reinterpret_cast<FARPROC>(_GetProcAddress);
+				return gan::AnyFnToFn<FARPROC>(_GetProcAddress);
 			else
 				return gan::Hook::GetTrampoline(GetProcAddress)(hModule, lpProcName);
 		}
@@ -155,7 +156,7 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 		gan::Hook hook { GetProcAddress, _GetProcAddress };
 
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);
-		EXPECT(GetProcAddress(hMod, "GetProcAddress") == reinterpret_cast<FARPROC>(_GetProcAddress));
+		EXPECT(GetProcAddress(hMod, "GetProcAddress") == gan::AnyFnToFn<FARPROC>(_GetProcAddress));
 		ASSERT(hook.Uninstall() == gan::Hook::OpResult::Unhooked);
 	}
 	DEFINE_TEST_END
