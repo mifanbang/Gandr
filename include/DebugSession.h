@@ -76,8 +76,8 @@ public:
 
 	bool IsValid() const noexcept { return m_pid != 0; }
 
-	Identifier GetId() const noexcept			{ return m_pid;	}
-	const WinHandle GetHandle() const noexcept	{ return m_hProc; }
+	Identifier GetId() const noexcept	{ return m_pid;	}
+	WinHandle GetHandle() const noexcept{ return m_hProc; }
 
 	// Event handlers
 	// Handlers should NOT close handles in debug info structures as class Debugger will close them.

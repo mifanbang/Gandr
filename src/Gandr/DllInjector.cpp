@@ -20,6 +20,7 @@
 
 #include <Buffer.h>
 #include <DllLookup.h>
+#include <Handle.h>
 
 #include <cassert>
 #include <functional>
@@ -54,7 +55,7 @@ public:
 		struct StackFrameForLoadLibraryW32
 		{
 			// for LoadLibraryW()
-			LPCVOID pRetAddrVirtualFree;
+			gan::ConstMemAddr pRetAddrVirtualFree;
 			LPCWSTR pDllPath;
 
 			// for VirtualFree()
@@ -77,14 +78,14 @@ public:
 		const gan::MemAddr bufferData{ output->GetData() };
 		bufferData.Ref<StackFrameForLoadLibraryW32>() = {
 			// for LoadLibraryW()
-			funcVirtualFree,
-			remoteDllPath,
+			.pRetAddrVirtualFree{ funcVirtualFree },
+			.pDllPath{ remoteDllPath },
 
 			// for VirtualFree()
-			reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, ip)),
-			remoteDllPath,
-			0,
-			MEM_RELEASE
+			.pRetAddrOrigin{ reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, ip)) },
+			.pMemAddr{ remoteDllPath },
+			.size{ 0 },
+			.freeType{ MEM_RELEASE }
 		};
 
 		SetIPToLoadLibraryW(context);

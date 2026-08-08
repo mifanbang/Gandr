@@ -69,7 +69,7 @@ void* DllLookup::LoadLibAndGetSymbol(std::wstring_view lib, std::string_view nam
 	assert(name.data());
 
 	if (auto hModule = LibraryManager::GetInstance().Get(lib))
-		return ::GetProcAddress(hModule, name.data());
+		return FromAnyFn(::GetProcAddress(hModule, name.data()));
 	return nullptr;
 }
 

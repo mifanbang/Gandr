@@ -480,9 +480,9 @@ public:
 
 PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 {
-	constexpr uint8_t k_lenRelShortJmpToAux = OpcodeGenerator::RelShortJmp8::k_length;
-	constexpr uint8_t k_lenRelNearJmp32 = OpcodeGenerator::RelNearJmp32::k_length;
-	constexpr uint8_t k_lenAbsoluteJmpRax = OpcodeGenerator::AbsLongJmpRax::k_length;
+	constexpr int8_t k_lenRelShortJmpToAux = OpcodeGenerator::RelShortJmp8::k_length;
+	constexpr int8_t k_lenRelNearJmp32 = OpcodeGenerator::RelNearJmp32::k_length;
+	constexpr int8_t k_lenAbsoluteJmpRax = OpcodeGenerator::AbsLongJmpRax::k_length;
 
 	constexpr PrologStrategy k_RelNearJmp32 { PrologStrategy::Type::RelNearJmp32 };
 	constexpr PrologStrategy k_AbsoluteJmp64 { PrologStrategy::Type::AbsoluteJmp64 };
@@ -493,10 +493,12 @@ PrologStrategy DetermineStrategy(gan::MemAddr origFunc, gan::MemAddr hookFunc)
 			origFunc - hookFunc :
 			hookFunc - origFunc;
 
-		if (addrDiff < 0x7FFF'FFFFull - k_lenRelNearJmp32)  // disp is signed
+		if (addrDiff < 0x7FFF'FFFFll - k_lenRelNearJmp32)  // disp is signed
 			return k_RelNearJmp32;  // Addressable with 32-bit displacement
 
-		for (intptr_t i = k_lenRelShortJmpToAux; i < 127 + k_lenRelShortJmpToAux - k_lenAbsoluteJmpRax; ++i)
+		for (intptr_t i = k_lenRelShortJmpToAux;
+			i < (127 + k_lenRelShortJmpToAux - k_lenAbsoluteJmpRax);
+			++i)
 		{
 			auto start = origFunc.Offset(i).ConstPtr<uint8_t>();
 			auto end = origFunc.Offset(i + k_lenAbsoluteJmpRax).ConstPtr<uint8_t>();

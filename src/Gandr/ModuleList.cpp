@@ -46,7 +46,7 @@ gan::ModuleInfo MakeModuleInfo(const MODULEENTRY32W& moduleEntry)
 {
 	return {
 		.base{ gan::ConstMemAddr{ moduleEntry.modBaseAddr } },
-		.size{ moduleEntry.modBaseSize },
+		.size{ static_cast<size_t>(moduleEntry.modBaseSize) },
 		.imageName{ moduleEntry.szModule },
 		.imagePath{ moduleEntry.szExePath }
 	};

@@ -22,6 +22,7 @@
 	#error Macro NOMINMAX is required for the library
 #endif  // windows.h NOMINMAX check
 
+#include <concepts>
 #include <functional>
 #include <type_traits>
 
@@ -34,11 +35,79 @@ namespace gan
 {
 
 
-enum class MemType { Mutable, Immutable };
+// Generalized concept to cover pointers of:
+//     1. Non-member functions
+//     2. Static member functions
+//     3. Non-static member functions
+template <class F>
+concept IsAnyFuncPtr =
+	std::is_member_function_pointer_v<F>
+	|| (std::is_pointer_v<F> && std::is_function_v<std::remove_pointer_t<F>>);
+
+namespace internal
+{
+	// Helper data structure for casting between functions and raw pointers.
+	template <class F>
+	union _MemFnAddr
+	{
+		F func;
+		void* addr;
+	};
+}  // namespace internal
+
+// ---------------------------------------------------------------------------
+// Function ToMemFn & FromMemFn:
+//     Low-level and therefore unsafe castings between a void* raw pointer and
+//     a non-static member function pointer.
+// ---------------------------------------------------------------------------
+
+template <class F>
+	requires std::is_member_function_pointer_v<F>
+constexpr F ToMemFn(void* addr)
+{
+	return internal::_MemFnAddr<F>{ .addr = addr }.func;
+}
+
+template <class F>
+	requires std::is_member_function_pointer_v<F>
+constexpr void* FromMemFn(F func)
+{
+	return internal::_MemFnAddr<F>{ .func = func }.addr;
+}
+
+// ---------------------------------------------------------------------------
+// Function ToAnyFn & FromAnyFn:
+//     Generalized versions of ToMemFn and FromMemFn
+// ---------------------------------------------------------------------------
+
+template <class F>
+	requires IsAnyFuncPtr<F>
+constexpr static F ToAnyFn(void* addr)
+{
+	return internal::_MemFnAddr<F>{ .addr = addr }.func;
+}
+
+template <class F>
+	requires IsAnyFuncPtr<F>
+constexpr static void* FromAnyFn(F func)
+{
+	return internal::_MemFnAddr<F>{ .func = func }.addr;
+}
+
+template <class F_To, class F_From>
+	requires
+		IsAnyFuncPtr<F_To>
+		&& IsAnyFuncPtr<F_From>
+		&& (!std::same_as<F_To, F_From>)
+constexpr static F_To AnyFnToFn(F_From func)
+{
+	return ToAnyFn<F_To>(FromAnyFn(func));
+}
 
 
 namespace internal
 {
+	enum class MemType { Mutable, Immutable };
 
 	// Utility for memory address manipulation
 	template <MemType Mutability>
@@ -57,16 +126,21 @@ namespace internal
 		constexpr _MemAddrWrapper(_MemAddrWrapper&&) noexcept = default;
 
 		_MemAddrWrapper(const _MemAddrWrapper<MemType::Mutable>& mut) noexcept
-			requires !IsMutable
+			requires (!IsMutable)
 		: _MemAddrWrapper(mut.m_addr)
 		{ }
 		explicit _MemAddrWrapper(const void* addr) noexcept
-			requires !IsMutable
+			requires (!IsMutable)
 		: _MemAddrWrapper(reinterpret_cast<IntegralType>(addr))
 		{ }
 		explicit _MemAddrWrapper(void* addr) noexcept
 			requires IsMutable
 		: _MemAddrWrapper(reinterpret_cast<IntegralType>(addr))
+		{ }
+		template <IsAnyFuncPtr F>
+		explicit _MemAddrWrapper(F func) noexcept
+			requires (!IsMutable)
+		: _MemAddrWrapper(FromAnyFn(func))
 		{ }
 
 		constexpr _MemAddrWrapper& operator=(const _MemAddrWrapper&) = default;
@@ -85,7 +159,7 @@ namespace internal
 			return reinterpret_cast<S*>(m_addr);
 		}
 		_MemAddrWrapper<MemType::Mutable> ConstCast() const noexcept  // ConstMemAddr -> MemAddr; use with caution
-			requires !IsMutable
+			requires (!IsMutable)
 		{
 			return _MemAddrWrapper<MemType::Mutable>{ reinterpret_cast<void*>(m_addr) };
 		}
@@ -156,8 +230,8 @@ namespace internal
 	};
 
 }  // namespace internal
-using MemAddr = internal::_MemAddrWrapper<MemType::Mutable>;
-using ConstMemAddr = internal::_MemAddrWrapper<MemType::Immutable>;
+using MemAddr = internal::_MemAddrWrapper<internal::MemType::Mutable>;
+using ConstMemAddr = internal::_MemAddrWrapper<internal::MemType::Immutable>;
 static_assert(sizeof(MemAddr) == sizeof(MemAddr::IntegralType));
 static_assert(sizeof(ConstMemAddr) == sizeof(ConstMemAddr::IntegralType));
 
@@ -213,67 +287,6 @@ consteval bool Is64() noexcept { return sizeof(MemAddr) == 8; }
 consteval Arch BuildArch() noexcept { return Is64() ? Arch::Amd64 : Arch::IA32; }
 
 consteval bool UseStdFormat() noexcept { return false; }  // Whether to enable usage of std::format which can boast executable size
-
-
-// Generalized concept to cover pointers of:
-//     1. Non-member functions
-//     2. Static member functions
-//     3. Non-static member functions
-template <class F>
-concept IsAnyFuncPtr =
-	std::is_member_function_pointer_v<F>
-	|| (std::is_pointer_v<F> && std::is_function_v<std::remove_pointer_t<F>>);
-
-
-namespace internal
-{
-	// Helper data structure for casting between functions and raw pointers.
-	template <class F>
-	union _MemFnAddr
-	{
-		F func;
-		void* addr;
-	};
-}  // namespace internal
-
-// ---------------------------------------------------------------------------
-// Function ToMemFn & FromMemFn:
-//     Low-level and therefore unsafe castings between a void* raw pointer and
-//     a non-static member function pointer.
-// ---------------------------------------------------------------------------
-
-template <class F>
-	requires std::is_member_function_pointer_v<F>
-constexpr F ToMemFn(void* addr)
-{
-	return internal::_MemFnAddr<F>{ .addr = addr }.func;
-}
-
-template <class F>
-	requires std::is_member_function_pointer_v<F>
-constexpr void* FromMemFn(F func)
-{
-	return internal::_MemFnAddr<F>{ .func = func }.addr;
-}
-
-// ---------------------------------------------------------------------------
-// Function ToAnyFn & FromAnyFn:
-//     Generalized versions of ToMemFn and FromMemFn
-// ---------------------------------------------------------------------------
-
-template <class F>
-	requires IsAnyFuncPtr<F>
-constexpr static F ToAnyFn(void* addr)
-{
-	return internal::_MemFnAddr<F>{ .addr = addr }.func;
-}
-
-template <class F>
-	requires IsAnyFuncPtr<F>
-constexpr static void* FromAnyFn(F func)
-{
-	return internal::_MemFnAddr<F>{ .func = func }.addr;
-}
 
 
 template <class Enum, class Storage>
