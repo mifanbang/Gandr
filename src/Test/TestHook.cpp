@@ -142,6 +142,7 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 
 		static DWORD __stdcall _GetCurrentProcessId()
 		{
+#pragma warning(suppress : 6387)  // Suppressing: 'GetModuleHandleA("kernel32")' could be '0'
 			const auto func = GetProcAddress(GetModuleHandleA("kernel32"), "GetCurrentProcessId");
 			return gan::Hook::GetTrampolineUnsafe<decltype(&GetCurrentProcessId)>(gan::ConstMemAddr{ func })();
 		}
@@ -164,6 +165,8 @@ DEFINE_TESTSUITE_START(Hook_Kernel32)
 	// Test for calling gan::Hook::GetTrampolineUnsafe (see the hook function, _GetCurrentProcessId).
 	DEFINE_TEST_START(GetTrampolineUnsafe)
 	{
+		HMODULE hMod = GetModuleHandleA("kernel32");
+		ASSERT(hMod);
 		gan::Hook hook { GetCurrentProcessId, _GetCurrentProcessId };
 
 		ASSERT(hook.Install() == gan::Hook::OpResult::Hooked);

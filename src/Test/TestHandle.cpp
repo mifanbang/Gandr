@@ -65,6 +65,7 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 			ASSERT(handle1);
 
 			gan::AutoWinHandle handle2(std::move(handle1));
+#pragma warning(suppress : 26800)  // Suppressing "Use of a moved from object", as checking its content is the intention
 			EXPECT(!handle1);
 			EXPECT(handle2);
 			EXPECT(handle2 == event);
@@ -90,6 +91,7 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 			ASSERT(handle2);
 
 			handle2 = std::move(handle1);
+#pragma warning(suppress : 26800)  // Suppressing "Use of a moved from object", as checking its content is the intention
 			EXPECT(!handle1);
 			EXPECT(handle2);
 			EXPECT(handle2 == event1);
