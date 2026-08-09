@@ -37,6 +37,17 @@ bool IsHandleValidToSystem(HANDLE handle)
 }
 
 
+HANDLE CreateNamelessEvent()
+{
+	constexpr LPSECURITY_ATTRIBUTES k_noAttr{ nullptr };
+	constexpr BOOL k_autoReset{ FALSE };
+	constexpr BOOL k_initiallyUnset{ FALSE };
+	constexpr wchar_t* k_namelessEvent{ nullptr };
+
+	return CreateEventW(k_noAttr, k_autoReset, k_initiallyUnset, k_namelessEvent);
+}
+
+
 }  // unnamed namespace
 
 
@@ -44,22 +55,20 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 
 	DEFINE_TEST_START(AutoClose)
 	{
-		const auto event = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+		const auto event = CreateNamelessEvent();
 		ASSERT(event != nullptr);
-
 		{
 			gan::AutoWinHandle handle(event);
+			EXPECT(handle);
 		}
-
 		ASSERT(!IsHandleValidToSystem(event));
 	}
 	DEFINE_TEST_END
 
 	DEFINE_TEST_START(MoveConstruct)
 	{
-		const auto event = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+		const auto event = CreateNamelessEvent();
 		ASSERT(event != nullptr);
-
 		{
 			gan::AutoWinHandle handle1(event);
 			ASSERT(handle1);
@@ -71,23 +80,22 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 			EXPECT(handle2 == event);
 			EXPECT(IsHandleValidToSystem(*handle2));
 		}
-
 		EXPECT(!IsHandleValidToSystem(event));
 	}
 	DEFINE_TEST_END
 
 	DEFINE_TEST_START(MoveAssignment)
 	{
-		const auto event1 = CreateEventW(nullptr, FALSE, FALSE, nullptr);
-		const auto event2 = CreateEventW(nullptr, FALSE, FALSE, nullptr);
+		const auto event1 = CreateNamelessEvent();
 		ASSERT(event1 != nullptr);
+		const auto event2 = CreateNamelessEvent();
+		if (event2 == nullptr)
+			CloseHandle(event1);  // Avoid leaking
 		ASSERT(event2 != nullptr);
-
 		{
 			gan::AutoWinHandle handle1(event1);
-			ASSERT(handle1);
-
 			gan::AutoWinHandle handle2(event2);
+			ASSERT(handle1);
 			ASSERT(handle2);
 
 			handle2 = std::move(handle1);
@@ -98,7 +106,6 @@ DEFINE_TESTSUITE_START(AutoWinHandle)
 			EXPECT(IsHandleValidToSystem(*handle2));
 			EXPECT(!IsHandleValidToSystem(event2));  // The original event of handle2 should be closed by now
 		}
-
 		EXPECT(!IsHandleValidToSystem(event1));
 	}
 	DEFINE_TEST_END
