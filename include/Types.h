@@ -24,6 +24,7 @@
 
 #include <concepts>
 #include <functional>
+#include <optional>
 #include <type_traits>
 
 
@@ -33,7 +34,6 @@ struct HINSTANCE__;
 
 namespace gan
 {
-
 
 // Generalized concept to cover pointers of:
 //     1. Non-member functions
@@ -80,25 +80,19 @@ constexpr void* FromMemFn(F func)
 //     Generalized versions of ToMemFn and FromMemFn
 // ---------------------------------------------------------------------------
 
-template <class F>
-	requires IsAnyFuncPtr<F>
+template <IsAnyFuncPtr F>
 constexpr static F ToAnyFn(void* addr)
 {
 	return internal::_MemFnAddr<F>{ .addr = addr }.func;
 }
 
-template <class F>
-	requires IsAnyFuncPtr<F>
+template <IsAnyFuncPtr F>
 constexpr static void* FromAnyFn(F func)
 {
 	return internal::_MemFnAddr<F>{ .func = func }.addr;
 }
 
-template <class F_To, class F_From>
-	requires
-		IsAnyFuncPtr<F_To>
-		&& IsAnyFuncPtr<F_From>
-		&& (!std::same_as<F_To, F_From>)
+template <IsAnyFuncPtr F_To, IsAnyFuncPtr F_From>
 constexpr static F_To AnyFnToFn(F_From func)
 {
 	return ToAnyFn<F_To>(FromAnyFn(func));
@@ -334,6 +328,27 @@ public:
 
 private:
 	Storage m_data;
+};
+
+
+template <class F>
+class Deferred
+{
+public:
+	explicit Deferred(const F& func)
+		: m_func{ func }
+	{ }
+	~Deferred()
+	{
+		if (m_func)
+			(*m_func)();
+	}
+	void Cancel()
+	{
+		m_func.reset();
+	}
+private:
+	std::optional<F> m_func;
 };
 
 

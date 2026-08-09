@@ -40,6 +40,7 @@ public:
 		Succeeded,
 
 		GetContextFailed,
+		RemoteAllocFailed,
 		DLLPathNotWritten,
 		StackFrameNotWritten,
 		SetContextFailed

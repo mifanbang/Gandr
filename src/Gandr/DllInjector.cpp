@@ -154,7 +154,7 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(std::wstring_view dllP
 {
 	assert(dllPath.data());
 
-	constexpr DWORD k_contextFlags{ CONTEXT_INTEGER | CONTEXT_CONTROL };
+	constexpr WinDword k_contextFlags{ CONTEXT_INTEGER | CONTEXT_CONTROL };
 
 	CONTEXT context;
 	ZeroMemory(&context, sizeof(context));
@@ -164,34 +164,45 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(std::wstring_view dllP
 	if (::GetThreadContext(*m_hThread, &context) == FALSE)
 		return Result::GetContextFailed;
 
+	constexpr void* k_anyFreeMem = nullptr;
+
 	// Allocate buffer in the memory space of target process and write DLL path to it
 	const size_t dwBufferSize = sizeof(WCHAR) * (dllPath.size() + 1);
-	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(*m_hProcess, nullptr, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
-	const bool isDllPathWritten = (remoteBuffer && ::WriteProcessMemory(*m_hProcess, remoteBuffer, dllPath.data(), dwBufferSize, nullptr) != 0);
-	if (!isDllPathWritten)
-		return Result::DLLPathNotWritten;
+	auto remoteBuffer = reinterpret_cast<LPWSTR>(::VirtualAllocEx(*m_hProcess, k_anyFreeMem, dwBufferSize, MEM_COMMIT, PAGE_READWRITE));
+	if (!remoteBuffer)
+		return Result::RemoteAllocFailed;
 
-	// Generate a "synthesized" stack frame and modify registers accordingly
-	auto bufferStackFrame = InjectionHelper::GenerateStackFrameAndUpdateContext<BuildArch()>(context, remoteBuffer);
-	assert(bufferStackFrame);
-	if (!bufferStackFrame)
-		return Result::StackFrameNotWritten;
+	Deferred freeRemoteMemOnError{ [this, remoteBuffer]{
+		::VirtualFreeEx(*m_hProcess, remoteBuffer, 0, MEM_RELEASE);
+	} };
+	{
+		const auto isDllPathWritten = (::WriteProcessMemory(*m_hProcess, remoteBuffer, dllPath.data(), dwBufferSize, nullptr) != 0);
+		if (!isDllPathWritten)
+			return Result::DLLPathNotWritten;
 
-	// Write the stack frame target process memory
-	const auto stackFrameWritten = ::WriteProcessMemory(
-		*m_hProcess,
-		reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, sp)),
-		bufferStackFrame->GetData(),
-		bufferStackFrame->GetSize(),
-		nullptr
-	);
-	if (stackFrameWritten == FALSE)
-		return Result::StackFrameNotWritten;
+		// Generate a "synthesized" stack frame and modify registers accordingly
+		auto bufferStackFrame = InjectionHelper::GenerateStackFrameAndUpdateContext<BuildArch()>(context, remoteBuffer);
+		assert(bufferStackFrame);
+		if (!bufferStackFrame)
+			return Result::StackFrameNotWritten;
 
-	// Manipulate IP (and other registers on AMD64) to fake a function call
-	context.ContextFlags = k_contextFlags;
-	if (::SetThreadContext(*m_hThread, &context) == FALSE)
-		return Result::SetContextFailed;
+		// Write the stack frame target process memory
+		const auto stackFrameWritten = ::WriteProcessMemory(
+			*m_hProcess,
+			reinterpret_cast<LPVOID>(GET_CONTEXT_REG(context, sp)),
+			bufferStackFrame->GetData(),
+			bufferStackFrame->GetSize(),
+			nullptr
+		);
+		if (stackFrameWritten == FALSE)
+			return Result::StackFrameNotWritten;
+
+		// Manipulate IP (and other registers on AMD64) to fake a function call
+		context.ContextFlags = k_contextFlags;
+		if (::SetThreadContext(*m_hThread, &context) == FALSE)
+			return Result::SetContextFailed;
+	}
+	freeRemoteMemOnError.Cancel();
 
 	return Result::Succeeded;
 }

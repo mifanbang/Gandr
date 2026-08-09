@@ -45,7 +45,7 @@ public:
 	Buffer(size_t capacity, size_t size, uint8_t* addr, Private) noexcept;
 	~Buffer();
 
-	// Non-copyable & non-movable, since there can be no invalidated buffer
+	// Non-copyable & non-movable, since there can be no invalidated Buffer object
 	Buffer(const Buffer&) = delete;
 	Buffer(Buffer&&) = delete;
 	Buffer& operator=(const Buffer&) = delete;
