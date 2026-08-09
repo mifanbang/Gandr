@@ -79,7 +79,8 @@ DEFINE_TESTSUITE_START(Debugger)
 	}
 	DEFINE_TEST_END
 
-	// This is for testing whether the sample code in README.md builds
+	// This is for testing whether the sample code in README.md builds. It is expected that
+	// Debugger fails to add a DllPreloadDebugSession due to the absence of specified files.
 	DEFINE_TEST_START(ReadMeSample)
 	{
 		gan::DebugSession::CreateProcessParam param{
