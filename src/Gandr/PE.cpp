@@ -26,6 +26,17 @@
 namespace
 {
 
+std::u8string_view MakeU8StrView(auto&& sectionName)
+{
+	const auto length = [](auto&& sectionName) {
+		for (size_t i = 0; i < sizeof(sectionName); ++i)
+			if (sectionName[i] == '\0')
+				return i;
+		return sizeof(sectionName);
+	}(sectionName);
+	return { reinterpret_cast<const char8_t*>(sectionName), length };
+}
+
 // Fill in data in PeHeaders::sectionHeaderList
 void SetUpSectionHeaders(gan::ConstMemAddr baseAddr, gan::PeHeaders& headers)
 {
@@ -113,13 +124,12 @@ std::optional<uint32_t> PeHeaders::FindSectionByName(uint32_t startIndex, std::u
 	if (startIndex < sectionHeaderList.size()
 		&& name.length() <= IMAGE_SIZEOF_SHORT_NAME)
 	{
+		auto searchRange = sectionHeaderList | std::views::drop(startIndex);
 		const auto itr = std::ranges::find_if(
-			sectionHeaderList | std::views::drop(startIndex),
+			searchRange,
 			[name] (const auto& sectionHeader) noexcept {
 				// sectionHeader.Name isn't guaranteed to be null-terminated
-				char8_t sectionNameBuf[IMAGE_SIZEOF_SHORT_NAME + 1]{};
-				memcpy(sectionNameBuf, sectionHeader.Name, IMAGE_SIZEOF_SHORT_NAME);
-				return std::u8string_view{ sectionNameBuf } == name;
+				return MakeU8StrView(sectionHeader.Name) == name;
 			}
 		);
 		if (itr != sectionHeaderList.end())
