@@ -186,7 +186,7 @@ class TrampolineRegistry : public gan::Singleton<TrampolineRegistry>
 	friend class gan::Singleton<TrampolineRegistry>;
 
 public:
-	constexpr static auto k_trampolineSize = Trampoline::k_size;
+	constexpr static auto k_trampolineSize = sizeof(Trampoline::opcode);
 
 	// Try allocating a trampoline within the range of 32-bit offset from "desiredAddress".
 	gan::MemAddr Register(const Trampoline& trampoline, gan::MemRange desiredAddrRange)
@@ -606,7 +606,7 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 		{
 			const uint8_t nextInstLen = nextInstInfo->GetLength();
 
-			if (copiedProlog.prolog.length + nextInstLen <= Prolog::k_maxSize)  // Check remaining space for the instruction
+			if (copiedProlog.prolog.length + nextInstLen <= sizeof(copiedProlog.prolog.opcode))  // Check remaining space for the instruction
 			{
 				memcpy(
 					copiedProlog.prolog.opcode + copiedProlog.prolog.length,
@@ -711,7 +711,7 @@ Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog) n
 	static_assert(Trampoline::k_size >= Prolog::k_maxSize + OpcodeGenerator::AbsLongJmp64::k_length);
 
 	Trampoline result;
-	memcpy(result.opcode, prolog.opcode, prolog.length);
+	memcpy_s(result.opcode, sizeof(result.opcode), prolog.opcode, prolog.length);
 
 	if constexpr (gan::Is64())
 	{
