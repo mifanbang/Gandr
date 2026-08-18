@@ -38,7 +38,6 @@
 namespace
 {
 
-
 // workaround for compile error when we'd like to put Is64() in a static_assert
 template <size_t>
 constexpr bool k_64bitStaticAssert = gan::Is64();
@@ -95,7 +94,6 @@ struct Trampoline
 
 	uint8_t opcode[k_size] { };
 };
-
 
 
 // ---------------------------------------------------------------------------
@@ -540,15 +538,17 @@ Prolog GenerateHookProlog(gan::MemAddr origFunc, gan::MemAddr hookFunc, PrologSt
 
 bool WriteMemory(gan::MemAddr address, const std::span<const uint8_t>& data) noexcept
 {
-	auto rawPtr = address.Ptr<uint8_t>();
-
 	DWORD oldAttr{ };
-	DWORD dontCare{ };
-	::VirtualProtect(rawPtr, data.size(), PAGE_EXECUTE_READWRITE, &oldAttr);
-	memcpy(rawPtr, data.data(), data.size());
-	::VirtualProtect(rawPtr, data.size(), oldAttr, &dontCare);
+	if (auto rawPtr = address.Ptr<uint8_t>();
+		::VirtualProtect(rawPtr, data.size(), PAGE_EXECUTE_READWRITE, &oldAttr))
+	{
+		memcpy(rawPtr, data.data(), data.size());
 
-	return true;
+		DWORD dontCare{ };
+		::VirtualProtect(rawPtr, data.size(), oldAttr, &dontCare);
+		return true;
+	}
+	return false;
 }
 
 
@@ -793,7 +793,9 @@ Hook::OpResult Hook::Install()
 			return OpResult::Hooked;
 		}
 		else
+		{
 			hookReg.Unregister(m_funcOrig);
+		}
 	}
 
 	trampolineReg.Unregister(trampolineAddr);
