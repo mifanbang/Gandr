@@ -29,7 +29,6 @@
 namespace
 {
 
-
 enum class ConsoleColor : uint8_t
 {
 	Black = 30,
@@ -45,11 +44,10 @@ enum class ConsoleColor : uint8_t
 	White = BrightGray + 60,
 };
 
-
 class ConsoleColorScope
 {
 public:
-	ConsoleColorScope(ConsoleColor color)
+	explicit ConsoleColorScope(ConsoleColor color)
 	{
 		printf("\033[%dm", static_cast<int>(color));
 	}
@@ -59,7 +57,6 @@ public:
 		printf("\033[0m");
 	}
 };
-
 
 class ConsoleColorHelper
 {
@@ -71,7 +68,6 @@ public:
 	}
 };
 
-
 void EnableTerminalColoring(HANDLE console)
 {
 	DWORD consoleMode;
@@ -79,9 +75,7 @@ void EnableTerminalColoring(HANDLE console)
 		SetConsoleMode(console, consoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 }
 
-
 }  // unnamed namespace
-
 
 
 TestSuite::Result TestSuite::RunAll()
@@ -158,12 +152,10 @@ TestSuite::Result TestSuite::RunAll()
 	return result;
 }
 
-
 void TestManager::Add(TestSuite* test)
 {
 	GetInstance().m_tests.emplace_back(test);
 }
-
 
 bool TestManager::RunAll()
 {

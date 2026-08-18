@@ -26,7 +26,6 @@
 namespace
 {
 
-
 // excluding the higher half 0x40
 struct PrefixREX
 {
@@ -69,7 +68,7 @@ struct Opcode
 		, bytes{ opcode_1, opcode_2 }
 	{ }
 
-	constexpr bool operator == (Opcode other) const
+	constexpr bool operator==(Opcode other) const
 	{
 		return length == other.length && op16i == other.op16i;
 	}
@@ -87,7 +86,7 @@ struct OpcodeLookAhead
 	ModRegRM modRegRM;
 	SIB sib;
 
-	OpcodeLookAhead(gan::ConstMemAddr addr)
+	explicit OpcodeLookAhead(gan::ConstMemAddr addr)
 		: opcode(addr.ConstRef<uint8_t>())
 		, modRegRM()
 		, sib()
@@ -176,7 +175,6 @@ struct OpcodeDefinition
 		, flags(reg == RegField::Unused ? flags : MakeFlags(flags, MiscFlags::OpInModRegRM))
 	{ }
 };
-
 
 
 constexpr OpcodeDefinition k_opDefTable[] {
@@ -518,13 +516,11 @@ std::optional<gan::InstructionLengthDetails> GenerateLengthInfo(gan::Arch arch, 
 	return result;
 }
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 InstructionDecoder::InstructionDecoder(Arch arch, ConstMemAddr address) noexcept
 	: m_instPtr(address)
@@ -532,7 +528,6 @@ InstructionDecoder::InstructionDecoder(Arch arch, ConstMemAddr address) noexcept
 {
 	assert(arch == Arch::IA32 || arch == Arch::Amd64);
 }
-
 
 std::optional<InstructionLengthDetails> InstructionDecoder::GetNextLength()
 {
@@ -547,6 +542,5 @@ std::optional<InstructionLengthDetails> InstructionDecoder::GetNextLength()
 	}
 	return std::nullopt;
 }
-
 
 }  // namespace gan
