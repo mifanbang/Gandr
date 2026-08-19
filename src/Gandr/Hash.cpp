@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Hash.h>
+#include <Gandr/Hash.h>
 
-#include <Handle.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 #include <bcrypt.h>  // Win32 API bug: must be included after windows.h
@@ -30,7 +30,6 @@
 
 namespace
 {
-
 
 struct AutoBcryptAlgHandleImpl
 {
@@ -46,13 +45,11 @@ struct AutoBcryptHashHandleImpl
 };
 using AutoBcryptHashHandle = gan::AutoHandle<AutoBcryptHashHandleImpl>;
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 std::expected<Hash<256>, WinErrorCode> Hasher::GetSHA(ConstMemAddr dataAddr, size_t size)
 {
@@ -117,7 +114,6 @@ std::expected<Hash<256>, WinErrorCode> Hasher::GetSHA(ConstMemAddr dataAddr, siz
 
 	return hash;
 }
-
 
 }  // namespace gan
 

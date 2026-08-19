@@ -27,7 +27,6 @@
 namespace gan
 {
 
-
 template <class T>
 class ThreadSafeResource
 {
@@ -63,6 +62,5 @@ private:
 	T m_resInst;
 	mutable std::shared_mutex m_mutex;
 };
-
 
 }  // namespace gan

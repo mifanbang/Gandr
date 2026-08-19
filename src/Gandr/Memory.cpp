@@ -16,16 +16,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Memory.h>
+#include <Gandr/Memory.h>
 
-#include <Handle.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 
 
 namespace gan
 {
-
 
 std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnumerator::operator()(uint32_t pid, ConstMemRange addrRange)
 {
@@ -75,7 +74,6 @@ std::expected<MemoryRegionList, MemoryRegionEnumerator::Error> MemoryRegionEnume
 	return regions;
 }
 
-
 static_assert(MemoryStateFlags{ MemoryState::Commit } == MEM_COMMIT);
 static_assert(MemoryStateFlags{ MemoryState::Free } == MEM_FREE);
 static_assert(MemoryStateFlags{ MemoryState::Reserve } == MEM_RESERVE);
@@ -96,6 +94,5 @@ static_assert(MemoryProtectFlags{ MemoryProtect::WriteCombine } == PAGE_WRITECOM
 static_assert(MemoryTypeFlags{ MemoryType::Image } == MEM_IMAGE);
 static_assert(MemoryTypeFlags{ MemoryType::Mapped } == MEM_MAPPED);
 static_assert(MemoryTypeFlags{ MemoryType::Private } == MEM_PRIVATE);
-
 
 }  // namespace gan

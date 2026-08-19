@@ -16,10 +16,10 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Hook.h>
+#include <Gandr/Hook.h>
 
-#include <InstructionDecoder.h>
-#include <Types.h>
+#include <Gandr/InstructionDecoder.h>
+#include <Gandr/Types.h>
 
 #include <algorithm>
 #include <cassert>
@@ -868,6 +868,5 @@ ConstMemAddr Hook::GetTrampolineAddr(ConstMemAddr origFunc)
 	assert(addr);
 	return addr;
 }
-
 
 }  // namespace gan

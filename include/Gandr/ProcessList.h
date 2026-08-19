@@ -27,7 +27,6 @@
 namespace gan
 {
 
-
 struct ProcessInfo
 {
 	uint32_t pid;
@@ -37,7 +36,6 @@ struct ProcessInfo
 	std::wstring imageName;  // incl. file extension
 };
 using ProcessList = std::vector<ProcessInfo>;
-
 
 struct ThreadInfo
 {
@@ -81,6 +79,5 @@ public:
 	std::expected<ThreadList, Error> operator()();
 	std::expected<ThreadList, Error> operator()(uint32_t pid);
 };
-
 
 }  // namespace gan

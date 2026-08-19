@@ -18,35 +18,45 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Handle.h>
 
+#include <string>
 #include <string_view>
 
 
 namespace gan
 {
 
-
 // ---------------------------------------------------------------------------
-// Class DllLookup - Resolve a symbol with the specified dynamic lib.
-//					 Loead the library when needed.
+// Class DLLInjectorByContext - DLL injection by setting context of a thread
 // ---------------------------------------------------------------------------
 
-class DllLookup
+class DllInjectorByContext
 {
 public:
-	template <class T>
-	static auto Get(std::wstring_view lib, std::string_view name)
+	enum class Result : uint8_t
 	{
-		if constexpr (IsAnyFuncPtr<T>)
-			return ToAnyFn<T>(LoadLibAndGetSymbol(lib, name));
-		else
-			return reinterpret_cast<T>(LoadLibAndGetSymbol(lib, name));
-	}
+		Succeeded,
+
+		GetContextFailed,
+		RemoteAllocFailed,
+		DLLPathNotWritten,
+		StackFrameNotWritten,
+		SetContextFailed
+	};
+
+	DllInjectorByContext(WinHandle hProcess, WinHandle hThread);
+
+	// m_hProcess and m_hThread will be closed in destructor
+	DllInjectorByContext(const DllInjectorByContext&) = delete;
+	DllInjectorByContext& operator=(const DllInjectorByContext&) = delete;
+
+	Result Inject(std::wstring_view dllPath);
 
 private:
-	static void* LoadLibAndGetSymbol(std::wstring_view lib, std::string_view name);
+	AutoWinHandle m_hProcess;
+	AutoWinHandle m_hThread;
+	std::wstring m_dllPath;
 };
-
 
 }  // namespace gan

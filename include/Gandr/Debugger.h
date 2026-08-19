@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <DebugSession.h>
+#include <Gandr/DebugSession.h>
 
 #include <memory>
 #include <unordered_map>
@@ -26,7 +26,6 @@
 
 namespace gan
 {
-
 
 // ---------------------------------------------------------------------------
 // Class Debugger - Managing DebugSession objects and rounting events to them
@@ -78,6 +77,5 @@ private:
 
 	bool m_flagEventLoopExit;  // flag for main loop
 };
-
 
 }  // namespace gan

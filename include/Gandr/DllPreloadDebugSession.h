@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Handle.h>
+#include <Gandr/DebugSession.h>
 
 #include <string>
 #include <string_view>
@@ -27,39 +27,30 @@
 namespace gan
 {
 
-
 // ---------------------------------------------------------------------------
-// Class DLLInjectorByContext - DLL injection by setting context of a thread
+// class DllPreloadDebugSession - A DebugSession implementation that preloads a DLL at entry point
 // ---------------------------------------------------------------------------
 
-class DllInjectorByContext
+class DllPreloadDebugSession : public DebugSession
 {
 public:
-	enum class Result : uint8_t
+	enum class Option : uint8_t
 	{
-		Succeeded,
-
-		GetContextFailed,
-		RemoteAllocFailed,
-		DLLPathNotWritten,
-		StackFrameNotWritten,
-		SetContextFailed
+		EndSessionSync,  // Automatically ends the session when OnDllLoaded() detects loaded module
+		EndSessionAsync,  // Automatically ends the session when target process starts calling LoadLibraryW()
+		KeepAlive  // Keep the session alive
 	};
 
-	DllInjectorByContext(WinHandle hProcess, WinHandle hThread);
-
-	// m_hProcess and m_hThread will be closed in destructor
-	DllInjectorByContext(const DllInjectorByContext&) = delete;
-	DllInjectorByContext& operator=(const DllInjectorByContext&) = delete;
-
-	Result Inject(std::wstring_view dllPath);
+	DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option);
 
 private:
-	AutoWinHandle m_hProcess;
-	AutoWinHandle m_hThread;
-	std::wstring m_dllPath;
+	ContinueStatus OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) noexcept override;
+	ContinueStatus OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo) override;
+	ContinueStatus OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) noexcept override;
+
+	WinHandle m_hMainThread;
+	std::wstring m_payloadPath;
+	Option m_option;
 };
-
-
 
 }  // namespace gan

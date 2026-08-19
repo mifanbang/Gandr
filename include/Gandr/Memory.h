@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <Handle.h>
-#include <Types.h>
+#include <Gandr/Handle.h>
+#include <Gandr/Types.h>
 
 #include <expected>
 #include <vector>
@@ -27,7 +27,6 @@
 
 namespace gan
 {
-
 
 enum class MemoryState
 {
@@ -79,7 +78,6 @@ struct MemoryRegion
 };
 using MemoryRegionList = std::vector<MemoryRegion>;
 
-
 class MemoryRegionEnumerator
 {
 public:
@@ -96,6 +94,5 @@ public:
 	std::expected<MemoryRegionList, Error> operator()(uint32_t pid, ConstMemRange addrRange = k_maxRange);
 	std::expected<MemoryRegionList, Error> operator()(WinHandle process, ConstMemRange addrRange = k_maxRange);
 };
-
 
 }  // namespace gan

@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Debugger.h>
+#include <Gandr/Debugger.h>
 
 #include <windows.h>
 
@@ -25,7 +25,6 @@
 
 namespace
 {
-
 
 gan::DebugSession::ContinueStatus CallDebugEventHandler(gan::DebugSession& session, const DEBUG_EVENT& event)
 {
@@ -78,13 +77,11 @@ gan::DebugSession::ContinueStatus CallDebugEventHandler(gan::DebugSession& sessi
 	}
 }
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 // ---------------------------------------------------------------------------
 // class Debugger
@@ -174,6 +171,5 @@ void Debugger::GetSessionList(IdList& output) const
 	for (auto& itr : m_sessions)
 		output.push_back(itr.first);
 }
-
 
 }  // namespace gan

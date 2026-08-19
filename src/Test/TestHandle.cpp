@@ -18,14 +18,13 @@
 
 #include "Test.h"
 
-#include <Handle.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 
 
 namespace
 {
-
 
 bool IsHandleValidToSystem(HANDLE handle)
 {
@@ -36,7 +35,6 @@ bool IsHandleValidToSystem(HANDLE handle)
 	return GetHandleInformation(handle, &dummy) != FALSE;  // Returning FALSE means the handle is invalid.
 }
 
-
 HANDLE CreateNamelessEvent()
 {
 	constexpr LPSECURITY_ATTRIBUTES k_noAttr{ nullptr };
@@ -46,7 +44,6 @@ HANDLE CreateNamelessEvent()
 
 	return CreateEventW(k_noAttr, k_autoReset, k_initiallyUnset, k_namelessEvent);
 }
-
 
 }  // unnamed namespace
 

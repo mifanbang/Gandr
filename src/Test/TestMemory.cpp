@@ -18,8 +18,8 @@
 
 #include "Test.h"
 
-#include <Memory.h>
-#include <Types.h>
+#include <Gandr/Memory.h>
+#include <Gandr/Types.h>
 
 #include <algorithm>
 

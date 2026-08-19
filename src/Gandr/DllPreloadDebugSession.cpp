@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <DllPreloadDebugSession.h>
+#include <Gandr/DllPreloadDebugSession.h>
 
-#include <Breakpoint.h>
-#include <DllInjector.h>
-#include <Handle.h>
+#include <Gandr/Breakpoint.h>
+#include <Gandr/DllInjector.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 #include <shlwapi.h>
@@ -31,7 +31,6 @@
 namespace gan
 {
 
-
 DllPreloadDebugSession::DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option)
 	: DebugSession(newProcParam)
 	, m_hMainThread(INVALID_HANDLE_VALUE)
@@ -39,7 +38,6 @@ DllPreloadDebugSession::DllPreloadDebugSession(const CreateProcessParam& newProc
 	, m_option(option)
 {
 }
-
 
 DebugSession::ContinueStatus DllPreloadDebugSession::OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) noexcept
 {
@@ -50,7 +48,6 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnProcessCreated(const CREA
 
 	return ContinueStatus::ContinueThread;
 }
-
 
 DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo)
 {
@@ -84,7 +81,6 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnExceptionTriggered(const 
 	return ContinueStatus::ContinueThread;
 }
 
-
 DebugSession::ContinueStatus DllPreloadDebugSession::OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) noexcept
 {
 	if (m_option == Option::EndSessionSync)
@@ -100,6 +96,5 @@ DebugSession::ContinueStatus DllPreloadDebugSession::OnDllLoaded(const LOAD_DLL_
 
 	return ContinueStatus::ContinueThread;
 }
-
 
 }  // namespace gan

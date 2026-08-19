@@ -24,7 +24,6 @@
 namespace gan
 {
 
-
 class Buffer
 {
 private:
@@ -65,6 +64,5 @@ private:
 	size_t m_size;  // Size in use
 	uint8_t* m_data;
 };
-
 
 }  // namespace gan

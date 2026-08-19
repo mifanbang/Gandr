@@ -16,10 +16,10 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <DebugSession.h>
+#include <Gandr/DebugSession.h>
 
-#include <Buffer.h>
-#include <Types.h>
+#include <Gandr/Buffer.h>
+#include <Gandr/Types.h>
 
 #include <cstdio>
 #include <format>
@@ -29,7 +29,6 @@
 
 namespace gan
 {
-
 
 // ---------------------------------------------------------------------------
 // class DebugSession
@@ -102,12 +101,10 @@ DebugSession::DebugSession(const CreateProcessParam& newProcParam)
 	}
 }
 
-
 DebugSession::~DebugSession()
 {
 	End(EndOption::Kill);
 }
-
 
 void DebugSession::End(EndOption option) noexcept
 {
@@ -122,7 +119,6 @@ void DebugSession::End(EndOption option) noexcept
 		::CloseHandle(m_hProc);
 	}
 }
-
 
 void DebugSession::OnPreEvent(PreEvent)
 {
@@ -163,6 +159,5 @@ DebugSession::ContinueStatus DebugSession::OnRipEvent(const RIP_INFO&)
 {
 	return ContinueStatus::ContinueThread;
 }
-
 
 }  // namespace gan

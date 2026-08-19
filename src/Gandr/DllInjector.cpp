@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <DllInjector.h>
+#include <Gandr/DllInjector.h>
 
-#include <Buffer.h>
-#include <DllLookup.h>
-#include <Handle.h>
+#include <Gandr/Buffer.h>
+#include <Gandr/DllLookup.h>
+#include <Gandr/Handle.h>
 
 #include <cassert>
 #include <functional>
@@ -38,7 +38,8 @@
 
 namespace
 {
-	using namespace std::literals;
+
+using namespace std::literals;
 
 
 class InjectionHelper
@@ -131,13 +132,11 @@ private:
 	}
 };
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 DllInjectorByContext::DllInjectorByContext(WinHandle hProcess, WinHandle hThread)
 	: m_hProcess(HandleHelper::Duplicate(hProcess))
@@ -148,7 +147,6 @@ DllInjectorByContext::DllInjectorByContext(WinHandle hProcess, WinHandle hThread
 	assert(m_hProcess);
 	assert(m_hThread);
 }
-
 
 DllInjectorByContext::Result DllInjectorByContext::Inject(std::wstring_view dllPath)
 {
@@ -206,6 +204,5 @@ DllInjectorByContext::Result DllInjectorByContext::Inject(std::wstring_view dllP
 
 	return Result::Succeeded;
 }
-
 
 }  // namespace gan

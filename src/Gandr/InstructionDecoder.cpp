@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <InstructionDecoder.h>
+#include <Gandr/InstructionDecoder.h>
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 #include <cassert>
 

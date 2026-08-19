@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Buffer.h>
+#include <Gandr/Buffer.h>
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 #include <intrin.h>
 #include <windows.h>
@@ -28,7 +28,6 @@
 
 namespace
 {
-
 
 size_t DetermineCapacity(size_t requestedSize) noexcept
 {
@@ -48,13 +47,11 @@ size_t DetermineCapacity(size_t requestedSize) noexcept
 #endif  // _WIN64
 }
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 std::unique_ptr<Buffer> Buffer::Allocate(size_t size)
 {
@@ -108,6 +105,5 @@ bool Buffer::Resize(size_t newSize) noexcept
 	}
 	return false;
 }
-
 
 }  // namespace gan

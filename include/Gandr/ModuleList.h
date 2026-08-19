@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 #include <expected>
 #include <string>
@@ -27,7 +27,6 @@
 
 namespace gan
 {
-
 
 struct ModuleInfo
 {
@@ -55,6 +54,5 @@ public:
 	std::expected<ModuleList, Error> operator()(uint32_t processId);
 	std::expected<ModuleList, Error> operator()(WinHandle process);
 };
-
 
 }  // namespace gan

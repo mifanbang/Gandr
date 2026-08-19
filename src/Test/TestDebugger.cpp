@@ -18,10 +18,10 @@
 
 #include "Test.h"
 
-#include <Debugger.h>
-#include <DllPreloadDebugSession.h>
-#include <Handle.h>
-#include <ModuleList.h>
+#include <Gandr/Debugger.h>
+#include <Gandr/DllPreloadDebugSession.h>
+#include <Gandr/Handle.h>
+#include <Gandr/ModuleList.h>
 
 #include <algorithm>
 #include <string>

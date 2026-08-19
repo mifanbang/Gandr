@@ -16,14 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Breakpoint.h>
+#include <Gandr/Breakpoint.h>
 
 #include <windows.h>
 
 
 namespace
 {
-
 
 enum class Dr7UpdateOp : uint8_t
 {
@@ -63,13 +62,11 @@ bool UpdateDebugRegisters(gan::WinHandle hThread, gan::ConstMemAddr address, gan
 	return ::SetThreadContext(hThread, &ctx) != 0;
 }
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 bool HWBreakpoint::Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot) noexcept
 {
@@ -80,6 +77,5 @@ bool HWBreakpoint::Disable(WinHandle thread, HWBreakpointSlot slot) noexcept
 {
 	return UpdateDebugRegisters(thread, ConstMemAddr{ }, slot, Dr7UpdateOp::Disable);
 }
-
 
 }  // namespace gan

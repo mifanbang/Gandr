@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <ModuleList.h>
+#include <Gandr/ModuleList.h>
 
-#include <Handle.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 #include <tlhelp32.h>  // must be included after windows.h, which sucks
@@ -26,7 +26,6 @@
 
 namespace
 {
-
 
 gan::AutoWinHandle GetModuleListSnapshop(uint32_t processId) noexcept
 {
@@ -52,13 +51,11 @@ gan::ModuleInfo MakeModuleInfo(const MODULEENTRY32W& moduleEntry)
 	};
 }
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::operator()(uint32_t processId)
 {
@@ -87,6 +84,5 @@ std::expected<ModuleList, ModuleEnumerator::Error> ModuleEnumerator::operator()(
 {
 	return (*this)(::GetProcessId(process));
 }
-
 
 }  // namespace gan

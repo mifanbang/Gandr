@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 
 namespace gan
 {
-
 
 enum class HWBreakpointSlot : uint8_t
 {
@@ -41,6 +40,5 @@ public:
 	static bool Enable(WinHandle thread, ConstMemAddr addr, HWBreakpointSlot slot) noexcept;
 	static bool Disable(WinHandle thread, HWBreakpointSlot slot) noexcept;
 };
-
 
 }  // namespace gan

@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 
 namespace gan
 {
-
 
 class HandleHelper
 {
@@ -119,6 +118,5 @@ namespace internal
 }
 using AutoWinHandle = AutoHandle<internal::_AutoWinHandleImpl>;
 using AutoWinModule = AutoHandle<internal::_AutoWinModuleImpl>;
-
 
 }  // namespace gan

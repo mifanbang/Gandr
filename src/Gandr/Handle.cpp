@@ -16,14 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Handle.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 
 
 namespace gan
 {
-
 
 void internal::_AutoWinHandleImpl::Close(WinHandle handle) noexcept
 {
@@ -34,7 +33,6 @@ void internal::_AutoWinModuleImpl::Close(RawHandle handle) noexcept
 {
 	::FreeLibrary(handle);
 }
-
 
 template <>
 WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle) noexcept
@@ -56,6 +54,5 @@ WinHandle HandleHelper::Duplicate<WinHandle>(WinHandle handle) noexcept
 
 	return dupResult ? newHandle : nullptr;
 }
-
 
 }  // namespace gan

@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <ProcessList.h>
+#include <Gandr/ProcessList.h>
 
-#include <Handle.h>
+#include <Gandr/Handle.h>
 
 #include <windows.h>
 #include <tlhelp32.h>  // must be included after windows.h, which sucks
@@ -26,7 +26,6 @@
 
 namespace
 {
-
 
 constexpr gan::ProcessInfo MakeProcessInfo(const PROCESSENTRY32W& procEntry)
 {
@@ -48,13 +47,11 @@ constexpr gan::ThreadInfo MakeThreadInfo(const THREADENTRY32& threadEntry)
 	};
 }
 
-
 }  // unnamed namespace
 
 
 namespace gan
 {
-
 
 std::expected<ProcessList, ProcessEnumerator::Error> ProcessEnumerator::operator()()
 {
@@ -112,6 +109,5 @@ std::expected<ThreadList, ThreadEnumerator::Error> ThreadEnumerator::operator()(
 
 	return threadList;
 }
-
 
 }  // namespace gan

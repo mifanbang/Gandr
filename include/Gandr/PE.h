@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 #include <windows.h>
 
@@ -31,10 +31,8 @@
 namespace gan
 {
 
-
 using Rva = uint32_t;
 using Ordinal = uint16_t;
-
 
 // Gandr's analog which combines IMAGE_NT_HEADERS32 and IMAGE_NT_HEADERS64
 struct ImageNtHeaders
@@ -98,6 +96,5 @@ class PeImageHelper
 public:
 	static std::optional<PeHeaders> GetLoadedHeaders(ConstMemAddr addr);
 };
-
 
 }  // namespace gan

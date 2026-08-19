@@ -16,42 +16,30 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "Test.h"
+#pragma once
 
-#include <Gandr/ModuleList.h>
+#include <Gandr/Types.h>
 
-#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <expected>
 
-#include <shlwapi.h>
-#include <windows.h>
 
-
-namespace
+namespace gan
 {
 
-bool SearchModInList(const gan::ModuleList& modList, const wchar_t* modName)
+template <size_t NumOfBits>
+	requires ((NumOfBits & 7) == 0)  // Must be a multiple of 8
+struct Hash : public std::array<uint8_t, (NumOfBits >> 3)>
 {
-	const auto funcMatchMod = [modName](const gan::ModuleInfo& modInfo) {
-		return StrStrIW(modInfo.imageName.c_str(), modName) != nullptr;
-	};
-	return std::ranges::find_if(modList, funcMatchMod) != modList.end();
-}
+};
 
-}  // unnamed namespace
+class Hasher
+{
+public:
+	// Generate the SHA256 hash for a given buffer. On error, return a Windows error
+	// code of the last failed operation.
+	static std::expected<Hash<256>, WinErrorCode> GetSHA(ConstMemAddr dataAddr, size_t size);
+};
 
-
-DEFINE_TESTSUITE_START(ModuleList)
-
-	DEFINE_TEST_START(CheckModulesOfCurrentProcess)
-	{
-		auto moduleList = gan::ModuleEnumerator{}(GetCurrentProcessId());
-		ASSERT(moduleList);
-
-		EXPECT(SearchModInList(moduleList.value(), L"Test.exe"));
-		EXPECT(SearchModInList(moduleList.value(), L"kernel32.dll"));
-	}
-	DEFINE_TEST_END
-
-
-
-DEFINE_TESTSUITE_END
+}  // namespace gan

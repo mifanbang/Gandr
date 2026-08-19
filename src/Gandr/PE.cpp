@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <PE.h>
+#include <Gandr/PE.h>
 
 #include <cassert>
 #include <ranges>

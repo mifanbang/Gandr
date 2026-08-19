@@ -18,30 +18,33 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
-#include <array>
-#include <cstddef>
-#include <expected>
+#include <string_view>
 
 
 namespace gan
 {
 
+// ---------------------------------------------------------------------------
+// Class DllLookup - Resolve a symbol with the specified dynamic lib.
+//					 Loead the library when needed.
+// ---------------------------------------------------------------------------
 
-template <size_t NumOfBits>
-	requires ((NumOfBits & 7) == 0)  // Must be a multiple of 8
-struct Hash : public std::array<uint8_t, (NumOfBits >> 3)>
-{
-};
-
-class Hasher
+class DllLookup
 {
 public:
-	// Generate the SHA256 hash for a given buffer. On error, return a Windows error
-	// code of the last failed operation.
-	static std::expected<Hash<256>, WinErrorCode> GetSHA(ConstMemAddr dataAddr, size_t size);
-};
+	template <class T>
+	static auto Get(std::wstring_view lib, std::string_view name)
+	{
+		if constexpr (IsAnyFuncPtr<T>)
+			return ToAnyFn<T>(LoadLibAndGetSymbol(lib, name));
+		else
+			return reinterpret_cast<T>(LoadLibAndGetSymbol(lib, name));
+	}
 
+private:
+	static void* LoadLibAndGetSymbol(std::wstring_view lib, std::string_view name);
+};
 
 }  // namespace gan

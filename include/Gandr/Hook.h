@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 
 namespace gan
 {
-
 
 // ---------------------------------------------------------------------------
 // Class Hook: Just a hook.
@@ -95,6 +94,5 @@ private:
 	MemAddr m_funcHook;  // address to the user-defined hook function.
 	bool m_hooked;
 };
-
 
 }  // namespace gan

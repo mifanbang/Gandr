@@ -18,9 +18,9 @@
 
 #include "Test.h"
 
-#include <Hook.h>
-#include <PE.h>
-#include <Types.h>
+#include <Gandr/Hook.h>
+#include <Gandr/PE.h>
+#include <Gandr/Types.h>
 
 #include <string_view>
 

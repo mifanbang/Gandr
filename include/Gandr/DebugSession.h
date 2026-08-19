@@ -18,14 +18,13 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 #include <windows.h>
 
 
 namespace gan
 {
-
 
 // ---------------------------------------------------------------------------
 // Class DebugSession - A session of another process being debugged by the
@@ -96,6 +95,5 @@ private:
 	Identifier m_pid;
 	WinHandle m_hProc;
 };
-
 
 }  // namespace gan

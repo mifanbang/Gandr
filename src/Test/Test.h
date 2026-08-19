@@ -18,13 +18,12 @@
 
 #pragma once
 
+#include <Gandr/Types.h>
+
 #include <cstdio>
 #include <functional>
 #include <memory>
 #include <vector>
-
-#include <Types.h>
-
 
 
 struct TestCaseBase
@@ -41,7 +40,6 @@ struct TestCaseBase
 	virtual void Run() = 0;
 };
 
-
 struct TestCaseRegistry
 {
 	std::function<TestCaseBase* ()> funcMakeInst;
@@ -55,7 +53,6 @@ struct TestCaseRegistry
 		registryList.emplace_back(this);
 	}
 };
-
 
 struct TestSuite
 {
@@ -118,7 +115,6 @@ struct TestSuite
 	}
 
 
-
 class TestManager : public gan::Singleton<TestManager>
 {
 public:
@@ -128,4 +124,3 @@ public:
 private:
 	std::vector<TestSuite*> m_tests;
 };
-

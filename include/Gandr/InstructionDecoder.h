@@ -18,14 +18,13 @@
 
 #pragma once
 
-#include <Types.h>
+#include <Gandr/Types.h>
 
 #include <optional>
 
 
 namespace gan
 {
-
 
 struct InstructionLengthDetails
 {
@@ -62,7 +61,6 @@ struct InstructionLengthDetails
 	{ }
 };
 
-
 class InstructionDecoder
 {
 public:
@@ -79,6 +77,5 @@ private:
 	ConstMemAddr m_instPtr;
 	Arch m_arch;
 };
-
 
 }  // namespace gan
