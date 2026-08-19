@@ -1,113 +1,119 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
+    <Filter Include="include">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="include\Gandr">
+      <UniqueIdentifier>{b9e634b3-097c-4e20-82fb-f2cd7bb89d49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Gandr\ProcessList.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Breakpoint.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Buffer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Debugger.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\DebugSession.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\DllInjector.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\DllPreloadDebugSession.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\DllLookup.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Hash.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Hook.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\InstructionDecoder.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\ModuleList.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Handle.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\PE.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Gandr\Memory.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Gandr\Breakpoint.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Buffer.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Debugger.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\DebugSession.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\DllInjector.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\DllLookup.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\DllPreloadDebugSession.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Handle.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Hash.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Hook.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\InstructionDecoder.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Memory.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\ModuleList.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Mutex.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\PE.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\ProcessList.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
     </ClInclude>
     <ClInclude Include="include\Gandr\Types.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr.hpp">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

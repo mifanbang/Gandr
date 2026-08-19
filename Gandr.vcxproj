@@ -214,6 +214,7 @@
     <ClCompile Include="src\Gandr\ProcessList.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Gandr.hpp" />
     <ClInclude Include="include\Gandr\Breakpoint.h" />
     <ClInclude Include="include\Gandr\Buffer.h" />
     <ClInclude Include="include\Gandr\Debugger.h" />
