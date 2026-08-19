@@ -330,7 +330,7 @@ private:
 		const auto numTrampolinesPerPage = m_allocGranularity / k_trampolineSize;
 		m_freeLists.emplace_back(
 			std::views::iota(0u, numTrampolinesPerPage)
-			| std::views::transform([](auto idx) { return FreeSlot{ idx * k_trampolineSize }; })
+			| std::views::transform([](auto idx) { return FreeSlot{ static_cast<uint32_t>(idx*k_trampolineSize) }; })
 			| std::ranges::to<FreeList>()
 		);
 
@@ -715,14 +715,22 @@ Trampoline GenerateTrampoline(gan::MemAddr origFuncAddr, const Prolog& prolog) n
 
 	if constexpr (gan::Is64())
 	{
-		auto& opcodeJmp = reinterpret_cast<uint8_t(&)[14]>(result.opcode[prolog.length]);  // ugly...
+		using OpcodeAbsLongJmp64 = uint8_t[14];
+		auto& opcodeJmp =
+			gan::MemAddr{ result.opcode }
+			.Offset(prolog.length)
+			.Ref<OpcodeAbsLongJmp64>();
 		OpcodeGenerator::AbsLongJmp64::Make(origFuncAddr.Offset(prolog.length), opcodeJmp);
 	}
 	else
 	{
 		// Instruction length is less of an issue for trampolines as we usually have plenty of space.
-		// Using a 6-byte "push and ret" instead of a 5-byte relative jump is fine.
-		auto& opcodeJmp = reinterpret_cast<uint8_t(&)[6]>(result.opcode[prolog.length]);  // ugly...
+		// Using a 6-byte "push and ret" instead of a 5-byte relative jump should be fine.
+		using OpcideAbsLongJmp32 = uint8_t[6];
+		auto& opcodeJmp =
+			gan::MemAddr{ result.opcode }
+			.Offset(prolog.length)
+			.Ref<OpcideAbsLongJmp32>();
 		OpcodeGenerator::AbsLongJmp32::Make(origFuncAddr.Offset(prolog.length), opcodeJmp);
 	}
 	return result;
