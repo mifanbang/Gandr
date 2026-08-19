@@ -184,7 +184,7 @@ class TrampolineRegistry : public gan::Singleton<TrampolineRegistry>
 	friend class gan::Singleton<TrampolineRegistry>;
 
 public:
-	constexpr static auto k_trampolineSize = sizeof(Trampoline::opcode);
+	constexpr static auto k_trampolineSize = sizeof(Trampoline);
 
 	// Try allocating a trampoline within the range of 32-bit offset from "desiredAddress".
 	gan::MemAddr Register(const Trampoline& trampoline, gan::MemRange desiredAddrRange)
@@ -202,10 +202,9 @@ public:
 		m_freeLists[pageIndex].pop_back();
 
 		auto trampolineAddr = m_pages[pageIndex].Offset(slot.pageOffset);
-		memcpy(trampolineAddr.Ptr<uint8_t>(), trampoline.opcode, k_trampolineSize);
-
-		assert(m_records.find(trampolineAddr) == m_records.end());
-		m_records.try_emplace(trampolineAddr, pageIndex);
+		trampolineAddr.Ref<Trampoline>() = trampoline;
+		[[maybe_unused]] auto [_, inserted] = m_records.try_emplace(trampolineAddr, pageIndex);
+		assert(inserted);
 
 		return trampolineAddr;
 	}
@@ -608,8 +607,9 @@ std::optional<PrologWithDisp> CopyProlog(gan::ConstMemAddr addr, uint8_t length)
 
 			if (copiedProlog.prolog.length + nextInstLen <= sizeof(copiedProlog.prolog.opcode))  // Check remaining space for the instruction
 			{
-				memcpy(
+				memcpy_s(
 					copiedProlog.prolog.opcode + copiedProlog.prolog.length,
+					sizeof(copiedProlog.prolog.opcode) - copiedProlog.prolog.length,
 					addr.Offset(copiedProlog.prolog.length).ConstPtr<uint8_t>(),
 					nextInstLen
 				);
