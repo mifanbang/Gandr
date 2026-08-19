@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <windows.h>
-
 #include <shared_mutex>
 #include <type_traits>
 
