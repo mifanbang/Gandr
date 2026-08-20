@@ -43,6 +43,12 @@ public:
 
 	DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option);
 
+	DllPreloadDebugSession() = delete;
+	DllPreloadDebugSession(const DllPreloadDebugSession&) = delete;
+	DllPreloadDebugSession(DllPreloadDebugSession&&) = delete;
+	DllPreloadDebugSession& operator=(const DllPreloadDebugSession&) = delete;
+	DllPreloadDebugSession& operator=(DllPreloadDebugSession&&) = delete;
+
 private:
 	ContinueStatus OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) noexcept override;
 	ContinueStatus OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo) override;

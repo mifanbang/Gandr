@@ -41,6 +41,7 @@ public:
 	// Factory function
 	static std::unique_ptr<Buffer> Allocate(size_t size);
 
+	Buffer() = delete;
 	Buffer(size_t capacity, size_t size, uint8_t* addr, Private) noexcept;
 	~Buffer();
 

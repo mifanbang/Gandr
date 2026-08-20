@@ -63,13 +63,14 @@ public:
 		Detach
 	};
 
-	DebugSession(const CreateProcessParam& newProcParam);
+	explicit DebugSession(const CreateProcessParam& newProcParam);
 	virtual ~DebugSession();
 
+	DebugSession() = delete;
 	DebugSession(const DebugSession&) = delete;
+	DebugSession(DebugSession&&) = delete;
 	DebugSession& operator=(const DebugSession&) = delete;
-	DebugSession(DebugSession&&) = default;
-	DebugSession& operator=(DebugSession&&) = default;
+	DebugSession& operator=(DebugSession&&) = delete;
 
 	void End(EndOption option) noexcept;
 

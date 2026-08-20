@@ -63,6 +63,14 @@ public:
 		AssertCtorArgs(m_funcOrig, m_funcHook);
 	}
 
+	Hook() = delete;
+	// Non-copyable
+	Hook(const Hook&) = delete;
+	Hook& operator=(const Hook&) = delete;
+	// Movable
+	Hook(Hook&&) = default;
+	Hook& operator=(Hook&&) = default;
+
 	OpResult Install();
 	OpResult Uninstall();
 
