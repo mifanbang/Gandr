@@ -18,10 +18,6 @@
 
 #pragma once
 
-#if !defined(NOMINMAX) || defined(min) || defined(max)
-	#error Macro NOMINMAX is required for the library
-#endif  // windows.h NOMINMAX check
-
 #include <concepts>
 #include <functional>
 #include <optional>

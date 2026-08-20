@@ -276,7 +276,7 @@ private:
 	{
 		const auto tzcnt = _tzcnt_u32(granularity);
 		assert(_lzcnt_u32(granularity) + tzcnt == 31);  // "granularity" must a power of 2.
-		return std::numeric_limits<size_t>::max() << tzcnt;
+		return (std::numeric_limits<size_t>::max)() << tzcnt;
 	}
 
 	static size_t AlignMemAddrWithGranularity(const size_t addr, uint32_t granularity) noexcept
