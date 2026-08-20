@@ -18,20 +18,20 @@
 
 #pragma once
 
-#include <Gandr/Breakpoint.h>
-#include <Gandr/Buffer.h>
-#include <Gandr/Debugger.h>
-#include <Gandr/DebugSession.h>
-#include <Gandr/DllInjector.h>
-#include <Gandr/DllLookup.h>
-#include <Gandr/DllPreloadDebugSession.h>
-#include <Gandr/Handle.h>
-#include <Gandr/Hash.h>
-#include <Gandr/Hook.h>
-#include <Gandr/InstructionDecoder.h>
-#include <Gandr/Memory.h>
-#include <Gandr/ModuleList.h>
-#include <Gandr/Mutex.h>
-#include <Gandr/PE.h>
-#include <Gandr/ProcessList.h>
-#include <Gandr/Types.h>
+#include <Gandr/Breakpoint.hpp>
+#include <Gandr/Buffer.hpp>
+#include <Gandr/Debugger.hpp>
+#include <Gandr/DebugSession.hpp>
+#include <Gandr/DllInjector.hpp>
+#include <Gandr/DllLookup.hpp>
+#include <Gandr/DllPreloadDebugSession.hpp>
+#include <Gandr/Handle.hpp>
+#include <Gandr/Hash.hpp>
+#include <Gandr/Hook.hpp>
+#include <Gandr/InstructionDecoder.hpp>
+#include <Gandr/Memory.hpp>
+#include <Gandr/ModuleList.hpp>
+#include <Gandr/Mutex.hpp>
+#include <Gandr/PE.hpp>
+#include <Gandr/ProcessList.hpp>
+#include <Gandr/Types.hpp>

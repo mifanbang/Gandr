@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/Hash.h>
+#include <Gandr/Hash.hpp>
 
 #include <windows.h>
 

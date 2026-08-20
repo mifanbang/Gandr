@@ -215,23 +215,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Gandr.hpp" />
-    <ClInclude Include="include\Gandr\Breakpoint.h" />
-    <ClInclude Include="include\Gandr\Buffer.h" />
-    <ClInclude Include="include\Gandr\Debugger.h" />
-    <ClInclude Include="include\Gandr\DebugSession.h" />
-    <ClInclude Include="include\Gandr\DllInjector.h" />
-    <ClInclude Include="include\Gandr\DllLookup.h" />
-    <ClInclude Include="include\Gandr\DllPreloadDebugSession.h" />
-    <ClInclude Include="include\Gandr\Handle.h" />
-    <ClInclude Include="include\Gandr\Hash.h" />
-    <ClInclude Include="include\Gandr\Hook.h" />
-    <ClInclude Include="include\Gandr\InstructionDecoder.h" />
-    <ClInclude Include="include\Gandr\Memory.h" />
-    <ClInclude Include="include\Gandr\ModuleList.h" />
-    <ClInclude Include="include\Gandr\Mutex.h" />
-    <ClInclude Include="include\Gandr\PE.h" />
-    <ClInclude Include="include\Gandr\ProcessList.h" />
-    <ClInclude Include="include\Gandr\Types.h" />
+    <ClInclude Include="include\Gandr\Breakpoint.hpp" />
+    <ClInclude Include="include\Gandr\Buffer.hpp" />
+    <ClInclude Include="include\Gandr\Debugger.hpp" />
+    <ClInclude Include="include\Gandr\DebugSession.hpp" />
+    <ClInclude Include="include\Gandr\DllInjector.hpp" />
+    <ClInclude Include="include\Gandr\DllLookup.hpp" />
+    <ClInclude Include="include\Gandr\DllPreloadDebugSession.hpp" />
+    <ClInclude Include="include\Gandr\Handle.hpp" />
+    <ClInclude Include="include\Gandr\Hash.hpp" />
+    <ClInclude Include="include\Gandr\Hook.hpp" />
+    <ClInclude Include="include\Gandr\InstructionDecoder.hpp" />
+    <ClInclude Include="include\Gandr\Memory.hpp" />
+    <ClInclude Include="include\Gandr\ModuleList.hpp" />
+    <ClInclude Include="include\Gandr\Mutex.hpp" />
+    <ClInclude Include="include\Gandr\PE.hpp" />
+    <ClInclude Include="include\Gandr\ProcessList.hpp" />
+    <ClInclude Include="include\Gandr\Types.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

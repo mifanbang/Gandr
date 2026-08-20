@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Gandr/Types.h>
+#include <Gandr/Types.hpp>
 
 #include <string_view>
 

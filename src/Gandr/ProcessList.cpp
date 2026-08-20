@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/ProcessList.h>
+#include <Gandr/ProcessList.hpp>
 
-#include <Gandr/Handle.h>
+#include <Gandr/Handle.hpp>
 
 #include <windows.h>
 #include <tlhelp32.h>  // must be included after windows.h, which sucks

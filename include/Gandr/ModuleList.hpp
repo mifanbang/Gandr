@@ -18,39 +18,41 @@
 
 #pragma once
 
-#include <Gandr/DebugSession.h>
+#include <Gandr/Types.hpp>
 
+#include <expected>
 #include <string>
-#include <string_view>
+#include <vector>
 
 
 namespace gan
 {
 
+struct ModuleInfo
+{
+	ConstMemAddr base;
+	size_t size;
+	std::wstring imageName;  // Incl. file extension
+	std::wstring imagePath;
+};
+using ModuleList = std::vector<ModuleInfo>;
+
+
 // ---------------------------------------------------------------------------
-// class DllPreloadDebugSession - A DebugSession implementation that preloads a DLL at entry point
+// Class ModuleEnumerator - Module list snapshot taker
 // ---------------------------------------------------------------------------
 
-class DllPreloadDebugSession : public DebugSession
+class ModuleEnumerator
 {
 public:
-	enum class Option : uint8_t
+	enum class Error
 	{
-		EndSessionSync,  // Automatically ends the session when OnDllLoaded() detects loaded module
-		EndSessionAsync,  // Automatically ends the session when target process starts calling LoadLibraryW()
-		KeepAlive  // Keep the session alive
+		SnapshotFailed,  // CreateToolhelp32Snapshot() failed
+		Module32Failed,  // A Module32*() function failed
 	};
 
-	DllPreloadDebugSession(const CreateProcessParam& newProcParam, std::wstring_view payloadPath, Option option);
-
-private:
-	ContinueStatus OnProcessCreated(const CREATE_PROCESS_DEBUG_INFO& procInfo) noexcept override;
-	ContinueStatus OnExceptionTriggered(const EXCEPTION_DEBUG_INFO& exceptionInfo) override;
-	ContinueStatus OnDllLoaded(const LOAD_DLL_DEBUG_INFO& dllInfo) noexcept override;
-
-	WinHandle m_hMainThread;
-	std::wstring m_payloadPath;
-	Option m_option;
+	std::expected<ModuleList, Error> operator()(uint32_t processId);
+	std::expected<ModuleList, Error> operator()(WinHandle process);
 };
 
 }  // namespace gan

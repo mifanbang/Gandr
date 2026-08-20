@@ -61,59 +61,59 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Gandr\Breakpoint.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Buffer.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Debugger.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\DebugSession.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\DllInjector.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\DllLookup.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\DllPreloadDebugSession.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Handle.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Hash.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Hook.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\InstructionDecoder.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Memory.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\ModuleList.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Mutex.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\PE.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\ProcessList.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Gandr\Types.h">
-      <Filter>include\Gandr</Filter>
-    </ClInclude>
     <ClInclude Include="include\Gandr.hpp">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Breakpoint.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Buffer.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Debugger.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\DebugSession.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\DllInjector.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\DllLookup.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\DllPreloadDebugSession.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Handle.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Hash.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Hook.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\InstructionDecoder.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Memory.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\ModuleList.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Mutex.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\PE.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\ProcessList.hpp">
+      <Filter>include\Gandr</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Gandr\Types.hpp">
+      <Filter>include\Gandr</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/ModuleList.h>
+#include <Gandr/ModuleList.hpp>
 
 #include <algorithm>
 

@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/DllPreloadDebugSession.h>
+#include <Gandr/DllPreloadDebugSession.hpp>
 
-#include <Gandr/Breakpoint.h>
-#include <Gandr/DllInjector.h>
-#include <Gandr/Handle.h>
+#include <Gandr/Breakpoint.hpp>
+#include <Gandr/DllInjector.hpp>
+#include <Gandr/Handle.hpp>
 
 #include <windows.h>
 #include <shlwapi.h>

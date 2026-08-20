@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/Buffer.h>
+#include <Gandr/Buffer.hpp>
 
-#include <Gandr/Types.h>
+#include <Gandr/Types.hpp>
 
 #include <intrin.h>
 #include <windows.h>

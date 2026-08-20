@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/DllLookup.h>
+#include <Gandr/DllLookup.hpp>
 
-#include <Gandr/Handle.h>
-#include <Gandr/Mutex.h>
-#include <Gandr/Types.h>
+#include <Gandr/Handle.hpp>
+#include <Gandr/Mutex.hpp>
+#include <Gandr/Types.hpp>
 
 #include <windows.h>
 

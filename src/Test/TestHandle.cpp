@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/Handle.h>
+#include <Gandr/Handle.hpp>
 
 #include <windows.h>
 

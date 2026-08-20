@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/Hash.h>
+#include <Gandr/Hash.hpp>
 
-#include <Gandr/Handle.h>
+#include <Gandr/Handle.hpp>
 
 #include <windows.h>
 #include <bcrypt.h>  // Win32 API bug: must be included after windows.h

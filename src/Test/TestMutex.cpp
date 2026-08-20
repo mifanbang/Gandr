@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/Mutex.h>
+#include <Gandr/Mutex.hpp>
 
 #include <chrono>
 #include <thread>

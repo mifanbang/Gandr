@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/DllLookup.h>
+#include <Gandr/DllLookup.hpp>
 
 #include <windows.h>
 

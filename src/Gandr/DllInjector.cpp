@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/DllInjector.h>
+#include <Gandr/DllInjector.hpp>
 
-#include <Gandr/Buffer.h>
-#include <Gandr/DllLookup.h>
-#include <Gandr/Handle.h>
+#include <Gandr/Buffer.hpp>
+#include <Gandr/DllLookup.hpp>
+#include <Gandr/Handle.hpp>
 
 #include <cassert>
 #include <functional>

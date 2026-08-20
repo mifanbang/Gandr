@@ -16,10 +16,10 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/Hook.h>
+#include <Gandr/Hook.hpp>
 
-#include <Gandr/InstructionDecoder.h>
-#include <Gandr/Types.h>
+#include <Gandr/InstructionDecoder.hpp>
+#include <Gandr/Types.hpp>
 
 #include <algorithm>
 #include <cassert>

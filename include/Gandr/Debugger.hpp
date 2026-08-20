@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <Gandr/DebugSession.h>
+#include <Gandr/DebugSession.hpp>
 
 #include <memory>
 #include <unordered_map>

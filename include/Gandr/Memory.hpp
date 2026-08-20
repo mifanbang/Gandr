@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <Gandr/Handle.h>
-#include <Gandr/Types.h>
+#include <Gandr/Handle.hpp>
+#include <Gandr/Types.hpp>
 
 #include <expected>
 #include <vector>

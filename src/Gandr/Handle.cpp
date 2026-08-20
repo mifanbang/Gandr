@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/Handle.h>
+#include <Gandr/Handle.hpp>
 
 #include <windows.h>
 

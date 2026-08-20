@@ -18,13 +18,13 @@
 
 #include "Test.h"
 
-#include <Gandr/PE.h>
+#include <Gandr/PE.hpp>
 
-#include <optional>
 #include <psapi.h>
 #include <windows.h>
 
 #include <algorithm>
+#include <optional>
 #include <ranges>
 #include <string_view>
 

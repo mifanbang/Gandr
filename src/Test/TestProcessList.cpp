@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/ProcessList.h>
+#include <Gandr/ProcessList.hpp>
 
 #include <algorithm>
 

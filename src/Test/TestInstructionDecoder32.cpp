@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/InstructionDecoder.h>
+#include <Gandr/InstructionDecoder.hpp>
 
 
 DEFINE_TESTSUITE_START(InstructionDecoder_IA32)

@@ -18,7 +18,7 @@
 
 #include "Test.h"
 
-#include <Gandr/Breakpoint.h>
+#include <Gandr/Breakpoint.hpp>
 
 #include <windows.h>
 

@@ -16,10 +16,10 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <Gandr/DebugSession.h>
+#include <Gandr/DebugSession.hpp>
 
-#include <Gandr/Buffer.h>
-#include <Gandr/Types.h>
+#include <Gandr/Buffer.hpp>
+#include <Gandr/Types.hpp>
 
 #include <cstdio>
 #include <format>
